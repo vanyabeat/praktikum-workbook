@@ -58,7 +58,7 @@ struct Document {
 class SearchServer {
 public:
     std::tuple<std::vector<std::string>, DocumentStatus> MatchDocument(const std::string &raw_query, int document_id) const {
-        auto document_status = DocumentStatus::ACTUAL;          /// лучше указать тип DocumentStatus, вероятно из-за auto у вас далее лишние кастомизации
+        DocumentStatus document_status = DocumentStatus::ACTUAL;
 
         std::vector<std::string> words_doc = GetAllWordsInDocument(document_id);
 
@@ -74,26 +74,26 @@ public:
 
         std::vector<std::string> result_v(result.begin(), result.end());
 
-        std::sort(result_v.begin(), result_v.end(), [](std::string &l, std::string &r) { /// не замечание, но проверьте, я не тестировал, у вас вектор заполняется из сета
-            return l < r;                                                                /// сет является уже сортированной структурой, насколько необходимо дополнительная сортировка?
-        });                                                                              /// если различный порядок у сета и вектора, может тогда у сета задать необходимый порядок?
+        //        std::sort(result_v.begin(), result_v.end(), [](std::string &l, std::string &r) {
+        //            return l < r;
+        //        }); UPD: Этот кусок действительно не нужен т.к сет в нутри держит отсортированную структуру именно по возрастанию
 
-        if (document_statuses_.find(document_id) != document_statuses_.end()) {                 /// правильно, что использовали find, но стоит сохранить значение его значение, иначе следующий метод at повторно ищет
-            document_status = static_cast<DocumentStatus>(document_statuses_.at(document_id));  /// есть "новомодный" синтаксис if(auto it = find; it == ...), если не поддерживается, то можно "по старинке": auto it = find; if (...)
-        }                                                                                       /// так же не понятно, зачем нужна кастомизация, вроде результат должен сохраняется и так в DocumentStatus;
+        auto needle_document = document_statuses_ratings_.find(document_id);
+
+        if (needle_document != document_statuses_ratings_.end()) {
+            document_status = needle_document->second.first;
+        }
+
         for (const auto &m_w : query_words.minus_words) {
             for (const auto &w : words_doc_set) {
                 if (m_w == w) {
-                    return std::tuple<std::vector<std::string>, DocumentStatus>(std::vector<std::string>(), static_cast<DocumentStatus>(document_status));  /// тут так же не понятно зачем необходима костомизация
+                    return std::tuple<std::vector<std::string>, DocumentStatus>(std::vector<std::string>(), document_status);
                 }
             }
         }
-        return std::tuple<std::vector<std::string>, DocumentStatus>(result_v, static_cast<DocumentStatus>(document_status));                                /// тут так же не понятно зачем необходима костомизация
+        return std::tuple<std::vector<std::string>, DocumentStatus>(result_v, document_status);
     }
 
-    int GetDocumentCount() const {
-        return document_count_;
-    }
     void setStopWords(const std::string &text) {
         for (const std::string &word : SplitIntoWords(text)) {
             stop_words_.insert(word);
@@ -101,21 +101,22 @@ public:
     }
 
     void AddDocument(int document_id, const std::string &document, const DocumentStatus &status, const std::vector<int> &ratings) {
-        ++document_count_;
+
         const std::vector<std::string> words = SplitIntoWordsNoStop(document);
         const double inv_word_count = 1.0 / words.size();
         for (const std::string &word : words) {
             word_to_document_freqs_[word][document_id] += inv_word_count;
         }
-        document_ratings_.emplace(document_id, ComputeAverageRating(ratings));
-        document_statuses_.emplace(document_id, status);
+
+        document_statuses_ratings_.insert(std::pair<int, std::pair<DocumentStatus, int>>(
+                document_id, std::pair<DocumentStatus, int>(status, ComputeAverageRating(ratings))));
     }
 
     std::vector<Document> FindTopDocuments(const std::string &raw_query, const std::function<bool(int, DocumentStatus, int)> &f) const {
         const Query query = ParseQuery(raw_query);
         auto non_matched_documents = FindAllDocuments(query);
         std::vector<Document> matched_documents;
-        double eps = EPSILON;                                     /// не совсем неообходимая переменная, объяснения в следующем комментарии
+
         for (const auto &doc : non_matched_documents) {
             if (f(doc.id, doc.status, doc.rating)) {
                 matched_documents.push_back(doc);
@@ -123,13 +124,13 @@ public:
         }
 
         sort(matched_documents.begin(), matched_documents.end(),
-             [eps](const Document &lhs, const Document &rhs) {      /// если сделать EPSILON глобальным, то можно использовать и в лямдах, либо использовать синтаксис захвата [eps = EPSILON]
+             [eps = eps_](const Document &lhs, const Document &rhs) {
                  if ((abs(lhs.relevance - rhs.relevance) < eps)) {
                      return true;
-                 } else {                                           /// после return обычно нет необходимости в else, хотя можете оставить
-                     return lhs.relevance > rhs.relevance;
                  }
+                 return lhs.relevance > rhs.relevance;
              });
+
         if (matched_documents.size() > MAX_RESULT_DOCUMENT_COUNT) {
             matched_documents.resize(MAX_RESULT_DOCUMENT_COUNT);
         }
@@ -141,18 +142,17 @@ public:
         return FindTopDocuments(raw_query, [](int document_id, DocumentStatus status, int rating) { return status == DocumentStatus::ACTUAL; });
     }
 
-    std::vector<Document> FindTopDocuments(const std::string &raw_query, const DocumentStatus &st) const {    /// константные ссылки для enum, несколько излишне.
+    std::vector<Document> FindTopDocuments(const std::string &raw_query, const DocumentStatus st) const {
 
         return FindTopDocuments(raw_query, [&st](int document_id, DocumentStatus status, int rating) { return status == st; });
     }
 
 private:
-    const double EPSILON = 1e-6;
+    const double eps_ = 1e-6;
     std::set<std::string> stop_words_;
     std::map<std::string, std::map<int, double>> word_to_document_freqs_;
-    std::map<int, int> document_ratings_;             /// предлагаю сделать один контейнер со структурой {int, DocumentStatus} в заместо document_ratings_ и document_statuses_
-    std::map<int, DocumentStatus> document_statuses_; /// они заполняются одновременно
-    int document_count_;                              /// от этого поля можно избавиться, оно просто кеширует размер одно из контейнера: document_ratings_, document_statuses_
+    std::map<int, std::pair<DocumentStatus, int>> document_statuses_ratings_;
+
     bool IsStopWord(const std::string &word) const {
         return stop_words_.count(word) > 0;
     }
@@ -193,15 +193,15 @@ private:
         bool is_stop;
     };
 
-    QueryWord ParseQueryWord(std::string text) const {      /// должна быть константная ссылка
+    QueryWord ParseQueryWord(const std::string &text) const {
+        std::string tmp = text;
         bool is_minus = false;
-        // Word shouldn't be empty
         if (text[0] == '-') {
             is_minus = true;
-            text = text.substr(1);
+            tmp = text.substr(1);
         }
         return {
-                text,
+                tmp,
                 is_minus,
                 IsStopWord(text)};
     }
@@ -228,7 +228,7 @@ private:
 
 
     double ComputeWordInverseDocumentFreq(const std::string &word) const {
-        return log(document_ratings_.size() * 1.0 / word_to_document_freqs_.at(word).size());
+        return log(document_statuses_ratings_.size() * 1.0 / word_to_document_freqs_.at(word).size());
     }
 
     std::vector<Document> FindAllDocuments(const Query &query) const {
@@ -256,8 +256,8 @@ private:
         for (const auto [document_id, relevance] : document_to_relevance) {
             matched_documents.push_back({document_id,
                                          relevance,
-                                         document_ratings_.at(document_id),
-                                         document_statuses_.at(document_id)});
+                                         document_statuses_ratings_.at(document_id).second,
+                                         document_statuses_ratings_.at(document_id).first});
         }
         return matched_documents;
     }

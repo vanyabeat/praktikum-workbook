@@ -58,7 +58,7 @@ struct Document {
 class SearchServer {
 public:
     std::tuple<std::vector<std::string>, DocumentStatus> MatchDocument(const std::string &raw_query, int document_id) const {
-        auto document_status = DocumentStatus::ACTUAL;
+        auto document_status = DocumentStatus::ACTUAL;          /// лучше указать тип DocumentStatus, вероятно из-за auto у вас далее лишние кастомизации
 
         std::vector<std::string> words_doc = GetAllWordsInDocument(document_id);
 
@@ -74,21 +74,21 @@ public:
 
         std::vector<std::string> result_v(result.begin(), result.end());
 
-        std::sort(result_v.begin(), result_v.end(), [](std::string &l, std::string &r) {
-            return l < r;
-        });
+        std::sort(result_v.begin(), result_v.end(), [](std::string &l, std::string &r) { /// не замечание, но проверьте, я не тестировал, у вас вектор заполняется из сета
+            return l < r;                                                                /// сет является уже сортированной структурой, насколько необходимо дополнительная сортировка?
+        });                                                                              /// если различный порядок у сета и вектора, может тогда у сета задать необходимый порядок?
 
-        if (document_statuses_.find(document_id) != document_statuses_.end()) {
-            document_status = static_cast<DocumentStatus>(document_statuses_.at(document_id));
-        }
+        if (document_statuses_.find(document_id) != document_statuses_.end()) {                 /// правильно, что использовали find, но стоит сохранить значение его значение, иначе следующий метод at повторно ищет
+            document_status = static_cast<DocumentStatus>(document_statuses_.at(document_id));  /// есть "новомодный" синтаксис if(auto it = find; it == ...), если не поддерживается, то можно "по старинке": auto it = find; if (...)
+        }                                                                                       /// так же не понятно, зачем нужна кастомизация, вроде результат должен сохраняется и так в DocumentStatus;
         for (const auto &m_w : query_words.minus_words) {
             for (const auto &w : words_doc_set) {
                 if (m_w == w) {
-                    return std::tuple<std::vector<std::string>, DocumentStatus>(std::vector<std::string>(), static_cast<DocumentStatus>(document_status));
+                    return std::tuple<std::vector<std::string>, DocumentStatus>(std::vector<std::string>(), static_cast<DocumentStatus>(document_status));  /// тут так же не понятно зачем необходима костомизация
                 }
             }
         }
-        return std::tuple<std::vector<std::string>, DocumentStatus>(result_v, static_cast<DocumentStatus>(document_status));
+        return std::tuple<std::vector<std::string>, DocumentStatus>(result_v, static_cast<DocumentStatus>(document_status));                                /// тут так же не понятно зачем необходима костомизация
     }
 
     int GetDocumentCount() const {
@@ -115,7 +115,7 @@ public:
         const Query query = ParseQuery(raw_query);
         auto non_matched_documents = FindAllDocuments(query);
         std::vector<Document> matched_documents;
-        double eps = EPSILON;
+        double eps = EPSILON;                                     /// не совсем неообходимая переменная, объяснения в следующем комментарии
         for (const auto &doc : non_matched_documents) {
             if (f(doc.id, doc.status, doc.rating)) {
                 matched_documents.push_back(doc);
@@ -123,10 +123,10 @@ public:
         }
 
         sort(matched_documents.begin(), matched_documents.end(),
-             [eps](const Document &lhs, const Document &rhs) {
+             [eps](const Document &lhs, const Document &rhs) {      /// если сделать EPSILON глобальным, то можно использовать и в лямдах, либо использовать синтаксис захвата [eps = EPSILON]
                  if ((abs(lhs.relevance - rhs.relevance) < eps)) {
                      return true;
-                 } else {
+                 } else {                                           /// после return обычно нет необходимости в else, хотя можете оставить
                      return lhs.relevance > rhs.relevance;
                  }
              });
@@ -141,7 +141,7 @@ public:
         return FindTopDocuments(raw_query, [](int document_id, DocumentStatus status, int rating) { return status == DocumentStatus::ACTUAL; });
     }
 
-    std::vector<Document> FindTopDocuments(const std::string &raw_query, const DocumentStatus &st) const {
+    std::vector<Document> FindTopDocuments(const std::string &raw_query, const DocumentStatus &st) const {    /// константные ссылки для enum, несколько излишне.
 
         return FindTopDocuments(raw_query, [&st](int document_id, DocumentStatus status, int rating) { return status == st; });
     }
@@ -150,9 +150,9 @@ private:
     const double EPSILON = 1e-6;
     std::set<std::string> stop_words_;
     std::map<std::string, std::map<int, double>> word_to_document_freqs_;
-    std::map<int, int> document_ratings_;
-    std::map<int, DocumentStatus> document_statuses_;
-    int document_count_;
+    std::map<int, int> document_ratings_;             /// предлагаю сделать один контейнер со структурой {int, DocumentStatus} в заместо document_ratings_ и document_statuses_
+    std::map<int, DocumentStatus> document_statuses_; /// они заполняются одновременно
+    int document_count_;                              /// от этого поля можно избавиться, оно просто кеширует размер одно из контейнера: document_ratings_, document_statuses_
     bool IsStopWord(const std::string &word) const {
         return stop_words_.count(word) > 0;
     }
@@ -193,7 +193,7 @@ private:
         bool is_stop;
     };
 
-    QueryWord ParseQueryWord(std::string text) const {
+    QueryWord ParseQueryWord(std::string text) const {      /// должна быть константная ссылка
         bool is_minus = false;
         // Word shouldn't be empty
         if (text[0] == '-') {

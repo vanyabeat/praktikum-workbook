@@ -254,10 +254,11 @@ private:
 
         std::vector<Document> matched_documents;
         for (const auto [document_id, relevance] : document_to_relevance) {
+            auto item = document_statuses_ratings_.at(document_id);
             matched_documents.push_back({document_id,
                                          relevance,
-                                         document_statuses_ratings_.at(document_id).second,
-                                         document_statuses_ratings_.at(document_id).first});
+                                         item.second,
+                                         item.first});
         }
         return matched_documents;
     }

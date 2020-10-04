@@ -151,7 +151,7 @@ private:
     const double eps_ = 1e-6;
     std::set<std::string> stop_words_;
     std::map<std::string, std::map<int, double>> word_to_document_freqs_;
-    std::map<int, std::pair<DocumentStatus, int>> document_statuses_ratings_;
+    std::map<int, std::pair<DocumentStatus, int>> document_statuses_ratings_;        /// правильней объявить структуру, она более информативная
 
     bool IsStopWord(const std::string &word) const {
         return stop_words_.count(word) > 0;

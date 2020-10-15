@@ -114,6 +114,13 @@ void AssertImpl(bool value, const string& expr_str, const string& file, const st
 
 #define ASSERT_HINT(expr, hint) AssertImpl(!!(expr), #expr, __FILE__, __FUNCTION__, __LINE__, (hint))
 
+template<typename T>
+void RunTestImpl(T func, const std::string &function) {
+    func();
+    std::cerr << function << " OK";
+}
+
+#define RUN_TEST(func) RunTestImpl((func),  #func)
 
 #include <cassert>
 #include <iostream>

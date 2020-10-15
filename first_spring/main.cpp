@@ -288,7 +288,7 @@ void TestExcludeStopWordsFromAddedDocumentContent() {
         SearchServer server;
         server.SetStopWords("in the"s);
         server.AddDocument(doc_id, content, DocumentStatus::ACTUAL, ratings);
-        assert(server.FindTopDocuments("in"s).empty());
+        ASSERT(server.FindTopDocuments("in"s).empty());
     }
 }
 
@@ -342,7 +342,7 @@ void TestSearch() {
         SearchServer server;
         server.AddDocument(doc_id, content, DocumentStatus::ACTUAL, ratings);
         const auto found_docs = server.FindTopDocuments("dog going fast"s);
-        assert(found_docs.empty());
+        ASSERT(found_docs.empty());
     }
 }
 
@@ -421,7 +421,7 @@ void TestRating() {
         SearchServer server;
         server.AddDocument(doc_id, content, DocumentStatus::ACTUAL, ratings);
         const auto found_docs = server.FindTopDocuments("cat"s);
-        assert(found_docs.size() == 1);
+        ASSERT(found_docs.size() == 1);
         const Document &doc0 = found_docs[0];
         ASSERT_EQUAL(doc0.id, doc_id);
         ASSERT_EQUAL(doc0.rating, 2);
@@ -441,7 +441,7 @@ void TestDocumentWithStatus() {
         server.AddDocument(doc_id + 1, content2, DocumentStatus::BANNED, ratings2);
         const auto found_docs = server.FindTopDocuments("dogs", DocumentStatus::BANNED);
 
-        assert(found_docs.size() == 1);
+        ASSERT(found_docs.size() == 1);
         const Document &doc0 = found_docs[0];
         ASSERT_EQUAL(doc0.id, 43);
         ASSERT_EQUAL(doc0.rating, 4);
@@ -478,6 +478,7 @@ void TestRelevance() {
 
     auto result = search_server.FindTopDocuments("cat");
     double actual_relevance = (1.0 / 2.0) * log(docs.size() / 2);
+    ASSERT_EQUAL(search_server.GetDocumentCount(), docs.size());
     ASSERT(double_equals(result[0].relevance, actual_relevance)); // Надо сделать ASSERT_DOUBLE_EQUALS @reviewer
 }
 

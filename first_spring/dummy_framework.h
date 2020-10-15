@@ -7,6 +7,8 @@ using std::string_literals::operator""s;
 
 #define ASSERT_EQUAL(a, b) AssertEqualImpl((a), (b), #a, #b, __FILE__, __FUNCTION__, __LINE__, ""s)
 
+#define ASSERT_NOTEQUAL(a, b) AssertEqualImpl((a), (b), #a, #b, __FILE__, __FUNCTION__, __LINE__, ""s)
+
 #define ASSERT_EQUAL_HINT(a, b, hint) AssertEqualImpl((a), (b), #a, #b, __FILE__, __FUNCTION__, __LINE__, (hint))
 
 #define RUN_TEST(func) RunTestImpl((func), #func)
@@ -103,5 +105,5 @@ void AssertImpl(bool value, const std::string &expr_str, const std::string &file
 template<typename T>
 void RunTestImpl(T func, const std::string &function) {
     func();
-    std::cerr << function << " OK";
+    std::cerr << function << " OK" << std::endl;
 }

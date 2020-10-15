@@ -5,6 +5,15 @@
 #include <set>
 #include <string>
 #include <vector>
+
+#define ASSERT_EQUAL(a, b) AssertEqualImpl((a), (b), #a, #b, __FILE__, __FUNCTION__, __LINE__, ""s)
+
+#define ASSERT_EQUAL_HINT(a, b, hint) AssertEqualImpl((a), (b), #a, #b, __FILE__, __FUNCTION__, __LINE__, (hint))
+
+#define ASSERT(expr) AssertImpl(!!(expr), #expr, __FILE__, __FUNCTION__, __LINE__, ""s)
+
+#define ASSERT_HINT(expr, hint) AssertImpl(!!(expr), #expr, __FILE__, __FUNCTION__, __LINE__, (hint))
+
 using namespace std;
 template <typename T>
 std::ostream& operator<<(std::ostream& os, const std::vector<T>& obj)
@@ -88,10 +97,6 @@ void AssertEqualImpl(const T& t, const U& u, const string& t_str, const string& 
     }
 }
 
-#define ASSERT_EQUAL(a, b) AssertEqualImpl((a), (b), #a, #b, __FILE__, __FUNCTION__, __LINE__, ""s)
-
-#define ASSERT_EQUAL_HINT(a, b, hint) AssertEqualImpl((a), (b), #a, #b, __FILE__, __FUNCTION__, __LINE__, (hint))
-
 void AssertImpl(bool value, const string& expr_str, const string& file, const string& func, unsigned line,
                 const string& hint) {
     if (!value) {
@@ -109,66 +114,91 @@ void AssertImpl(bool value, const string& expr_str, const string& file, const st
 
 #define ASSERT_HINT(expr, hint) AssertImpl(!!(expr), #expr, __FILE__, __FUNCTION__, __LINE__, (hint))
 
-vector<int> TakeEvens(const vector<int>& numbers) {
-    vector<int> evens;
-    for (int x : numbers) {
-        if (x % 2 == 0) {
-            evens.push_back(x);
-        }
-    }
-    return evens;
-}
 
-map<string, int> TakeAdults(const map<string, int>& people) {
-    map<string, int> adults;
-    for (const auto& [name, age] : people) {
-        if (age >= 18) {
-            adults[name] = age;
-        }
-    }
-    return adults;
-}
+#include <cassert>
+#include <iostream>
+#include <map>
+#include <set>
+#include <sstream>
+#include <string>
 
-bool IsPrime(int n) {
-    if (n < 2) {
+using namespace std;
+
+class Synonyms {
+public:
+    void Add(const string& first_word, const string& second_word) {
+        synonyms_[first_word].insert(second_word);
+        synonyms_[second_word].insert(first_word);
+    }
+
+    size_t GetSynonymCount(const string& word) const {
+        if (synonyms_.count(word) != 0) {
+            return synonyms_.at(word).size();
+        }
+        return 0;
+    }
+
+    bool AreSynonyms(const string& first_word, const string& second_word) const {
+        if (synonyms_.count(first_word) != 0) {
+            return synonyms_.at(first_word).count(second_word) != 0;
+        }
         return false;
     }
-    int i = 2;
-    while (i * i <= n) {
-        if (n % i == 0) {
-            return false;
-        }
-        ++i;
-    }
-    return true;
+
+private:
+    map<string, set<string>> synonyms_;
+};
+
+void TestAddingSynonymsIncreasesTheirCount() {
+    Synonyms synonyms;
+    assert(synonyms.GetSynonymCount("music"s) == 0);
+    assert(synonyms.GetSynonymCount("melody"s) == 0);
+
+    synonyms.Add("music"s, "melody"s);
+    assert(synonyms.GetSynonymCount("music"s) == 1);
+    assert(synonyms.GetSynonymCount("melody"s) == 1);
+
+    synonyms.Add("music"s, "tune"s);
+    assert(synonyms.GetSynonymCount("music"s) == 2);
+    assert(synonyms.GetSynonymCount("tune"s) == 1);
+    assert(synonyms.GetSynonymCount("melody"s) == 1);
 }
 
-set<int> TakePrimes(const set<int>& numbers) {
-    set<int> primes;
-    for (int number : numbers) {
-        if (IsPrime(number)) {
-            primes.insert(number);
-        }
-    }
-    return primes;
+void TestAreSynonyms() {
+    Synonyms synonyms;
+    synonyms.Add("winner"s, "champion"s);
+    synonyms.Add("good"s, "nice"s);
+
+    assert(synonyms.AreSynonyms("winner"s, "champion"s));
+    assert(synonyms.AreSynonyms("champion"s, "winner"s));
+
+    assert(!synonyms.AreSynonyms("good"s, "champion"s));
+    assert(synonyms.AreSynonyms("good"s, "nice"s));
+}
+
+void TestSynonyms() {
+    TestAddingSynonymsIncreasesTheirCount();
+    TestAreSynonyms();
 }
 
 int main() {
-    {
-        const set<int> numbers = {-1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
-        const set<int> expected_primes = {2, 3, 5, 7, 11, 13};
-        ASSERT_EQUAL(TakePrimes(numbers), expected_primes);
-    }
+    TestSynonyms();
+
+
+
 
     {
-        const map<string, int> people = {{"Ivan"s, 19}, {"Sergey"s, 16}, {"Alexey"s, 18}};
-        const map<string, int> expected_adults = {{"Alexey"s, 18}, {"Ivan"s, 19}};
-        ASSERT_EQUAL(TakeAdults(people), expected_adults);
+        Synonyms synonyms;
+        synonyms.Add("syn1", "syn2");
+        ASSERT(synonyms.AreSynonyms("syn1", "syn2"));
+        ASSERT(!synonyms.AreSynonyms("syn1", "syn3"));
+    }
+    {
+        Synonyms synonyms;
+        synonyms.Add("syn1", "syn2");
+        ASSERT_EQUAL(synonyms.GetSynonymCount("syn1"), 2);
+
     }
 
-    {
-        const vector<int> numbers = {3, 2, 1, 0, 3, 6};
-        const vector<int> expected_evens = {2, 0, 6};
-        ASSERT_EQUAL(TakeEvens(numbers), expected_evens);
-    }
+    return 0;
 }

@@ -11,10 +11,12 @@ using std::string_literals::operator""s;
 
 #define RUN_TEST(func) RunTestImpl((func), #func)
 
+///  в трех опереторах дублирование кода, предлагаю общую часть выделить в отдельную шаблонную функцю
+
 template<typename T>
 std::ostream &operator<<(std::ostream &os, const std::vector<T> &obj) {
-    if (obj.empty()) {
-        return os;
+    if (obj.empty()) {                          /// не замечание, просто интересно, при пустом контейнере у вас ничего не выводится
+        return os;                              /// может информативнее вывести пустой котейнер? "[]" ?
     } else {
         os << "[";
         for (auto i = 0; i < obj.size(); ++i) {
@@ -35,9 +37,9 @@ std::ostream &operator<<(std::ostream &os, const std::set<T> &obj) {
         return os;
     } else {
         os << "{";
-        auto counter = 0;
-        auto size = obj.size();
-        for (auto it = obj.begin(); it != obj.end(); ++it) {
+        auto counter = 0;                                       /// для простых типов лучше не использвать auto, в вашем случе подойдет size_t
+        auto size = obj.size();                                 /// для простых типов лучше не использвать auto, в вашем случе подойдет size_t
+        for (auto it = obj.begin(); it != obj.end(); ++it) {    /// почему не foreach? ( for (const auto & value : obj) )
             if (counter == (size - 1)) {
                 os << *it;
                 continue;
@@ -56,9 +58,9 @@ std::ostream &operator<<(std::ostream &os, const std::map<T, V> &obj) {
         return os;
     } else {
         os << "{";
-        auto counter = 0;
-        auto size = obj.size();
-        for (auto it = obj.begin(); it != obj.end(); ++it) {
+        auto counter = 0;                                       /// для простых типов лучше не использвать auto, в вашем случе подойдет size_t
+        auto size = obj.size();                                 /// для простых типов лучше не использвать auto, в вашем случе подойдет size_t
+        for (auto it = obj.begin(); it != obj.end(); ++it) {    /// почему не foreach? ( for ( value : obj) )
             if (counter == (size - 1)) {
                 os << it->first << ": " << it->second;
                 continue;

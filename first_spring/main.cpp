@@ -256,7 +256,7 @@ void TestAddDocument() {
         const auto found_docs = server.FindTopDocuments("document"s);
         ASSERT_EQUAL(found_docs.size(), 1);
         const Document &doc0 = found_docs[0];
-        ASSERT(doc0.id == 0);
+        ASSERT(doc0.id == 0);           /// по возможности лучше использовать ASSERT_EQUAL, т.к. в случае срабатывания, он более информативный
     }
     {
         SearchServer server;
@@ -277,7 +277,7 @@ void TestExcludeStopWordsFromAddedDocumentContent() {
         SearchServer server;
         server.AddDocument(doc_id, content, DocumentStatus::ACTUAL, ratings);
         const auto found_docs = server.FindTopDocuments("in"s);
-        ASSERT(found_docs.size() == 1);
+        ASSERT(found_docs.size() == 1);     /// по возможности лучше использовать ASSERT_EQUAL, т.к. в случае срабатывания, он более информативный
         const Document &doc0 = found_docs[0];
         ASSERT_EQUAL(doc0.id, doc_id);
     }
@@ -334,7 +334,7 @@ void TestSearch() {
         SearchServer server;
         server.AddDocument(doc_id, content, DocumentStatus::ACTUAL, ratings);
         const auto found_docs = server.FindTopDocuments("cat"s);
-        ASSERT(found_docs.size() == 1);
+        ASSERT(found_docs.size() == 1);         /// по возможности лучше использовать ASSERT_EQUAL, т.к. в случае срабатывания, он более информативный
         const Document &doc0 = found_docs[0];
         ASSERT_EQUAL(doc0.id, doc_id);
     }
@@ -441,7 +441,7 @@ void TestDocumentWithStatus() {
         server.AddDocument(doc_id + 1, content2, DocumentStatus::BANNED, ratings2);
         const auto found_docs = server.FindTopDocuments("dogs", DocumentStatus::BANNED);
 
-        ASSERT(found_docs.size() == 1);
+        ASSERT(found_docs.size() == 1);           /// по возможности лучше использовать ASSERT_EQUAL, т.к. в случае срабатывания, он более информативный
         const Document &doc0 = found_docs[0];
         ASSERT_EQUAL(doc0.id, 43);
         ASSERT_EQUAL(doc0.rating, 4);
@@ -479,8 +479,8 @@ void TestRelevance() {
     auto result = search_server.FindTopDocuments("cat");
     double actual_relevance = (1.0 / 2.0) * log(docs.size() / 2);
     ASSERT_EQUAL(search_server.GetDocumentCount(), docs.size());
-    ASSERT(double_equals(result[0].relevance, actual_relevance)); // Надо сделать ASSERT_DOUBLE_EQUALS @reviewer
-}
+    ASSERT(double_equals(result[0].relevance, actual_relevance)); // Надо сделать ASSERT_DOUBLE_EQUALS @reviewer /// можете сделать, для double не встречал отдельные ассерты,
+}        /// для каждого типа вряд ли получится создавать отдельные ассерты, достаточно бывает добавить HINT и в нем указать какое значение было
 
 
 // Функция TestSearchServer является точкой входа для запуска тестов

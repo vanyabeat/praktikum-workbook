@@ -455,7 +455,7 @@ void TestDocumentPredicate() {
     search_server.AddDocument(3, "ухоженный скворец евгений"s, DocumentStatus::BANNED, {9});
 
     for (const Document &document : search_server.FindTopDocuments("пушистый ухоженный кот"s, [](int document_id, DocumentStatus status, int rating) { return document_id % 2 == 0; })) {
-        ASSERT(document.id % 2 == 0);
+        ASSERT_EQUAL(document.id % 2, 0);
     }
 }
 

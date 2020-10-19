@@ -51,10 +51,6 @@ public:
 
         std::vector<std::string> result_v(result.begin(), result.end());
 
-        //        std::sort(result_v.begin(), result_v.end(), [](std::string &l, std::string &r) {
-        //            return l < r;
-        //        }); UPD: Этот кусок действительно не нужен т.к сет в нутри держит отсортированную структуру именно по возрастанию
-
         auto needle_document = document_statuses_ratings_.find(document_id);
 
         if (needle_document != document_statuses_ratings_.end()) {
@@ -130,7 +126,7 @@ private:
     const double eps_ = 1e-6;
     std::set<std::string> stop_words_;
     std::map<std::string, std::map<int, double>> word_to_document_freqs_;
-    std::map<int, std::pair<DocumentStatus, int>> document_statuses_ratings_;/// правильней объявить структуру, она более информативная
+    std::map<int, std::pair<DocumentStatus, int>> document_statuses_ratings_;
 
     bool IsStopWord(const std::string &word) const {
         return stop_words_.count(word) > 0;
@@ -256,7 +252,7 @@ void TestAddDocument() {
         const auto found_docs = server.FindTopDocuments("document"s);
         ASSERT_EQUAL(found_docs.size(), 1);
         const Document &doc0 = found_docs[0];
-        ASSERT(doc0.id == 0);           /// по возможности лучше использовать ASSERT_EQUAL, т.к. в случае срабатывания, он более информативный
+        ASSERT(doc0.id == 0);/// по возможности лучше использовать ASSERT_EQUAL, т.к. в случае срабатывания, он более информативный
     }
     {
         SearchServer server;
@@ -277,7 +273,7 @@ void TestExcludeStopWordsFromAddedDocumentContent() {
         SearchServer server;
         server.AddDocument(doc_id, content, DocumentStatus::ACTUAL, ratings);
         const auto found_docs = server.FindTopDocuments("in"s);
-        ASSERT(found_docs.size() == 1);     /// по возможности лучше использовать ASSERT_EQUAL, т.к. в случае срабатывания, он более информативный
+        ASSERT(found_docs.size() == 1);/// по возможности лучше использовать ASSERT_EQUAL, т.к. в случае срабатывания, он более информативный
         const Document &doc0 = found_docs[0];
         ASSERT_EQUAL(doc0.id, doc_id);
     }
@@ -334,7 +330,7 @@ void TestSearch() {
         SearchServer server;
         server.AddDocument(doc_id, content, DocumentStatus::ACTUAL, ratings);
         const auto found_docs = server.FindTopDocuments("cat"s);
-        ASSERT(found_docs.size() == 1);         /// по возможности лучше использовать ASSERT_EQUAL, т.к. в случае срабатывания, он более информативный
+        ASSERT_EQUAL(found_docs.size(), 1);
         const Document &doc0 = found_docs[0];
         ASSERT_EQUAL(doc0.id, doc_id);
     }
@@ -441,7 +437,7 @@ void TestDocumentWithStatus() {
         server.AddDocument(doc_id + 1, content2, DocumentStatus::BANNED, ratings2);
         const auto found_docs = server.FindTopDocuments("dogs", DocumentStatus::BANNED);
 
-        ASSERT(found_docs.size() == 1);           /// по возможности лучше использовать ASSERT_EQUAL, т.к. в случае срабатывания, он более информативный
+        ASSERT_EQUAL(found_docs.size(), 1);
         const Document &doc0 = found_docs[0];
         ASSERT_EQUAL(doc0.id, 43);
         ASSERT_EQUAL(doc0.rating, 4);
@@ -479,8 +475,8 @@ void TestRelevance() {
     auto result = search_server.FindTopDocuments("cat");
     double actual_relevance = (1.0 / 2.0) * log(docs.size() / 2);
     ASSERT_EQUAL(search_server.GetDocumentCount(), docs.size());
-    ASSERT(double_equals(result[0].relevance, actual_relevance)); // Надо сделать ASSERT_DOUBLE_EQUALS @reviewer /// можете сделать, для double не встречал отдельные ассерты,
-}        /// для каждого типа вряд ли получится создавать отдельные ассерты, достаточно бывает добавить HINT и в нем указать какое значение было
+    ASSERT(double_equals(result[0].relevance, actual_relevance));// Пользуюсь gtests , у них был и есть отдельный макрос для даблов ASSERT_DOUBLE_EQ ну не суть, поняли друг друга
+}
 
 
 // Функция TestSearchServer является точкой входа для запуска тестов

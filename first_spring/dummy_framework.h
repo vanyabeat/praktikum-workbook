@@ -11,21 +11,35 @@ using std::string_literals::operator""s;
 
 #define RUN_TEST(func) RunTestImpl((func), #func)
 
-///  в трех опереторах дублирование кода, предлагаю общую часть выделить в отдельную шаблонную функцю
+template<typename T, typename S>
+std::ostream &operator<<(std::ostream &os, const std::pair<T, S> &v) {
+    os << v.first << ": "
+       << v.second;
+    return os;
+}
+
+template<typename C>
+void container_print(std::ostream &os, const C &cont) {
+    size_t counter = 0;
+    size_t size = cont.size();
+    for (const auto item : cont) {
+        if (counter == (size - 1)) {
+            os << item;
+            continue;
+        }
+        os << item << ", ";
+        ++counter;
+    }
+}
 
 template<typename T>
 std::ostream &operator<<(std::ostream &os, const std::vector<T> &obj) {
-    if (obj.empty()) {                          /// не замечание, просто интересно, при пустом контейнере у вас ничего не выводится
-        return os;                              /// может информативнее вывести пустой котейнер? "[]" ?
+    if (obj.empty()) {
+        os << "[]";
+        return os;
     } else {
         os << "[";
-        for (auto i = 0; i < obj.size(); ++i) {
-            if (i == obj.size() - 1) {
-                os << obj.at(i);
-                continue;
-            }
-            os << obj.at(i) << ", ";
-        }
+        container_print(os, obj);
         os << "]";
     }
     return os;
@@ -34,19 +48,11 @@ std::ostream &operator<<(std::ostream &os, const std::vector<T> &obj) {
 template<typename T>
 std::ostream &operator<<(std::ostream &os, const std::set<T> &obj) {
     if (obj.empty()) {
+        os << "{}";
         return os;
     } else {
         os << "{";
-        auto counter = 0;                                       /// для простых типов лучше не использвать auto, в вашем случе подойдет size_t
-        auto size = obj.size();                                 /// для простых типов лучше не использвать auto, в вашем случе подойдет size_t
-        for (auto it = obj.begin(); it != obj.end(); ++it) {    /// почему не foreach? ( for (const auto & value : obj) )
-            if (counter == (size - 1)) {
-                os << *it;
-                continue;
-            }
-            os << *it << ", ";
-            ++counter;
-        }
+        container_print(os, obj);
         os << "}";
     }
     return os;
@@ -55,19 +61,11 @@ std::ostream &operator<<(std::ostream &os, const std::set<T> &obj) {
 template<typename T, typename V>
 std::ostream &operator<<(std::ostream &os, const std::map<T, V> &obj) {
     if (obj.empty()) {
+        os << "{}";
         return os;
     } else {
         os << "{";
-        auto counter = 0;                                       /// для простых типов лучше не использвать auto, в вашем случе подойдет size_t
-        auto size = obj.size();                                 /// для простых типов лучше не использвать auto, в вашем случе подойдет size_t
-        for (auto it = obj.begin(); it != obj.end(); ++it) {    /// почему не foreach? ( for ( value : obj) )
-            if (counter == (size - 1)) {
-                os << it->first << ": " << it->second;
-                continue;
-            }
-            os << it->first << ": " << it->second << ", ";
-            ++counter;
-        }
+        container_print(os, obj);
         os << "}";
     }
     return os;

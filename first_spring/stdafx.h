@@ -5,6 +5,7 @@
 #include <functional>
 #include <iomanip>
 #include <iostream>
+#include <ostream>
 #include <map>
 #include <set>
 #include <string>

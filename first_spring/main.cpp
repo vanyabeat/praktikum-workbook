@@ -252,7 +252,7 @@ void TestAddDocument() {
         const auto found_docs = server.FindTopDocuments("document"s);
         ASSERT_EQUAL(found_docs.size(), 1);
         const Document &doc0 = found_docs[0];
-        ASSERT(doc0.id == 0);/// по возможности лучше использовать ASSERT_EQUAL, т.к. в случае срабатывания, он более информативный
+        ASSERT_EQUAL(doc0.id, 0);
     }
     {
         SearchServer server;
@@ -417,7 +417,7 @@ void TestRating() {
         SearchServer server;
         server.AddDocument(doc_id, content, DocumentStatus::ACTUAL, ratings);
         const auto found_docs = server.FindTopDocuments("cat"s);
-        ASSERT(found_docs.size() == 1);
+        ASSERT_EQUAL(found_docs.size(), 1);
         const Document &doc0 = found_docs[0];
         ASSERT_EQUAL(doc0.id, doc_id);
         ASSERT_EQUAL(doc0.rating, 2);

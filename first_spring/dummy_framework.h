@@ -22,7 +22,7 @@ template<typename C>
 void container_print(std::ostream &os, const C &cont) {
     size_t counter = 0;
     size_t size = cont.size();
-    for (const auto item : cont) {
+    for (const auto item : cont) {      /// излишнее копирование, используйте константную ссылку
         if (counter == (size - 1)) {
             os << item;
             continue;
@@ -34,9 +34,9 @@ void container_print(std::ostream &os, const C &cont) {
 
 template<typename T>
 std::ostream &operator<<(std::ostream &os, const std::vector<T> &obj) {
-    if (obj.empty()) {
-        os << "[]";
-        return os;
+    if (obj.empty()) {                  /// не замечание, может эта часть (проверка) лишняя?
+        os << "[]";                     /// при пустом контейре может и так будет вывод "[]"?
+        return os;                      /// не тестировал, поэтому только предполагаю
     } else {
         os << "[";
         container_print(os, obj);

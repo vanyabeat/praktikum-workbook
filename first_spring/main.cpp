@@ -26,14 +26,35 @@ std::vector<std::string> SplitIntoWords(const std::string &text) {
 }
 
 struct Document {
-    int id;
-    double relevance;
-    int rating;
+public:
+    Document() = default;
+    Document(int id_, double rel_, int rating_){
+        id = id_;
+        relevance = rel_;
+        rating = rating_;
+    }
+
+    int id = 0;
+    double relevance = 0.0;
+    int rating = 0;
     DocumentStatus status;
 };
 
 class SearchServer {
 public:
+    SearchServer(const std::string &text) {
+        SetStopWords(text);
+    }
+
+    SearchServer() = default;
+
+    template<typename cnt>
+    SearchServer(const cnt &container) {
+        for (const auto &item : container){
+            stop_words_.insert(item);
+        }
+    }
+
     std::tuple<std::vector<std::string>, DocumentStatus> MatchDocument(const std::string &raw_query, int document_id) const {
         DocumentStatus document_status = DocumentStatus::ACTUAL;
 
@@ -65,12 +86,6 @@ public:
             }
         }
         return std::tuple<std::vector<std::string>, DocumentStatus>(result_v, document_status);
-    }
-
-    void SetStopWords(const std::string &text) {
-        for (const std::string &word : SplitIntoWords(text)) {
-            stop_words_.insert(word);
-        }
     }
 
     void AddDocument(int document_id, const std::string &document, const DocumentStatus &status, const std::vector<int> &ratings) {
@@ -123,6 +138,12 @@ public:
     size_t GetDocumentCount() const;
 
 private:
+    void SetStopWords(const std::string &text) {
+        for (const std::string &word : SplitIntoWords(text)) {
+            stop_words_.insert(word);
+        }
+    }
+
     const double eps_ = 1e-6;
     std::set<std::string> stop_words_;
     std::map<std::string, std::map<int, double>> word_to_document_freqs_;
@@ -281,8 +302,7 @@ void TestExcludeStopWordsFromAddedDocumentContent() {
     // Затем убеждаемся, что поиск этого же слова, входящего в список стоп-слов,
     // возвращает пустой результат
     {
-        SearchServer server;
-        server.SetStopWords("in the"s);
+        SearchServer server("in the"s);
         server.AddDocument(doc_id, content, DocumentStatus::ACTUAL, ratings);
         ASSERT(server.FindTopDocuments("in"s).empty());
     }
@@ -446,8 +466,7 @@ void TestDocumentWithStatus() {
 
 //Фильтрация результатов поиска с использованием предиката, задаваемого пользователем.
 void TestDocumentPredicate() {
-    SearchServer search_server;
-    search_server.SetStopWords("и в на"s);
+    SearchServer search_server("и в на"s);
 
     search_server.AddDocument(0, "белый кот и модный ошейник"s, DocumentStatus::ACTUAL, {8, -3});
     search_server.AddDocument(1, "пушистый кот пушистый хвост"s, DocumentStatus::ACTUAL, {7, 2, 7});
@@ -464,8 +483,7 @@ bool double_equals(double a, double b, double epsilon = 1e-6) {
 }
 //Корректное вычисление релевантности найденных документов.
 void TestRelevance() {
-    SearchServer search_server;
-    search_server.SetStopWords("и в на"s);
+    SearchServer search_server("и в на"s);
     std::vector<std::string> docs = {"white cat"s, "black cat"s, "orange dog"s, "ping pig"s};
     search_server.AddDocument(0, docs[0], DocumentStatus::ACTUAL, {8, -3});
     search_server.AddDocument(1, docs[1], DocumentStatus::ACTUAL, {7, 2, 7});
@@ -478,6 +496,18 @@ void TestRelevance() {
     ASSERT(double_equals(result[0].relevance, actual_relevance));// Пользуюсь gtests , у них был и есть отдельный макрос для даблов ASSERT_DOUBLE_EQ ну не суть, поняли друг друга
 }
 
+void TestConstructors() {
+    {
+        SearchServer s({"1", "2"});
+        s.AddDocument(1, "3 2 1", DocumentStatus::ACTUAL, {1, 2, 3});
+        ASSERT_EQUAL(s.GetDocumentCount(), 1);
+    }
+    {
+        SearchServer s;
+        ASSERT_EQUAL(s.GetDocumentCount(), 0);
+    }
+
+}
 
 // Функция TestSearchServer является точкой входа для запуска тестов
 void TestSearchServer() {
@@ -503,6 +533,8 @@ void TestSearchServer() {
     RUN_TEST(TestSearch);
 
     RUN_TEST(TestCountDocuments);
+
+    RUN_TEST(TestConstructors);
 }
 
 // --------- Окончание модульных тестов поисковой системы -----------

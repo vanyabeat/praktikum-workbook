@@ -26,33 +26,37 @@ std::vector<std::string> SplitIntoWords(const std::string &text) {
 }
 
 struct Document {
-public:
     Document() = default;
-    Document(int id_, double rel_, int rating_){
-        id = id_;
-        relevance = rel_;
-        rating = rating_;
+
+    Document(int id, double relevance, int rating)
+        : id(id), relevance(relevance), rating(rating) {
+    }
+
+    Document(int id, double relevance, int rating, DocumentStatus status)
+        : id(id), relevance(relevance), rating(rating), status(status) {
     }
 
     int id = 0;
     double relevance = 0.0;
     int rating = 0;
-    DocumentStatus status;
+    DocumentStatus status = DocumentStatus::ACTUAL;
 };
 
 class SearchServer {
 public:
-    SearchServer(const std::string &text) {
-        SetStopWords(text);
+    SearchServer() = default;
+    
+    template<typename StringContainer>
+    explicit SearchServer(const StringContainer &stop_words)
+        : stop_words_(MakeUniqueNonEmptyStrings(stop_words)) {
+        for (const auto &item : stop_words) {
+            QueryChecker(item, __FUNCTION__);
+        }
     }
 
-    SearchServer() = default;
-
-    template<typename cnt>
-    SearchServer(const cnt &container) {
-        for (const auto &item : container){
-            stop_words_.insert(item);
-        }
+    explicit SearchServer(const std::string &stop_words_text)
+        : SearchServer(SplitIntoWords(stop_words_text)) {
+        QueryChecker(stop_words_text, __FUNCTION__);
     }
 
     std::tuple<std::vector<std::string>, DocumentStatus> MatchDocument(const std::string &raw_query, int document_id) const {
@@ -88,8 +92,24 @@ public:
         return std::tuple<std::vector<std::string>, DocumentStatus>(result_v, document_status);
     }
 
+    int GetDocumentId(int index) const {
+        std::vector<std::pair<int, std::pair<DocumentStatus, int>>> res(document_statuses_ratings_.begin(), document_statuses_ratings_.end());
+        if (index < 0 || index > res.size()) {
+            throw std::out_of_range("Out of range in document_statuses_ratings_");
+        }
+        return res[index].first;
+    }
+
     void AddDocument(int document_id, const std::string &document, const DocumentStatus &status, const std::vector<int> &ratings) {
 
+        if (document_statuses_ratings_.find(document_id) != document_statuses_ratings_.end()) {
+            throw std::invalid_argument(std::string("Invalid document_id ") + std::to_string(document_id));
+        }
+        if (document_id < 0) {
+            throw std::invalid_argument("");
+        }
+
+        QueryChecker(document, __FUNCTION__);
         const std::vector<std::string> words = SplitIntoWordsNoStop(document);
         const double inv_word_count = 1.0 / words.size();
         for (const std::string &word : words) {
@@ -101,6 +121,9 @@ public:
     }
 
     std::vector<Document> FindTopDocuments(const std::string &raw_query, const std::function<bool(int, DocumentStatus, int)> &f) const {
+
+        QueryChecker(raw_query, __FUNCTION__);
+
         const Query query = ParseQuery(raw_query);
         auto non_matched_documents = FindAllDocuments(query);
         std::vector<Document> matched_documents;
@@ -138,12 +161,49 @@ public:
     size_t GetDocumentCount() const;
 
 private:
+    static bool IsValidWord(const std::string &word) {
+        // A valid word must not contain special characters
+        return none_of(word.begin(), word.end(), [](char c) {
+            return c >= '\0' && c < ' ';
+        });
+    }
+
+    static bool IsHaveVoidMinus(const std::string &query) {
+        if (query == "-") {
+            return true;
+        }
+
+        if (query[query.size() - 1] == '-') {
+            return true;
+        }
+
+        for (auto i = 0; i < query.size(); ++i) {
+            if (query[i] == '-' && i != query.size() - 1) {
+                if (query[i + 1] == ' ') {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     void SetStopWords(const std::string &text) {
         for (const std::string &word : SplitIntoWords(text)) {
             stop_words_.insert(word);
         }
     }
 
+    static void QueryChecker(const std::string &text, const std::string &func) {
+        // Если нашли два минуса сразу нафиг такой запрос!
+        if (text.find("--") != std::string::npos) {
+            throw std::invalid_argument("Invalid std::string(\"" + text + "\") in " + std::string(func));
+        } else if (!IsValidWord(text)) {
+            throw std::invalid_argument("Invalid chars from [0x0 -> 0x20] in std::string(\"" + text + "\") in " + std::string(func));
+        } else if (IsHaveVoidMinus(text)) {
+            throw std::invalid_argument("Invalid void minus std::string(\"" + text + "\") in " + std::string(func));
+        }
+    }
     const double eps_ = 1e-6;
     std::set<std::string> stop_words_;
     std::map<std::string, std::map<int, double>> word_to_document_freqs_;
@@ -209,6 +269,7 @@ private:
 
     Query ParseQuery(const std::string &text) const {
         Query query;
+        QueryChecker(text, __FUNCTION__);
         for (const std::string &word : SplitIntoWords(text)) {
             const QueryWord query_word = ParseQueryWord(word);
             if (!query_word.is_stop) {
@@ -257,6 +318,17 @@ private:
                                          item.first});
         }
         return matched_documents;
+    }
+
+    template<typename StringContainer>
+    static std::set<std::string> MakeUniqueNonEmptyStrings(const StringContainer &strings) {
+        std::set<std::string> non_empty_strings;
+        for (const std::string &str : strings) {
+            if (!str.empty()) {
+                non_empty_strings.insert(str);
+            }
+        }
+        return non_empty_strings;
     }
 };
 
@@ -498,17 +570,59 @@ void TestRelevance() {
 
 void TestConstructors() {
     {
-        SearchServer s({"1", "2"});
-        s.AddDocument(1, "3 2 1", DocumentStatus::ACTUAL, {1, 2, 3});
+        std::vector<std::string> vec = {std::string("ab"), std::string("b")};
+        SearchServer s(vec);
+        s.AddDocument(1, "docmunts", DocumentStatus::ACTUAL, {1, 2, 3});
         ASSERT_EQUAL(s.GetDocumentCount(), 1);
     }
     {
         SearchServer s;
         ASSERT_EQUAL(s.GetDocumentCount(), 0);
     }
-
 }
 
+void TestExceptions_Minuses() {
+    {
+        std::vector<std::string> vec = {std::string("ab"), std::string("b")};
+        SearchServer s(vec);
+        s.AddDocument(1, "text text", DocumentStatus::ACTUAL, {1, 2, 3});
+        auto search = "--search"s;
+        try {
+            s.FindTopDocuments(search);
+        } catch (const std::exception &e) {
+            ASSERT_EQUAL("Invalid std::string(\"" + search + "\") in FindTopDocuments", e.what());
+        }
+    }
+}
+
+void TestExceptions_ValidWord() {
+    {
+        std::vector<std::string> vec = {std::string("ab"), std::string("b")};
+        SearchServer s(vec);
+        s.AddDocument(1, "text text", DocumentStatus::ACTUAL, {1, 2, 3});
+        std::string search = "скворец"s;
+        search[1] = 0x1;
+        try {
+            s.FindTopDocuments(search);
+        } catch (const std::exception &e) {
+            ASSERT_EQUAL("Invalid chars from [0x0 -> 0x20] in std::string(\"" + search + "\") in FindTopDocuments", e.what());
+        }
+    }
+}
+
+void TestExceptions_VoidMinus() {
+    {
+        std::vector<std::string> vec = {std::string("ab"), std::string("b")};
+        SearchServer s(vec);
+        s.AddDocument(1, "text text", DocumentStatus::ACTUAL, {1, 2, 3});
+        std::string search = "- скворец"s;
+        try {
+            s.FindTopDocuments(search);
+        } catch (const std::exception &e) {
+            ASSERT_EQUAL("Invalid void minus std::string(\"" + search + "\") in FindTopDocuments", e.what());
+        }
+    }
+}
 // Функция TestSearchServer является точкой входа для запуска тестов
 void TestSearchServer() {
     //1
@@ -535,6 +649,12 @@ void TestSearchServer() {
     RUN_TEST(TestCountDocuments);
 
     RUN_TEST(TestConstructors);
+
+    RUN_TEST(TestExceptions_Minuses);
+
+    RUN_TEST(TestExceptions_ValidWord);
+
+    RUN_TEST(TestExceptions_VoidMinus);
 }
 
 // --------- Окончание модульных тестов поисковой системы -----------

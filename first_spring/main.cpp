@@ -49,14 +49,14 @@ public:
     template<typename StringContainer>
     explicit SearchServer(const StringContainer &stop_words)
         : stop_words_(MakeUniqueNonEmptyStrings(stop_words)) {
-        for (const auto &item : stop_words) {
-            QueryChecker(item, __FUNCTION__);
+        for (const auto &item : stop_words) {           /// item несколько общее название, лучше использовать конкретное, конечно, когда это можно, к примеру word
+            QueryChecker(item, __FUNCTION__);           /// по названию метода подразумевается проверка запроса, а не слова
         }
     }
 
     explicit SearchServer(const std::string &stop_words_text)
         : SearchServer(SplitIntoWords(stop_words_text)) {
-        QueryChecker(stop_words_text, __FUNCTION__);
+        QueryChecker(stop_words_text, __FUNCTION__);    /// двойная проверка, уже проверяется в вызываемом конструкторе
     }
 
     std::tuple<std::vector<std::string>, DocumentStatus> MatchDocument(const std::string &raw_query, int document_id) const {
@@ -103,10 +103,10 @@ public:
     void AddDocument(int document_id, const std::string &document, const DocumentStatus &status, const std::vector<int> &ratings) {
 
         if (document_statuses_ratings_.find(document_id) != document_statuses_ratings_.end()) {
-            throw std::invalid_argument(std::string("Invalid document_id ") + std::to_string(document_id));
+            throw std::invalid_argument(std::string("Invalid document_id ") + std::to_string(document_id)); /// лучше изменить на сообщение, что уже есть такой id
         }
         if (document_id < 0) {
-            throw std::invalid_argument("");
+            throw std::invalid_argument("");    /// желательно добавить сообщение
         }
 
         QueryChecker(document, __FUNCTION__);
@@ -167,7 +167,6 @@ private:
             return c >= '\0' && c < ' ';
         });
     }
-
     static bool IsHaveVoidMinus(const std::string &query) {
         if (query == "-") {
             return true;
@@ -177,7 +176,7 @@ private:
             return true;
         }
 
-        for (auto i = 0; i < query.size(); ++i) {
+        for (auto i = 0; i < query.size(); ++i) {               /// повторяет работу метода SplitIntoWords
             if (query[i] == '-' && i != query.size() - 1) {
                 if (query[i + 1] == ' ') {
                     return true;
@@ -194,6 +193,8 @@ private:
         }
     }
 
+/// не очень верное решение добалять отладочную информацию в исключения, исключения используются, обычно, не для отладки, а просто для обработки исключительных ситуаций
+/// очень не одназначный метод, отсутствует логика проверки, только признаки проверок
     static void QueryChecker(const std::string &text, const std::string &func) {
         // Если нашли два минуса сразу нафиг такой запрос!
         if (text.find("--") != std::string::npos) {
@@ -252,7 +253,7 @@ private:
     QueryWord ParseQueryWord(const std::string &text) const {
         std::string tmp = text;
         bool is_minus = false;
-        if (text[0] == '-') {
+        if (text[0] == '-') {           /// насколько корректна проверка первого символа если строка будет пустой?
             is_minus = true;
             tmp = text.substr(1);
         }

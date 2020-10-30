@@ -665,21 +665,21 @@ void TestSearchServer() {
     RUN_TEST(TestDocumentWithStatus);
     //9
     RUN_TEST(TestRelevance);
-
+    //10
     RUN_TEST(TestSearch);
-
+    //11
     RUN_TEST(TestCountDocuments);
-
+    //12
     RUN_TEST(TestConstructors);
-
+    //13
     RUN_TEST(TestExceptions_Minuses);
-
+    //14
     RUN_TEST(TestExceptions_ValidWord);
-
+    //15
     RUN_TEST(TestExceptions_VoidMinus);
-
+    //16
     RUN_TEST(TestExceptions_Ids);
-
+    //17
     RUN_TEST(TestExceptions_DocumentIndexes);
 }
 

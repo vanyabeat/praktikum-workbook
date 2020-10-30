@@ -45,18 +45,14 @@ struct Document {
 class SearchServer {
 public:
     SearchServer() = default;
-    
+
     template<typename StringContainer>
     explicit SearchServer(const StringContainer &stop_words)
         : stop_words_(MakeUniqueNonEmptyStrings(stop_words)) {
-        for (const auto &item : stop_words) {           /// item несколько общее название, лучше использовать конкретное, конечно, когда это можно, к примеру word
-            QueryChecker(item, __FUNCTION__);           /// по названию метода подразумевается проверка запроса, а не слова
-        }
     }
 
     explicit SearchServer(const std::string &stop_words_text)
         : SearchServer(SplitIntoWords(stop_words_text)) {
-        QueryChecker(stop_words_text, __FUNCTION__);    /// двойная проверка, уже проверяется в вызываемом конструкторе
     }
 
     std::tuple<std::vector<std::string>, DocumentStatus> MatchDocument(const std::string &raw_query, int document_id) const {
@@ -103,13 +99,13 @@ public:
     void AddDocument(int document_id, const std::string &document, const DocumentStatus &status, const std::vector<int> &ratings) {
 
         if (document_statuses_ratings_.find(document_id) != document_statuses_ratings_.end()) {
-            throw std::invalid_argument(std::string("Invalid document_id ") + std::to_string(document_id)); /// лучше изменить на сообщение, что уже есть такой id
-        }
-        if (document_id < 0) {
-            throw std::invalid_argument("");    /// желательно добавить сообщение
+            throw std::invalid_argument(std::string("document_id ") + std::to_string(document_id) + " exist");
         }
 
-        QueryChecker(document, __FUNCTION__);
+        if (document_id < 0) {
+            throw std::invalid_argument("Negative document_id");
+        }
+
         const std::vector<std::string> words = SplitIntoWordsNoStop(document);
         const double inv_word_count = 1.0 / words.size();
         for (const std::string &word : words) {
@@ -121,8 +117,6 @@ public:
     }
 
     std::vector<Document> FindTopDocuments(const std::string &raw_query, const std::function<bool(int, DocumentStatus, int)> &f) const {
-
-        QueryChecker(raw_query, __FUNCTION__);
 
         const Query query = ParseQuery(raw_query);
         auto non_matched_documents = FindAllDocuments(query);
@@ -167,44 +161,7 @@ private:
             return c >= '\0' && c < ' ';
         });
     }
-    static bool IsHaveVoidMinus(const std::string &query) {
-        if (query == "-") {
-            return true;
-        }
 
-        if (query[query.size() - 1] == '-') {
-            return true;
-        }
-
-        for (auto i = 0; i < query.size(); ++i) {               /// повторяет работу метода SplitIntoWords
-            if (query[i] == '-' && i != query.size() - 1) {
-                if (query[i + 1] == ' ') {
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
-    void SetStopWords(const std::string &text) {
-        for (const std::string &word : SplitIntoWords(text)) {
-            stop_words_.insert(word);
-        }
-    }
-
-/// не очень верное решение добалять отладочную информацию в исключения, исключения используются, обычно, не для отладки, а просто для обработки исключительных ситуаций
-/// очень не одназначный метод, отсутствует логика проверки, только признаки проверок
-    static void QueryChecker(const std::string &text, const std::string &func) {
-        // Если нашли два минуса сразу нафиг такой запрос!
-        if (text.find("--") != std::string::npos) {
-            throw std::invalid_argument("Invalid std::string(\"" + text + "\") in " + std::string(func));
-        } else if (!IsValidWord(text)) {
-            throw std::invalid_argument("Invalid chars from [0x0 -> 0x20] in std::string(\"" + text + "\") in " + std::string(func));
-        } else if (IsHaveVoidMinus(text)) {
-            throw std::invalid_argument("Invalid void minus std::string(\"" + text + "\") in " + std::string(func));
-        }
-    }
     const double eps_ = 1e-6;
     std::set<std::string> stop_words_;
     std::map<std::string, std::map<int, double>> word_to_document_freqs_;
@@ -253,10 +210,28 @@ private:
     QueryWord ParseQueryWord(const std::string &text) const {
         std::string tmp = text;
         bool is_minus = false;
-        if (text[0] == '-') {           /// насколько корректна проверка первого символа если строка будет пустой?
+
+        // В text по условию задачи не может быть минус минус слова...
+        if (text.find("--") != std::string::npos) {
+            throw std::invalid_argument("Invalid query word \"" + text + "\"");
+        }
+
+        // Если это не валидное слово выбрасываем исключение
+        if (!IsValidWord(text)) {
+            throw std::invalid_argument(std::string("Invalid chars from [0x0 -> 0x20] in query word ") + "\"" + text + "\"");
+        }
+
+        // Если это висячий минус
+        if (text == "-") {
+            throw std::invalid_argument(std::string("Void minus in query"));
+        }
+
+
+        if (text[0] == '-') {// проверка первого символа корректа так как есть функция split
             is_minus = true;
             tmp = text.substr(1);
         }
+
         return {
                 tmp,
                 is_minus,
@@ -270,7 +245,6 @@ private:
 
     Query ParseQuery(const std::string &text) const {
         Query query;
-        QueryChecker(text, __FUNCTION__);
         for (const std::string &word : SplitIntoWords(text)) {
             const QueryWord query_word = ParseQueryWord(word);
             if (!query_word.is_stop) {
@@ -591,7 +565,7 @@ void TestExceptions_Minuses() {
         try {
             s.FindTopDocuments(search);
         } catch (const std::exception &e) {
-            ASSERT_EQUAL("Invalid std::string(\"" + search + "\") in FindTopDocuments", e.what());
+            ASSERT_EQUAL("Invalid query word \"" + search + "\"", e.what());
         }
     }
 }
@@ -606,7 +580,7 @@ void TestExceptions_ValidWord() {
         try {
             s.FindTopDocuments(search);
         } catch (const std::exception &e) {
-            ASSERT_EQUAL("Invalid chars from [0x0 -> 0x20] in std::string(\"" + search + "\") in FindTopDocuments", e.what());
+            ASSERT_EQUAL("Invalid chars from [0x0 -> 0x20] in query word \"" + search + "\"", e.what());
         }
     }
 }
@@ -620,10 +594,57 @@ void TestExceptions_VoidMinus() {
         try {
             s.FindTopDocuments(search);
         } catch (const std::exception &e) {
-            ASSERT_EQUAL("Invalid void minus std::string(\"" + search + "\") in FindTopDocuments", e.what());
+            ASSERT_EQUAL(std::string("Void minus in query"), e.what());
         }
     }
 }
+
+void TestExceptions_Ids() {
+    {
+        std::vector<std::string> vec = {std::string("ab"), std::string("b")};
+        SearchServer s(vec);
+        s.AddDocument(1, "text text", DocumentStatus::ACTUAL, {1, 2, 3});
+        try {
+            s.AddDocument(1, "text text2", DocumentStatus::ACTUAL, {1, 2, 3});
+        } catch (const std::exception &e) {
+            ASSERT_EQUAL(std::string("document_id 1 exist"), e.what());
+        }
+    }
+    {
+        std::vector<std::string> vec = {std::string("ab"), std::string("b")};
+        SearchServer s(vec);
+        s.AddDocument(1, "text text", DocumentStatus::ACTUAL, {1, 2, 3});
+        try {
+            s.AddDocument(-1, "text text2", DocumentStatus::ACTUAL, {1, 2, 3});
+        } catch (const std::exception &e) {
+            ASSERT_EQUAL(std::string("Negative document_id"), e.what());
+        }
+    }
+}
+
+void TestExceptions_DocumentIndexes() {
+    {
+        std::vector<std::string> vec = {std::string("ab"), std::string("b")};
+        SearchServer s(vec);
+        s.AddDocument(1, "text text", DocumentStatus::ACTUAL, {1, 2, 3});
+        s.AddDocument(1000, "text text2", DocumentStatus::ACTUAL, {1, 2, 3});
+        s.AddDocument(1001, "text text3", DocumentStatus::ACTUAL, {1, 2, 3});
+        ASSERT_EQUAL(s.GetDocumentId(0), 1);
+        ASSERT_EQUAL(s.GetDocumentId(2), 1001);
+    }
+    {
+        std::vector<std::string> vec = {std::string("ab"), std::string("b")};
+        SearchServer s(vec);
+        s.AddDocument(1, "text text", DocumentStatus::ACTUAL, {1, 2, 3});
+        try {
+            s.GetDocumentId(10000);
+        } catch (const std::exception &e) {
+            ASSERT_EQUAL(std::string("Out of range in document_statuses_ratings_"), e.what());
+        }
+    }
+}
+
+
 // Функция TestSearchServer является точкой входа для запуска тестов
 void TestSearchServer() {
     //1
@@ -656,6 +677,10 @@ void TestSearchServer() {
     RUN_TEST(TestExceptions_ValidWord);
 
     RUN_TEST(TestExceptions_VoidMinus);
+
+    RUN_TEST(TestExceptions_Ids);
+
+    RUN_TEST(TestExceptions_DocumentIndexes);
 }
 
 // --------- Окончание модульных тестов поисковой системы -----------

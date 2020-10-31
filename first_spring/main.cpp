@@ -48,7 +48,7 @@ public:
 
     template<typename StringContainer>
     explicit SearchServer(const StringContainer &stop_words)
-        : stop_words_(MakeUniqueNonEmptyStrings(stop_words)) {
+        : stop_words_(MakeUniqueNonEmptyStrings(stop_words)) {   /// а тут не должно быть проверки, что все слова из stop_words являются IsValidWord?
     }
 
     explicit SearchServer(const std::string &stop_words_text)
@@ -206,6 +206,18 @@ private:
         bool is_minus;
         bool is_stop;
     };
+
+/// все же отсутствует логика проверки, только отдельные признаки по заданию, из-за этого повторяющиеся проверки на символ "-".
+/// если метод полагается на то, что split не создает пустое слово, то это должно быть соответсвующе указано, но правильней, метод должен самостоятельно обеспечивать свою корректность
+/// и кстати, ваш split это не гарантирует, можете протестировать с "cat   in    the   city"
+/// предлагаю такой порядок проверки:
+/// 1 проверить на пустое слово (не text == "", и не text.size() == 0, а использовать только empty()), если да, то бросаем исключение
+/// 2 !IsValidWord
+/// 3 проверяете, что первый символ == '-', если да, то:
+///   3.1 вся логика с проверкий этого символа, которая была
+///   3.2 после удаления первого символа опять проверяем, что tmp непустое, если пустое, то бросаем исключение
+///   3.3 проверяем tmp[0] == '-', если да, то бросаем исключение
+/// 4 возврат результата
 
     QueryWord ParseQueryWord(const std::string &text) const {
         std::string tmp = text;

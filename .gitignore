@@ -32,3 +32,4 @@
 *.app
 *first_spring/.idea
 *first_spring/cmake-build-debug/
+*first_spring/build/

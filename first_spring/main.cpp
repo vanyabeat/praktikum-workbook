@@ -48,7 +48,7 @@ public:
 
 	template<typename StringContainer>
 	explicit SearchServer(const StringContainer &stop_words)
-		: stop_words_(MakeUniqueNonEmptyStrings(stop_words)) {   /// а тут не должно быть проверки, что все слова из stop_words являются IsValidWord?
+		: stop_words_(MakeUniqueNonEmptyStrings(stop_words)) {
 	}
 
 	explicit SearchServer(const std::string &stop_words_text)
@@ -207,43 +207,44 @@ private:
 		bool is_stop;
 	};
 
-/// все же отсутствует логика проверки, только отдельные признаки по заданию, из-за этого повторяющиеся проверки на символ "-".
-/// если метод полагается на то, что split не создает пустое слово, то это должно быть соответсвующе указано, но правильней, метод должен самостоятельно обеспечивать свою корректность
-/// и кстати, ваш split это не гарантирует, можете протестировать с "cat   in    the   city"
-/// предлагаю такой порядок проверки:
-/// 1 проверить на пустое слово (не text == "", и не text.size() == 0, а использовать только empty()), если да, то бросаем исключение
-/// 2 !IsValidWord
-/// 3 проверяете, что первый символ == '-', если да, то:
-///   3.1 вся логика с проверкий этого символа, которая была
-///   3.2 после удаления первого символа опять проверяем, что tmp непустое, если пустое, то бросаем исключение
-///   3.3 проверяем tmp[0] == '-', если да, то бросаем исключение
-/// 4 возврат результата
+	/// все же отсутствует логика проверки, только отдельные признаки по заданию, из-за этого повторяющиеся проверки на символ "-".
+	/// если метод полагается на то, что split не создает пустое слово, то это должно быть соответсвующе указано, но правильней, метод должен самостоятельно обеспечивать свою корректность
+	/// и кстати, ваш split это не гарантирует, можете протестировать с "cat   in    the   city"
+	/// предлагаю такой порядок проверки:
+	/// 1 проверить на пустое слово (не text == "", и не text.size() == 0, а использовать только empty()), если да, то бросаем исключение
+	/// 2 !IsValidWord
+	/// 3 проверяете, что первый символ == '-', если да, то:
+	///   3.1 вся логика с проверкий этого символа, которая была
+	///   3.2 после удаления первого символа опять проверяем, что tmp непустое, если пустое, то бросаем исключение
+	///   3.3 проверяем tmp[0] == '-', если да, то бросаем исключение
+	/// 4 возврат результата
 
 	QueryWord ParseQueryWord(const std::string &text) const {
-		std::string tmp = text;
 		bool is_minus = false;
-
-		// В text по условию задачи не может быть минус минус слова...
-		if (text.find("--") != std::string::npos) {
-			throw std::invalid_argument("Invalid query word \"" + text + "\"");
+		std::string tmp = text;
+		// [1] проверяем на пустое слово
+		if (text.empty()) {
+			throw std::invalid_argument("Empty query word");
 		}
-
-		// Если это не валидное слово выбрасываем исключение
+		// [2] если это не валидное слово выбрасываем исключение
 		if (!IsValidWord(text)) {
 			throw std::invalid_argument(std::string("Invalid chars from [0x0 -> 0x20] in query word ") + "\"" + text + "\"");
 		}
-
-		// Если это висячий минус
-		if (text == "-") {
-			throw std::invalid_argument(std::string("Void minus in query"));
-		}
-
-
-		if (text[0] == '-') {// проверка первого символа корректа так как есть функция split
+		// [3] проверяем что первый символ == '-'
+		if (text[0] == '-') {
+			// [3.1]
 			is_minus = true;
 			tmp = text.substr(1);
+			// [3.2]
+			if (tmp.empty()) {
+				throw std::invalid_argument(std::string("Void minus in query"));
+			}
+			// [3.3]
+			if (tmp[0] == '-') {
+				throw std::invalid_argument("Invalid query word \"" + text + "\"");
+			}
 		}
-
+		// [4]
 		return {
 				tmp,
 				is_minus,
@@ -311,6 +312,9 @@ private:
 	static std::set<std::string> MakeUniqueNonEmptyStrings(const StringContainer &strings) {
 		std::set<std::string> non_empty_strings;
 		for (const std::string &str : strings) {
+			if (!IsValidWord(str)) {
+				throw std::invalid_argument(std::string("Invalid chars from [0x0 -> 0x20] in stop word ") + "\"" + str + "\"");
+			}
 			if (!str.empty()) {
 				non_empty_strings.insert(str);
 			}
@@ -656,6 +660,35 @@ void TestExceptions_DocumentIndexes() {
 	}
 }
 
+void TestExceptions_Empty() {
+	{
+		std::vector<std::string> vec = {std::string("ab"), std::string("b")};
+		SearchServer s(vec);
+		s.AddDocument(1, "text text", DocumentStatus::ACTUAL, {1, 2, 3});
+		try {
+			s.FindTopDocuments("");
+		} catch (const std::exception &e) {
+			ASSERT_EQUAL(std::string("Empty query word"), e.what());
+		}
+	}
+}
+
+void TestExceptions_Undefined_Stop_Word() {
+	{
+		std::string stop_word1 = "stop";
+		std::string stop_word2 = "stop";
+		stop_word2[2] = 0x2;
+
+		std::vector<std::string> vec = {stop_word1, stop_word2};
+
+		try {
+			SearchServer s(vec);
+		} catch (const std::exception &e) {
+			ASSERT_EQUAL(std::string("Invalid chars from [0x0 -> 0x20] in stop word \"") + stop_word2 + "\"", e.what());
+		}
+	}
+}
+
 
 // Функция TestSearchServer является точкой входа для запуска тестов
 void TestSearchServer() {
@@ -693,6 +726,10 @@ void TestSearchServer() {
 	RUN_TEST(TestExceptions_Ids);
 	//17
 	RUN_TEST(TestExceptions_DocumentIndexes);
+	//18
+	RUN_TEST(TestExceptions_Empty);
+	//19
+	RUN_TEST(TestExceptions_Undefined_Stop_Word);
 }
 
 // --------- Окончание модульных тестов поисковой системы -----------

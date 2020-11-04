@@ -29,11 +29,11 @@ struct Document {
 	Document() = default;
 
 	Document(int id, double relevance, int rating)
-		: id(id), relevance(relevance), rating(rating) {
+			: id(id), relevance(relevance), rating(rating) {
 	}
 
 	Document(int id, double relevance, int rating, DocumentStatus status)
-		: id(id), relevance(relevance), rating(rating), status(status) {
+			: id(id), relevance(relevance), rating(rating), status(status) {
 	}
 
 	int id = 0;
@@ -48,11 +48,14 @@ public:
 
 	template<typename StringContainer>
 	explicit SearchServer(const StringContainer &stop_words)
-		: stop_words_(MakeUniqueNonEmptyStrings(stop_words)) {
+			: stop_words_(MakeUniqueNonEmptyStrings(stop_words)) {
+		if (!std::all_of(stop_words_.begin(), stop_words_.end(), IsValidWord)) {
+			throw std::invalid_argument("Some of stop words are invalid"s);
+		}
 	}
 
 	explicit SearchServer(const std::string &stop_words_text)
-		: SearchServer(SplitIntoWords(stop_words_text)) {
+			: SearchServer(SplitIntoWords(stop_words_text)) {
 	}
 
 	std::tuple<std::vector<std::string>, DocumentStatus> MatchDocument(const std::string &raw_query, int document_id) const {
@@ -130,10 +133,10 @@ public:
 
 		sort(matched_documents.begin(), matched_documents.end(),
 			 [eps = eps_](const Document &lhs, const Document &rhs) {
-				 if ((abs(lhs.relevance - rhs.relevance) < eps)) {
-					 return true;
-				 }
-				 return lhs.relevance > rhs.relevance;
+			   if ((abs(lhs.relevance - rhs.relevance) < eps)) {
+				   return true;
+			   }
+			   return lhs.relevance > rhs.relevance;
 			 });
 
 		if (matched_documents.size() > MAX_RESULT_DOCUMENT_COUNT) {
@@ -158,7 +161,7 @@ private:
 	static bool IsValidWord(const std::string &word) {
 		// A valid word must not contain special characters
 		return none_of(word.begin(), word.end(), [](char c) {
-			return c >= '\0' && c < ' ';
+		  return c >= '\0' && c < ' ';
 		});
 	}
 
@@ -312,9 +315,6 @@ private:
 	static std::set<std::string> MakeUniqueNonEmptyStrings(const StringContainer &strings) {
 		std::set<std::string> non_empty_strings;
 		for (const std::string &str : strings) {
-			if (!IsValidWord(str)) {
-				throw std::invalid_argument(std::string("Invalid chars from [0x0 -> 0x20] in stop word ") + "\"" + str + "\"");
-			}
 			if (!str.empty()) {
 				non_empty_strings.insert(str);
 			}
@@ -684,7 +684,7 @@ void TestExceptions_Undefined_Stop_Word() {
 		try {
 			SearchServer s(vec);
 		} catch (const std::exception &e) {
-			ASSERT_EQUAL(std::string("Invalid chars from [0x0 -> 0x20] in stop word \"") + stop_word2 + "\"", e.what());
+			ASSERT_EQUAL("Some of stop words are invalid"s, e.what());
 		}
 	}
 }

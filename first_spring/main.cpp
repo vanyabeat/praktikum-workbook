@@ -49,6 +49,9 @@ public:
 	template<typename StringContainer>
 	explicit SearchServer(const StringContainer &stop_words)
 		: stop_words_(MakeUniqueNonEmptyStrings(stop_words)) {
+		if (!std::all_of(stop_words_.begin(), stop_words_.end(), IsValidWord)) {
+			throw std::invalid_argument("Some of stop words are invalid"s);
+		}
 	}
 
 	explicit SearchServer(const std::string &stop_words_text)
@@ -312,9 +315,6 @@ private:
 	static std::set<std::string> MakeUniqueNonEmptyStrings(const StringContainer &strings) {
 		std::set<std::string> non_empty_strings;
 		for (const std::string &str : strings) {
-			if (!IsValidWord(str)) {
-				throw std::invalid_argument(std::string("Invalid chars from [0x0 -> 0x20] in stop word ") + "\"" + str + "\"");
-			}
 			if (!str.empty()) {
 				non_empty_strings.insert(str);
 			}
@@ -684,7 +684,7 @@ void TestExceptions_Undefined_Stop_Word() {
 		try {
 			SearchServer s(vec);
 		} catch (const std::exception &e) {
-			ASSERT_EQUAL(std::string("Invalid chars from [0x0 -> 0x20] in stop word \"") + stop_word2 + "\"", e.what());
+			ASSERT_EQUAL("Some of stop words are invalid"s, e.what());
 		}
 	}
 }

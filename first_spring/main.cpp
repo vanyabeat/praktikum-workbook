@@ -9,6 +9,68 @@ enum class DocumentStatus {
 
 const int MAX_RESULT_DOCUMENT_COUNT = 5;
 
+template<typename It>
+class IteratorRange {
+public:
+	explicit IteratorRange(It begin, It end, size_t size) : begin_(begin), end_(end), size_(size) {}
+
+	It begin() const {
+		return begin_;
+	}
+
+	It end() const {
+		return end_;
+	}
+
+	auto size() {
+		return size_;
+	}
+
+private:
+	It begin_;
+	It end_;
+	size_t size_;
+};
+
+template<typename Iterator>
+class Paginator {
+public:
+	explicit Paginator(Iterator b, Iterator e, size_t page_size) {
+		auto d = distance(b, e);
+		// просто тупо будем определять кратно или не кратно)
+		size_ = d / page_size + (d % page_size != 0 ? 1 : 0);
+
+		for (int i = 0; i < size_; ++i) {
+			auto b_it = next(b, page_size * i);
+			auto e_it = (i == size_ - 1 ? e : next(b_it, page_size));
+			IteratorRange<Iterator> page(b_it, e_it, std::distance(b_it, e_it));
+			pages_.push_back(page);
+		}
+	}
+
+	auto begin() const {
+		return pages_.begin();
+	}
+
+	auto end() const {
+		return pages_.end();
+	}
+
+	size_t size() {
+		return std::distance(pages_.begin(), pages_.end());
+	}
+
+private:
+	std::vector<IteratorRange<Iterator>> pages_;
+	size_t size_;
+};
+
+
+template<typename Container>
+auto Paginate(const Container &c, size_t page_size) {
+	return Paginator(begin(c), end(c), page_size);
+}
+
 std::vector<std::string> SplitIntoWords(const std::string &text) {
 	std::vector<std::string> words;
 	std::string word;
@@ -29,11 +91,11 @@ struct Document {
 	Document() = default;
 
 	Document(int id, double relevance, int rating)
-			: id(id), relevance(relevance), rating(rating) {
+		: id(id), relevance(relevance), rating(rating) {
 	}
 
 	Document(int id, double relevance, int rating, DocumentStatus status)
-			: id(id), relevance(relevance), rating(rating), status(status) {
+		: id(id), relevance(relevance), rating(rating), status(status) {
 	}
 
 	int id = 0;
@@ -48,14 +110,14 @@ public:
 
 	template<typename StringContainer>
 	explicit SearchServer(const StringContainer &stop_words)
-			: stop_words_(MakeUniqueNonEmptyStrings(stop_words)) {
+		: stop_words_(MakeUniqueNonEmptyStrings(stop_words)) {
 		if (!std::all_of(stop_words_.begin(), stop_words_.end(), IsValidWord)) {
 			throw std::invalid_argument("Some of stop words are invalid"s);
 		}
 	}
 
 	explicit SearchServer(const std::string &stop_words_text)
-			: SearchServer(SplitIntoWords(stop_words_text)) {
+		: SearchServer(SplitIntoWords(stop_words_text)) {
 	}
 
 	std::tuple<std::vector<std::string>, DocumentStatus> MatchDocument(const std::string &raw_query, int document_id) const {
@@ -133,10 +195,10 @@ public:
 
 		sort(matched_documents.begin(), matched_documents.end(),
 			 [eps = eps_](const Document &lhs, const Document &rhs) {
-			   if ((abs(lhs.relevance - rhs.relevance) < eps)) {
-				   return true;
-			   }
-			   return lhs.relevance > rhs.relevance;
+				 if ((abs(lhs.relevance - rhs.relevance) < eps)) {
+					 return true;
+				 }
+				 return lhs.relevance > rhs.relevance;
 			 });
 
 		if (matched_documents.size() > MAX_RESULT_DOCUMENT_COUNT) {
@@ -161,7 +223,7 @@ private:
 	static bool IsValidWord(const std::string &word) {
 		// A valid word must not contain special characters
 		return none_of(word.begin(), word.end(), [](char c) {
-		  return c >= '\0' && c < ' ';
+			return c >= '\0' && c < ' ';
 		});
 	}
 
@@ -734,8 +796,44 @@ void TestSearchServer() {
 
 // --------- Окончание модульных тестов поисковой системы -----------
 
+//int main() {
+//	TestSearchServer();
+//	// Если вы видите эту строку, значит все тесты прошли успешно
+//	std::cout << "Search server testing finished"s << std::endl;
+//}
+
+template<typename Iterator>
+std::ostream &operator<<(std::ostream &out, IteratorRange<Iterator> range) {
+	for (auto document : range) {
+		out << document;
+	}
+	return out;
+}
+std::ostream &operator<<(std::ostream &out, Document document) {
+	out << "{ document_id = " << document.id << ", relevance = " << document.relevance << ", rating = " << document.rating << " }";
+	return out;
+}
+
 int main() {
-	TestSearchServer();
-	// Если вы видите эту строку, значит все тесты прошли успешно
-	std::cout << "Search server testing finished"s << std::endl;
+	SearchServer search_server("and with"s);
+
+	search_server.AddDocument(1, "funny pet and nasty rat"s, DocumentStatus::ACTUAL, {7, 2, 7});
+	search_server.AddDocument(2, "funny pet with curly hair"s, DocumentStatus::ACTUAL, {1, 2, 3});
+	search_server.AddDocument(3, "big cat nasty hair"s, DocumentStatus::ACTUAL, {1, 2, 8});
+	search_server.AddDocument(4, "big dog cat Vladislav"s, DocumentStatus::ACTUAL, {1, 3, 2});
+	search_server.AddDocument(5, "big dog hamster Borya"s, DocumentStatus::ACTUAL, {1, 1, 1});
+
+	const auto search_results = search_server.FindTopDocuments("curly dog"s);
+	for (const auto &item : search_results) {
+		std::cout << item << std::endl;
+	}
+	std::cout << std::endl;
+	int page_size = 2;
+	const auto pages = Paginate(search_results, page_size);
+
+	// Выводим найденные документы по страницам
+	for (auto page = pages.begin(); page != pages.end(); ++page) {
+		std::cout << *page << std::endl;
+		std::cout << "Page break"s << std::endl;
+	}
 }

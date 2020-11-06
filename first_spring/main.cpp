@@ -821,33 +821,64 @@ std::ostream &operator<<(std::ostream &out, Document document) {
 
 class RequestQueue {
 public:
-	explicit RequestQueue(const SearchServer& search_server) {
+	explicit RequestQueue(const SearchServer &search_server)
+		: count_empty_query(0),
+		  search_server_(search_server) {
 		// напишите реализацию
 	}
 	// сделаем "обёртки" для всех методов поиска, чтобы сохранять результаты для нашей статистики
-	template <typename DocumentPredicate>
-	std::vector<Document> AddFindRequest(const std::string& raw_query, DocumentPredicate document_predicate) {
-		// напишите реализацию
+	template<typename DocumentPredicate>
+	std::vector<Document> AddFindRequest(const std::string &raw_query, DocumentPredicate document_predicate) {
+		auto request = search_server_.FindTopDocuments(raw_query, document_predicate);
+		QueryResult result(request);
+		AddQueue(result);
+		return request;
 	}
 
-	std::vector<Document> AddFindRequest(const std::string& raw_query, DocumentStatus status) {
-		// напишите реализацию
+	std::vector<Document> AddFindRequest(const std::string &raw_query, DocumentStatus status) {
+		auto request = search_server_.FindTopDocuments(raw_query, status);
+		QueryResult result(request);
+		AddQueue(result);
+		return request;
 	}
 
-	std::vector<Document> AddFindRequest(const std::string& raw_query) {
-		// напишите реализацию
+	std::vector<Document> AddFindRequest(const std::string &raw_query) {
+		auto request = search_server_.FindTopDocuments(raw_query);
+		QueryResult result(request);
+		AddQueue(result);
+		return request;
 	}
 
-	int GetNoResultRequests() const {
-		// напишите реализацию
+	size_t GetNoResultRequests() const {
+		return count_empty_query;
 	}
+
 private:
 	struct QueryResult {
-		// определите, что должно быть в структуре
+		QueryResult(const std::vector<Document> &r) : result(r) {
+		}
+		std::vector<Document> result;
 	};
 	std::deque<QueryResult> requests_;
+
 	const static int sec_in_day_ = 1440;
 	// возможно, здесь вам понадобится что-то ещё
+	size_t count_empty_query;
+	const SearchServer &search_server_;
+
+	// метод добавления ответа сервера в очередь
+	void AddQueue(const QueryResult &request) {
+		if (requests_.size() == sec_in_day_) {
+			if (requests_.front().result.empty()) {
+				--count_empty_query;
+			}
+			requests_.pop_front();
+		}
+		requests_.push_back(request);
+		if (request.result.empty()) {
+			++count_empty_query;
+		}
+	}
 };
 
 int main() {

@@ -5,8 +5,12 @@
 #include <functional>
 #include <iomanip>
 #include <iostream>
-#include <ostream>
+#include <iterator>
 #include <map>
+#include <numeric>
+#include <ostream>
+#include <random>
+#include <deque>
 #include <set>
 #include <string>
 #include <utility>

@@ -9,6 +9,73 @@ enum class DocumentStatus {
 
 const int MAX_RESULT_DOCUMENT_COUNT = 5;
 
+template<typename It>
+class IteratorRange {
+public:
+	explicit IteratorRange(It begin, It end, size_t size) : begin_(begin), end_(end), size_(size) {}
+
+	It begin() const {
+		return begin_;
+	}
+
+	It end() const {
+		return end_;
+	}
+
+	auto size() {
+		return size_;
+	}
+
+private:
+	It begin_;
+	It end_;
+	size_t size_;
+};
+
+template<typename Iterator>
+class Paginator {
+public:
+	explicit Paginator(Iterator begin, Iterator end, size_t page_size) {
+		auto all_size = distance(begin, end);
+		// просто тупо будем определять кратно или не кратно)
+		size_ = all_size / page_size + (all_size % page_size != 0 ? 1 : 0);
+
+		for (int i = 0; i < size_; ++i) {
+			auto b_it = next(begin, page_size * i);
+			Iterator e_it;
+			if (i == size_ - 1) {
+				e_it = end;
+			} else {
+				e_it = next(b_it, page_size);
+			}
+			IteratorRange<Iterator> page(b_it, e_it, std::distance(b_it, e_it));
+			pages_.push_back(page);
+		}
+	}
+
+	auto begin() const {
+		return pages_.begin();
+	}
+
+	auto end() const {
+		return pages_.end();
+	}
+
+	size_t size() {
+		return std::distance(pages_.begin(), pages_.end());
+	}
+
+private:
+	std::vector<IteratorRange<Iterator>> pages_;
+	size_t size_;
+};
+
+
+template<typename Container>
+auto Paginate(const Container &c, size_t page_size) {
+	return Paginator(begin(c), end(c), page_size);
+}
+
 std::vector<std::string> SplitIntoWords(const std::string &text) {
 	std::vector<std::string> words;
 	std::string word;
@@ -734,8 +801,75 @@ void TestSearchServer() {
 
 // --------- Окончание модульных тестов поисковой системы -----------
 
+//int main() {
+//	TestSearchServer();
+//	// Если вы видите эту строку, значит все тесты прошли успешно
+//	std::cout << "Search server testing finished"s << std::endl;
+//}
+
+template<typename Iterator>
+std::ostream &operator<<(std::ostream &out, IteratorRange<Iterator> range) {
+	for (auto document : range) {
+		out << document;
+	}
+	return out;
+}
+std::ostream &operator<<(std::ostream &out, Document document) {
+	out << "{ document_id = " << document.id << ", relevance = " << document.relevance << ", rating = " << document.rating << " }";
+	return out;
+}
+
+class RequestQueue {
+public:
+	explicit RequestQueue(const SearchServer& search_server) {
+		// напишите реализацию
+	}
+	// сделаем "обёртки" для всех методов поиска, чтобы сохранять результаты для нашей статистики
+	template <typename DocumentPredicate>
+	std::vector<Document> AddFindRequest(const std::string& raw_query, DocumentPredicate document_predicate) {
+		// напишите реализацию
+	}
+
+	std::vector<Document> AddFindRequest(const std::string& raw_query, DocumentStatus status) {
+		// напишите реализацию
+	}
+
+	std::vector<Document> AddFindRequest(const std::string& raw_query) {
+		// напишите реализацию
+	}
+
+	int GetNoResultRequests() const {
+		// напишите реализацию
+	}
+private:
+	struct QueryResult {
+		// определите, что должно быть в структуре
+	};
+	std::deque<QueryResult> requests_;
+	const static int sec_in_day_ = 1440;
+	// возможно, здесь вам понадобится что-то ещё
+};
+
 int main() {
-	TestSearchServer();
-	// Если вы видите эту строку, значит все тесты прошли успешно
-	std::cout << "Search server testing finished"s << std::endl;
+	SearchServer search_server("и в на"s);
+	RequestQueue request_queue(search_server);
+
+	search_server.AddDocument(1, "пушистый кот пушистый хвост"s, DocumentStatus::ACTUAL, {7, 2, 7});
+	search_server.AddDocument(2, "пушистый пёс и модный ошейник"s, DocumentStatus::ACTUAL, {1, 2, 3});
+	search_server.AddDocument(3, "большой кот модный ошейник "s, DocumentStatus::ACTUAL, {1, 2, 8});
+	search_server.AddDocument(4, "большой пёс скворец евгений"s, DocumentStatus::ACTUAL, {1, 3, 2});
+	search_server.AddDocument(5, "большой пёс скворец василий"s, DocumentStatus::ACTUAL, {1, 1, 1});
+
+	// 1439 запросов с нулевым результатом
+	for (int i = 0; i < 1439; ++i) {
+		request_queue.AddFindRequest("пустой запрос"s);
+	}
+	// все еще 1439 запросов с нулевым результатом
+	request_queue.AddFindRequest("пушистый пёс"s);
+	// новые сутки, первый запрос удален, 1438 запросов с нулевым результатом
+	request_queue.AddFindRequest("большой ошейник"s);
+	// первый запрос удален, 1437 запросов с нулевым результатом
+	request_queue.AddFindRequest("скворец"s);
+	std::cout << "Запросов, по которым ничего не нашлось "s << request_queue.GetNoResultRequests();
+	return 0;
 }

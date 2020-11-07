@@ -22,7 +22,6 @@ public:
 
 private:
 	struct QueryResult {
-		explicit QueryResult(const std::vector<Document> &r);
 		std::vector<Document> result;
 	};
 	std::deque<QueryResult> requests_;

@@ -8,13 +8,15 @@ enum class DocumentStatus {
 	REMOVED
 };
 
+
 struct Document {
-	Document(int id_, double relevance_, int rating_, DocumentStatus status_);
-	Document(int id_, double relevance_, int rating_);
+	Document() = default;
+
+	Document(int id, double relevance, int rating);
+
 	int id = 0;
 	double relevance = 0.0;
 	int rating = 0;
-	DocumentStatus status;
 };
 
 std::ostream &operator<<(std::ostream &out, Document document);

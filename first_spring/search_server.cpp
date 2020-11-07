@@ -4,7 +4,7 @@ size_t SearchServer::GetDocumentCount() const {
 	return document_statuses_ratings_.size();
 }
 SearchServer::SearchServer(const std::string &stop_words_text)
-		: SearchServer(SplitIntoWords(stop_words_text)) {
+	: SearchServer(SplitIntoWords(stop_words_text)) {
 }
 std::tuple<std::vector<std::string>, DocumentStatus> SearchServer::MatchDocument(const std::string &raw_query, int document_id) const {
 	DocumentStatus document_status = DocumentStatus::ACTUAL;
@@ -71,17 +71,17 @@ std::vector<Document> SearchServer::FindTopDocuments(const std::string &raw_quer
 	std::vector<Document> matched_documents;
 
 	for (const auto &doc : non_matched_documents) {
-		if (f(doc.id, doc.status, doc.rating)) {
+		if (f(doc.id, document_statuses_ratings_.at(doc.id).first, doc.rating)) {
 			matched_documents.push_back(doc);
 		}
 	}
 
 	sort(matched_documents.begin(), matched_documents.end(),
 		 [eps = eps_](const Document &lhs, const Document &rhs) {
-		   if ((abs(lhs.relevance - rhs.relevance) < eps)) {
-			   return lhs.rating > rhs.rating;
-		   }
-		   return lhs.relevance > rhs.relevance;
+			 if ((abs(lhs.relevance - rhs.relevance) < eps)) {
+				 return lhs.rating > rhs.rating;
+			 }
+			 return lhs.relevance > rhs.relevance;
 		 });
 
 	if (matched_documents.size() > MAX_RESULT_DOCUMENT_COUNT) {
@@ -100,7 +100,7 @@ std::vector<Document> SearchServer::FindTopDocuments(const std::string &raw_quer
 bool SearchServer::IsValidWord(const std::string &word) {
 	// A valid word must not contain special characters
 	return none_of(word.begin(), word.end(), [](char c) {
-	  return c >= '\0' && c < ' ';
+		return c >= '\0' && c < ' ';
 	});
 }
 bool SearchServer::IsStopWord(const std::string &word) const {
@@ -204,10 +204,7 @@ std::vector<Document> SearchServer::FindAllDocuments(const SearchServer::Query &
 	std::vector<Document> matched_documents;
 	for (const auto [document_id, relevance] : document_to_relevance) {
 		auto item = document_statuses_ratings_.at(document_id);
-		matched_documents.push_back({document_id,
-									 relevance,
-									 item.second,
-									 item.first});
+		matched_documents.emplace_back(document_id, relevance, item.second);
 	}
 	return matched_documents;
 }

@@ -26,6 +26,8 @@ public:
 
 	explicit SearchServer(const std::string &stop_words_text);
 
+	explicit SearchServer(const char * c_string);
+
 	[[nodiscard]] std::tuple<std::vector<std::string>, DocumentStatus> MatchDocument(const std::string &raw_query, int document_id) const;
 
 	int GetDocumentId(int index) const;

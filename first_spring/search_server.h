@@ -26,7 +26,7 @@ public:
 
 	explicit SearchServer(const std::string &stop_words_text);
 
-	std::tuple<std::vector<std::string>, DocumentStatus> MatchDocument(const std::string &raw_query, int document_id) const;
+	[[nodiscard]] std::tuple<std::vector<std::string>, DocumentStatus> MatchDocument(const std::string &raw_query, int document_id) const;
 
 	int GetDocumentId(int index) const;
 
@@ -34,11 +34,11 @@ public:
 
 	std::vector<Document> FindTopDocuments(const std::string &raw_query, const std::function<bool(int, DocumentStatus, int)> &f) const;
 
-	std::vector<Document> FindTopDocuments(const std::string &raw_query) const;
+	[[nodiscard]] std::vector<Document> FindTopDocuments(const std::string &raw_query) const;
 
-	std::vector<Document> FindTopDocuments(const std::string &raw_query, const DocumentStatus st) const;
+	[[nodiscard]] std::vector<Document> FindTopDocuments(const std::string &raw_query, const DocumentStatus st) const;
 
-	size_t GetDocumentCount() const;
+	[[nodiscard]] size_t GetDocumentCount() const;
 
 private:
 	static bool IsValidWord(const std::string &word);
@@ -48,9 +48,9 @@ private:
 	std::map<std::string, std::map<int, double>> word_to_document_freqs_;
 	std::map<int, std::pair<DocumentStatus, int>> document_statuses_ratings_;
 
-	bool IsStopWord(const std::string &word) const;
-	std::vector<std::string> GetAllWordsInDocument(const int document_id) const;
-	std::vector<std::string> SplitIntoWordsNoStop(const std::string &text) const;
+	[[nodiscard]] bool IsStopWord(const std::string &word) const;
+	[[nodiscard]] std::vector<std::string> GetAllWordsInDocument(const int document_id) const;
+	[[nodiscard]] std::vector<std::string> SplitIntoWordsNoStop(const std::string &text) const;
 
 	static int ComputeAverageRating(const std::vector<int> &ratings);
 
@@ -72,18 +72,18 @@ private:
 	///   3.3 проверяем tmp[0] == '-', если да, то бросаем исключение
 	/// 4 возврат результата
 
-	QueryWord ParseQueryWord(const std::string &text) const;
+	[[nodiscard]] QueryWord ParseQueryWord(const std::string &text) const;
 
 	struct Query {
 		std::set<std::string> plus_words;
 		std::set<std::string> minus_words;
 	};
 
-	Query ParseQuery(const std::string &text) const;
+	[[nodiscard]] Query ParseQuery(const std::string &text) const;
 
 
-	double ComputeWordInverseDocumentFreq(const std::string &word) const;
+	[[nodiscard]] double ComputeWordInverseDocumentFreq(const std::string &word) const;
 
-	std::vector<Document> FindAllDocuments(const Query &query) const;
+	[[nodiscard]] std::vector<Document> FindAllDocuments(const Query &query) const;
 
 };

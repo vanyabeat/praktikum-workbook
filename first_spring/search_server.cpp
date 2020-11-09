@@ -126,6 +126,9 @@ std::vector<std::string> SearchServer::SplitIntoWordsNoStop(const std::string &t
 			words.push_back(word);
 		}
 	}
+	if (!std::all_of(words.begin(), words.end(), IsValidWord)) {
+		throw std::invalid_argument("Some of words are invalid"s);
+	}
 	return words;
 }
 int SearchServer::ComputeAverageRating(const std::vector<int> &ratings) {

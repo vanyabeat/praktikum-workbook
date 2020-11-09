@@ -1,5 +1,6 @@
+/// отсутствует защита от повторного подключения
 #include "stdafx.h"
-using std::string_literals::operator""s;
+using std::string_literals::operator""s;	/// использование using в заголовочном файле и в глобальном пространстве имен засоряет это глобальное пространство имен
 
 #define ASSERT(expr) AssertImpl(!!(expr), #expr, __FILE__, __FUNCTION__, __LINE__, ""s)
 

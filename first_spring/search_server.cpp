@@ -30,8 +30,8 @@ std::tuple<std::vector<std::string>, DocumentStatus> SearchServer::MatchDocument
 	}
 
 	for (const auto &m_w : query_words.minus_words) {
-		for (const auto &w : words_doc_set) {
-			if (m_w == w) {
+		for (const auto &w : words_doc_set) {		/// странное решение, возможно просмотрел в прошлый раз. ознакомтесь со структурой std::set, с ее плюсами
+			if (m_w == w) {				/// set - эта уже сортированная структура, с хорошим показателем поиска (сложность == log(N)) и обходить ее (сложность получается == N), что бы найти значение, это не правильно
 				return std::tuple<std::vector<std::string>, DocumentStatus>(std::vector<std::string>(), document_status);
 			}
 		}
@@ -109,8 +109,8 @@ bool SearchServer::IsStopWord(const std::string &word) const {
 std::vector<std::string> SearchServer::GetAllWordsInDocument(const int document_id) const {
 	std::vector<std::string> result;
 	for (const std::pair<std::string, std::map<int, double>> &item : word_to_document_freqs_) {
-		auto str = item.first;
-		for (const std::pair<int, double> &item_ : item.second) {
+		auto str = item.first;						/// лишнее копирование
+		for (const std::pair<int, double> &item_ : item.second) {	/// выше писал про std::set, для std::map тоже замечание
 			if (item_.first == document_id) {
 				result.push_back(str);
 				continue;

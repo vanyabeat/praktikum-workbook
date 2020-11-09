@@ -10,9 +10,9 @@
 #include "document.h"
 #include "string_processing.h"
 
-using std::string_literals::operator""s;
+using std::string_literals::operator""s;		/// использование using в заголовочном файле и в глобальном пространстве имен засоряет это глобальное пространство имен
 
-const int MAX_RESULT_DOCUMENT_COUNT = 5;
+const int MAX_RESULT_DOCUMENT_COUNT = 5;		/// эта константа тоже засоряет и нужна только для одно метода, предлагаю перенести в cpp-файл
 
 class SearchServer {
 public:
@@ -26,7 +26,7 @@ public:
 
 	explicit SearchServer(const std::string &stop_words_text);
 
-	explicit SearchServer(const char * c_string);
+	explicit SearchServer(const char * c_string);		/// рекомендация, старайтесь в данном проекте не использовать "сырые" указатели из си
 
 	[[nodiscard]] std::tuple<std::vector<std::string>, DocumentStatus> MatchDocument(const std::string &raw_query, int document_id) const;
 

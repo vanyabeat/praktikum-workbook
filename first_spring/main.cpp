@@ -7,6 +7,7 @@
 //Добавление документов.
 // Добавленный документ должен находиться по поисковому запросу,// который содержит слова из документа.
 void TestAddDocument() {
+	using std::string_literals::operator""s;
 	{
 		SearchServer server("stops"s);
 		server.AddDocument(0, "sample document", DocumentStatus::ACTUAL, {2, 4});
@@ -25,6 +26,7 @@ void TestAddDocument() {
 //Поддержка стоп-слов.
 // Стоп-слова исключаются из текста документов.
 void TestExcludeStopWordsFromAddedDocumentContent() {
+	using std::string_literals::operator""s;
 	const int doc_id = 42;
 	const std::string content = "cat in the city"s;
 	const std::vector<int> ratings = {1, 2, 3};
@@ -51,6 +53,7 @@ void TestExcludeStopWordsFromAddedDocumentContent() {
 //Поддержка минус-слов. Документы, содержащие минус-слова поискового запроса,
 // не должны включаться в результаты поиска.
 void TestMinusWords() {
+	using std::string_literals::operator""s;
 	const int doc_id = 42;
 	const std::string content = "-cat in the city"s;
 	const std::string content2 = "cat in the city2"s;
@@ -82,6 +85,7 @@ void TestMinusWords() {
 // Добавление документов. Добавленный документ должен находиться по поисковому запросу,
 // который содержит слова из документа.
 void TestSearch() {
+	using std::string_literals::operator""s;
 	const int doc_id = 42;
 	const std::string content = "cat in the city"s;
 	const std::vector<int> ratings = {1, 2, 3};
@@ -104,6 +108,7 @@ void TestSearch() {
 
 // Тест проверяет, что поисковая система правильно считает кол-во документов
 void TestCountDocuments() {
+	using std::string_literals::operator""s;
 	const int doc_id = 42;
 	const std::string content = "cat in the city"s;
 	const std::string content2 = "cat in the city2"s;
@@ -125,6 +130,7 @@ void TestCountDocuments() {
 //Матчинг документов. При матчинге документа по поисковому запросу должны быть
 // возвращены все слова из поискового запроса, // присутствующие в документе. Если есть соответствие хотя бы по // одному минус-слову, должен возвращаться пустой список слов.
 void TestMatchDocument() {
+	using std::string_literals::operator""s;
 	const int doc_id = 42;
 	const std::string content = "cat in the city"s;
 	const std::string content2 = "long long long long -short"s;
@@ -150,6 +156,7 @@ void TestMatchDocument() {
 // Возвращаемые при поиске документов результаты должны быть отсортированы в
 // порядке убывания релевантности.
 void TestRelevanceSort() {
+	using std::string_literals::operator""s;
 	std::vector<std::string> docs = {
 			"cat dog flower",
 			"cat cat flower",
@@ -169,6 +176,7 @@ void TestRelevanceSort() {
 // Рейтинг добавленного документа равен среднему
 // арифметическому оценок документа.
 void TestRating() {
+	using std::string_literals::operator""s;
 	const int doc_id = 42;
 	const std::string content = "cat in the city"s;
 	const std::vector<int> ratings = {1, 2, 3};
@@ -186,6 +194,7 @@ void TestRating() {
 
 // Поиск документов, имеющих заданный статус.
 void TestDocumentWithStatus() {
+	using std::string_literals::operator""s;
 	const int doc_id = 42;
 	const std::string content = "cat in the city"s;
 	const std::string content2 = "all dogs go to heaven"s;
@@ -206,6 +215,7 @@ void TestDocumentWithStatus() {
 
 //Фильтрация результатов поиска с использованием предиката, задаваемого пользователем.
 void TestDocumentPredicate() {
+	using std::string_literals::operator""s;
 	SearchServer search_server("и в на"s);
 
 	search_server.AddDocument(0, "белый кот и модный ошейник"s, DocumentStatus::ACTUAL, {8, -3});
@@ -223,6 +233,7 @@ bool double_equals(double a, double b, double epsilon = 1e-6) {
 }
 //Корректное вычисление релевантности найденных документов.
 void TestRelevance() {
+	using std::string_literals::operator""s;
 	SearchServer search_server("и в на"s);
 	std::vector<std::string> docs = {"white cat"s, "black cat"s, "orange dog"s, "ping pig"s};
 	search_server.AddDocument(0, docs[0], DocumentStatus::ACTUAL, {8, -3});
@@ -237,6 +248,7 @@ void TestRelevance() {
 }
 
 void TestConstructors() {
+	using std::string_literals::operator""s;
 	{
 		std::vector<std::string> vec = {std::string("ab"), std::string("b")};
 		SearchServer s(vec);
@@ -250,10 +262,11 @@ void TestConstructors() {
 }
 
 void TestExceptions_Minuses() {
+	using std::string_literals::operator""s;
 	{
 		std::vector<std::string> vec = {std::string("ab"), std::string("b")};
 		SearchServer s(vec);
-		s.AddDocument(1, "text text", DocumentStatus::ACTUAL, {1, 2, 3});
+		s.AddDocument(1, "text text"s, DocumentStatus::ACTUAL, {1, 2, 3});
 		auto search = "--search"s;
 		try {
 			auto res = s.FindTopDocuments(search);
@@ -261,9 +274,20 @@ void TestExceptions_Minuses() {
 			ASSERT_EQUAL("Invalid query word \"" + search + "\"", e.what());
 		}
 	}
+	{
+		std::vector<std::string> vec = {std::string("word1"), std::string("word2")};
+		SearchServer s(vec);
+		s.AddDocument(1, "Lorem ipsum -word", DocumentStatus::ACTUAL, {1, 2, 3});
+		s.AddDocument(2, "word word", DocumentStatus::ACTUAL, {1, 2, 3});
+		std::vector<std::string> documents;
+		DocumentStatus status;
+		std::tie(documents, status) = s.MatchDocument("-Lorem word", 1);
+		ASSERT(documents.empty());
+	}
 }
 
 void TestExceptions_ValidWord() {
+	using std::string_literals::operator""s;
 	{
 		std::vector<std::string> vec = {std::string("ab"), std::string("b")};
 		SearchServer s(vec);
@@ -279,6 +303,7 @@ void TestExceptions_ValidWord() {
 }
 
 void TestExceptions_VoidMinus() {
+	using std::string_literals::operator""s;
 	{
 		std::vector<std::string> vec = {std::string("ab"), std::string("b")};
 		SearchServer s(vec);
@@ -293,6 +318,7 @@ void TestExceptions_VoidMinus() {
 }
 
 void TestExceptions_Ids() {
+	using std::string_literals::operator""s;
 	{
 		std::vector<std::string> vec = {std::string("ab"), std::string("b")};
 		SearchServer s(vec);
@@ -316,6 +342,7 @@ void TestExceptions_Ids() {
 }
 
 void TestExceptions_DocumentIndexes() {
+	using std::string_literals::operator""s;
 	{
 		std::vector<std::string> vec = {std::string("ab"), std::string("b")};
 		SearchServer s(vec);
@@ -338,6 +365,7 @@ void TestExceptions_DocumentIndexes() {
 }
 
 void TestExceptions_Empty() {
+	using std::string_literals::operator""s;
 	{
 		std::vector<std::string> vec = {std::string("ab"), std::string("b")};
 		SearchServer s(vec);
@@ -351,6 +379,7 @@ void TestExceptions_Empty() {
 }
 
 void TestExceptions_Undefined_Stop_Word() {
+	using std::string_literals::operator""s;
 	{
 		std::string stop_word1 = "stop";
 		std::string stop_word2 = "stop";
@@ -367,6 +396,7 @@ void TestExceptions_Undefined_Stop_Word() {
 }
 
 void Test_Queue() {
+	using std::string_literals::operator""s;
 	SearchServer search_server("и в на"s);
 	RequestQueue request_queue(search_server);
 
@@ -386,11 +416,11 @@ void Test_Queue() {
 	request_queue.AddFindRequest("большой ошейник"s);
 	// первый запрос удален, 1437 запросов с нулевым результатом
 	request_queue.AddFindRequest("скворец"s);
-	ASSERT_EQUAL(1439 - 2, request_queue.GetNoResultRequests() );
-
+	ASSERT_EQUAL(1439 - 2, request_queue.GetNoResultRequests());
 }
 
-void Test_Pagination(){
+void Test_Pagination() {
+	using std::string_literals::operator""s;
 	SearchServer search_server("and with"s);
 
 	search_server.AddDocument(1, "funny pet and nasty rat"s, DocumentStatus::ACTUAL, {7, 2, 7});
@@ -454,6 +484,7 @@ void TestSearchServer() {
 
 
 int main() {
+	using std::string_literals::operator""s;
 	TestSearchServer();
 	// Если вы видите эту строку, значит все тесты прошли успешно
 	std::cout << "Search server testing finished"s << std::endl;

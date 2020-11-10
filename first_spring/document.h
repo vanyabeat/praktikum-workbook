@@ -19,5 +19,5 @@ struct Document {
 	int rating = 0;
 };
 
-std::ostream &operator<<(std::ostream &out, Document document);	/// лишнее копирование document
+std::ostream &operator<<(std::ostream &out, Document &document);
 

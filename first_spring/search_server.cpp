@@ -1,5 +1,7 @@
 #include "search_server.h"
 
+const int MAX_RESULT_DOCUMENT_COUNT = 5;
+
 size_t SearchServer::GetDocumentCount() const {
 	return document_statuses_ratings_.size();
 }
@@ -29,11 +31,10 @@ std::tuple<std::vector<std::string>, DocumentStatus> SearchServer::MatchDocument
 		document_status = needle_document->second.first;
 	}
 
+
 	for (const auto &m_w : query_words.minus_words) {
-		for (const auto &w : words_doc_set) {		/// странное решение, возможно просмотрел в прошлый раз. ознакомтесь со структурой std::set, с ее плюсами
-			if (m_w == w) {				/// set - эта уже сортированная структура, с хорошим показателем поиска (сложность == log(N)) и обходить ее (сложность получается == N), что бы найти значение, это не правильно
-				return std::tuple<std::vector<std::string>, DocumentStatus>(std::vector<std::string>(), document_status);
-			}
+		if (words_doc_set.find(m_w) != words_doc_set.end()) {
+			return std::tuple<std::vector<std::string>, DocumentStatus>(std::vector<std::string>(), document_status);
 		}
 	}
 	return std::tuple<std::vector<std::string>, DocumentStatus>(result_v, document_status);
@@ -109,17 +110,15 @@ bool SearchServer::IsStopWord(const std::string &word) const {
 std::vector<std::string> SearchServer::GetAllWordsInDocument(const int document_id) const {
 	std::vector<std::string> result;
 	for (const std::pair<std::string, std::map<int, double>> &item : word_to_document_freqs_) {
-		auto str = item.first;						/// лишнее копирование
-		for (const std::pair<int, double> &item_ : item.second) {	/// выше писал про std::set, для std::map тоже замечание
-			if (item_.first == document_id) {
-				result.push_back(str);
-				continue;
-			}
+		if (item.second.find(document_id) != item.second.end()) {
+			result.push_back(item.first);
+			continue;
 		}
 	}
 	return result;
 }
 std::vector<std::string> SearchServer::SplitIntoWordsNoStop(const std::string &text) const {
+	using std::string_literals::operator""s;
 	std::vector<std::string> words;
 	for (const std::string &word : SplitIntoWords(text)) {
 		if (!IsStopWord(word)) {
@@ -213,7 +212,4 @@ std::vector<Document> SearchServer::FindAllDocuments(const SearchServer::Query &
 }
 double SearchServer::ComputeWordInverseDocumentFreq(const std::string &word) const {
 	return log(document_statuses_ratings_.size() * 1.0 / word_to_document_freqs_.at(word).size());
-}
-SearchServer::SearchServer(const char *stop_words_text) {
-	SearchServer(std::string(stop_words_text));
 }

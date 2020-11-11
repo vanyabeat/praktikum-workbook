@@ -19,5 +19,5 @@ struct Document {
 	int rating = 0;
 };
 
-std::ostream &operator<<(std::ostream &out, Document &document);
+std::ostream &operator<<(std::ostream &out, Document &document); /// не угадали, этот оператор не должен менять выводжимый объект, ссылка должна быть константной
 

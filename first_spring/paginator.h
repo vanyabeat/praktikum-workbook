@@ -65,7 +65,7 @@ auto Paginate(const Container &c, size_t page_size) {
 
 template<typename Iterator>
 std::ostream &operator<<(std::ostream &out, IteratorRange<Iterator> &range) {
-	for (auto &document : range) {	/// ссылка должна быть константной
+	for (const auto &document : range) {	/// ссылка должна быть константной
 		out << document;
 	}
 	return out;

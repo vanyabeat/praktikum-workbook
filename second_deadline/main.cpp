@@ -4,6 +4,16 @@
 #include "request_queue.h"
 #include "search_server.h"
 
+
+class StreamUntier {
+public:
+    
+
+private:
+    std::ostream* tied_before_;
+};
+
+
 //Добавление документов.
 // Добавленный документ должен находиться по поисковому запросу,// который содержит слова из документа.
 void TestAddDocument() {

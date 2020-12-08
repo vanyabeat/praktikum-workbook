@@ -32,6 +32,9 @@ public:
 
 	[[nodiscard]] size_t GetDocumentCount() const;
 
+	std::map<int, std::pair<DocumentStatus, int>>::const_iterator begin() const;
+	std::map<int, std::pair<DocumentStatus, int>>::const_iterator end() const;
+
 private:
 	static bool IsValidWord(const std::string &word);
 

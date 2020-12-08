@@ -213,3 +213,11 @@ std::vector<Document> SearchServer::FindAllDocuments(const SearchServer::Query &
 double SearchServer::ComputeWordInverseDocumentFreq(const std::string &word) const {
 	return log(document_statuses_ratings_.size() * 1.0 / word_to_document_freqs_.at(word).size());
 }
+
+std::map<int, std::pair<DocumentStatus, int>>::const_iterator SearchServer::begin() const{
+	return document_statuses_ratings_.cbegin();
+}
+
+std::map<int, std::pair<DocumentStatus, int>>::const_iterator SearchServer::end() const{
+	return document_statuses_ratings_.cend();
+}

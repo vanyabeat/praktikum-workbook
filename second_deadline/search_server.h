@@ -33,7 +33,10 @@ public:
 	[[nodiscard]] size_t GetDocumentCount() const;
 
 	std::vector<int>::const_iterator begin() const;
+
 	std::vector<int>::const_iterator end() const;
+
+	const std::map<std::string, double> &GetWordFrequencies(int document_id) const;
 
 private:
 	static bool IsValidWord(const std::string &word);

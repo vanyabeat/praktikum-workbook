@@ -524,5 +524,9 @@ int main() {
 
 	std::cout << "Before duplicates removed: "s << search_server.GetDocumentCount() << std::endl;
 
+    for (const int i : search_server){
+        std::cout << i;
+    }
+
 	std::cout << "After duplicates removed: "s << search_server.GetDocumentCount() << std::endl;
 }

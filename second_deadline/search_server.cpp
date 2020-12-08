@@ -56,6 +56,8 @@ void SearchServer::AddDocument(int document_id, const std::string &document, con
 		throw std::invalid_argument("Negative document_id");
 	}
 
+	document_ids_.push_back(document_id);
+
 	const std::vector<std::string> words = SplitIntoWordsNoStop(document);
 	const double inv_word_count = 1.0 / words.size();
 	for (const std::string &word : words) {
@@ -214,10 +216,10 @@ double SearchServer::ComputeWordInverseDocumentFreq(const std::string &word) con
 	return log(document_statuses_ratings_.size() * 1.0 / word_to_document_freqs_.at(word).size());
 }
 
-std::map<int, std::pair<DocumentStatus, int>>::const_iterator SearchServer::begin() const{
-	return document_statuses_ratings_.cbegin();
+std::vector<int>::const_iterator SearchServer::begin() const {
+	return document_ids_.cbegin();
 }
 
-std::map<int, std::pair<DocumentStatus, int>>::const_iterator SearchServer::end() const{
-	return document_statuses_ratings_.cend();
+std::vector<int>::const_iterator SearchServer::end() const {
+	return document_ids_.cend();
 }

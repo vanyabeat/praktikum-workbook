@@ -1,72 +1,77 @@
 #pragma once
+#include <algorithm>
+#include <iostream>
 #include <iterator>
 #include <vector>
-
-template<typename It>
+template<typename Iterator>
 class IteratorRange {
 public:
-	explicit IteratorRange(It begin, It end, size_t size) : begin_(begin), end_(end), size_(size) {}
-
-	It begin() const {
-		return begin_;
-	}
-
-	It end() const {
-		return end_;
-	}
-
-	size_t size() const {
-		return size_;
-	}
+	IteratorRange(Iterator begin, Iterator end);
+	Iterator begin() const;
+	Iterator end() const;
+	size_t size() const;
 
 private:
-	It begin_;
-	It end_;
-	size_t size_{};
+	Iterator first_, last_;
+	size_t size_;
 };
-
+template<typename Iterator>
+std::ostream &operator<<(std::ostream &out, const IteratorRange<Iterator> &range) {
+	for (Iterator it = range.begin(); it != range.end(); ++it) {
+		out << *it;
+	}
+	return out;
+}
 template<typename Iterator>
 class Paginator {
 public:
-	explicit Paginator(Iterator b, Iterator e, size_t page_size) {
-		auto d = std::distance(b, e);
-		// просто тупо будем определять кратно или не кратно)
-		size_t size_ = d / page_size + (d % page_size != 0 ? 1 : 0);
-
-		for (int i = 0; i < size_; ++i) {
-			auto b_it = std::next(b, page_size * i);// Сам не понял как очепятка работает !?
-			auto e_it = (i == size_ - 1 ? e : std::next(b_it, page_size));
-			IteratorRange<Iterator> page(b_it, e_it, std::distance(b_it, e_it));
-			pages_.push_back(page);
-		}
-	}
-
-	auto begin() const {
-		return pages_.begin();
-	}
-
-	auto end() const {
-		return pages_.end();
-	}
-
-	size_t size() const {
-		return pages_.size();
-	}
+	Paginator(Iterator begin, Iterator end, size_t page_size);
+	auto begin() const;
+	auto end() const;
+	size_t size() const;
 
 private:
 	std::vector<IteratorRange<Iterator>> pages_;
 };
-
-
+template<typename Iterator>
+IteratorRange<Iterator>::IteratorRange(Iterator begin, Iterator end)
+	: first_(begin), last_(end), size_(std::distance(first_, last_)) {
+}
+template<typename Iterator>
+Iterator IteratorRange<Iterator>::begin() const {
+	return first_;
+}
+template<typename Iterator>
+Iterator IteratorRange<Iterator>::end() const {
+	return last_;
+}
+template<typename Iterator>
+size_t IteratorRange<Iterator>::size() const {
+	return size_;
+}
+template<typename Iterator>
+Paginator<Iterator>::Paginator(Iterator begin, Iterator end, size_t page_size) {
+	for (size_t left = std::distance(begin, end); left > 0;) {
+		const size_t current_page_size = std::min(page_size, left);
+		const Iterator current_page_end = std::next(begin, current_page_size);
+		pages_.push_back(IteratorRange(begin, current_page_end));
+		left -= current_page_size;
+		begin = current_page_end;
+	}
+}
+template<typename Iterator>
+auto Paginator<Iterator>::begin() const {
+	return pages_.begin();
+}
+template<typename Iterator>
+auto Paginator<Iterator>::end() const {
+	return pages_.end();
+}
+template<typename Iterator>
+size_t Paginator<Iterator>::size() const {
+	return pages_.size();
+}
 template<typename Container>
 auto Paginate(const Container &c, size_t page_size) {
 	return Paginator(begin(c), end(c), page_size);
-}
-
-template<typename Iterator>
-std::ostream &operator<<(std::ostream &out, IteratorRange<Iterator> &range) {
-	for (const auto &document : range) {	/// ссылка должна быть константной
-		out << document;
-	}
-	return out;
 }

@@ -271,7 +271,7 @@ void TestExceptions_Minuses() {
 		try {
 			auto res = s.FindTopDocuments(search);
 		} catch (const std::exception &e) {
-			ASSERT_EQUAL("Invalid query word \"" + search + "\"", e.what());
+			ASSERT_EQUAL("Query word " + search + " is invalid", e.what());
 		}
 	}
 	{
@@ -297,7 +297,7 @@ void TestExceptions_ValidWord() {
 		try {
 			auto res = s.FindTopDocuments(search);
 		} catch (const std::exception &e) {
-			ASSERT_EQUAL("Invalid chars from [0x0 -> 0x20] in query word \"" + search + "\"", e.what());
+			ASSERT_EQUAL("Query word " + search + " is invalid", e.what());
 		}
 	}
 }
@@ -312,7 +312,7 @@ void TestExceptions_VoidMinus() {
 		try {
 			auto res = s.FindTopDocuments(search);
 		} catch (const std::exception &e) {
-			ASSERT_EQUAL(std::string("Void minus in query"), e.what());
+			ASSERT_EQUAL(std::string("Query word - is invalid"), e.what());
 		}
 	}
 }
@@ -326,7 +326,7 @@ void TestExceptions_Ids() {
 		try {
 			s.AddDocument(1, "text text2", DocumentStatus::ACTUAL, {1, 2, 3});
 		} catch (const std::exception &e) {
-			ASSERT_EQUAL(std::string("document_id 1 exist"), e.what());
+			ASSERT_EQUAL(std::string("Invalid document_id"), e.what());
 		}
 	}
 	{
@@ -336,33 +336,33 @@ void TestExceptions_Ids() {
 		try {
 			s.AddDocument(-1, "text text2", DocumentStatus::ACTUAL, {1, 2, 3});
 		} catch (const std::exception &e) {
-			ASSERT_EQUAL(std::string("Negative document_id"), e.what());
+			ASSERT_EQUAL(std::string("Invalid document_id"), e.what());
 		}
 	}
 }
 
-void TestExceptions_DocumentIndexes() {
-	using std::string_literals::operator""s;
-	{
-		std::vector<std::string> vec = {std::string("ab"), std::string("b")};
-		SearchServer s(vec);
-		s.AddDocument(1, "text text", DocumentStatus::ACTUAL, {1, 2, 3});
-		s.AddDocument(1000, "text text2", DocumentStatus::ACTUAL, {1, 2, 3});
-		s.AddDocument(1001, "text text3", DocumentStatus::ACTUAL, {1, 2, 3});
-		ASSERT_EQUAL(s.GetDocumentId(0), 1);
-		ASSERT_EQUAL(s.GetDocumentId(2), 1001);
-	}
-	{
-		std::vector<std::string> vec = {std::string("ab"), std::string("b")};
-		SearchServer s(vec);
-		s.AddDocument(1, "text text", DocumentStatus::ACTUAL, {1, 2, 3});
-		try {
-			s.GetDocumentId(10000);
-		} catch (const std::exception &e) {
-			ASSERT_EQUAL(std::string("Out of range in document_statuses_ratings_"), e.what());
-		}
-	}
-}
+// void TestExceptions_DocumentIndexes() {
+// 	using std::string_literals::operator""s;
+// 	{
+// 		std::vector<std::string> vec = {std::string("ab"), std::string("b")};
+// 		SearchServer s(vec);
+// 		s.AddDocument(1, "text text", DocumentStatus::ACTUAL, {1, 2, 3});
+// 		s.AddDocument(1000, "text text2", DocumentStatus::ACTUAL, {1, 2, 3});
+// 		s.AddDocument(1001, "text text3", DocumentStatus::ACTUAL, {1, 2, 3});
+// 		ASSERT_EQUAL(s.GetDocumentId(0), 1);
+// 		ASSERT_EQUAL(s.GetDocumentId(2), 1001);
+// 	}
+// 	{
+// 		std::vector<std::string> vec = {std::string("ab"), std::string("b")};
+// 		SearchServer s(vec);
+// 		s.AddDocument(1, "text text", DocumentStatus::ACTUAL, {1, 2, 3});
+// 		try {
+// 			s.GetDocumentId(10000);
+// 		} catch (const std::exception &e) {
+// 			ASSERT_EQUAL(std::string("Out of range in document_statuses_ratings_"), e.what());
+// 		}
+// 	}
+// }
 
 void TestExceptions_Empty() {
 	using std::string_literals::operator""s;
@@ -373,7 +373,7 @@ void TestExceptions_Empty() {
 		try {
 			auto res = s.FindTopDocuments("");
 		} catch (const std::exception &e) {
-			ASSERT_EQUAL(std::string("Empty query word"), e.what());
+			ASSERT_EQUAL(std::string("Query word is empty"), e.what());
 		}
 	}
 }
@@ -471,7 +471,7 @@ void TestSearchServer() {
 	//16
 	RUN_TEST(TestExceptions_Ids);
 	//17
-	RUN_TEST(TestExceptions_DocumentIndexes);
+	// RUN_TEST(TestExceptions_DocumentIndexes);
 	//18
 	RUN_TEST(TestExceptions_Empty);
 	//19
@@ -495,6 +495,7 @@ void AddDocument(SearchServer &s, size_t id, std::string str, DocumentStatus sta
 }
 
 int main() {
+    TestSearchServer();
 	using std::string_literals::operator""s;
 	SearchServer search_server("and with"s);
 

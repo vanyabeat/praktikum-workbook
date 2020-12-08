@@ -38,6 +38,10 @@ public:
 
 	const std::map<std::string, double> &GetWordFrequencies(int document_id) const;
 
+	void RemoveDocument(int document_id);
+	
+	[[nodiscard]] std::vector<std::string> GetAllWordsInDocument(const int document_id) const;
+
 private:
 	static bool IsValidWord(const std::string &word);
 
@@ -48,7 +52,7 @@ private:
 	std::vector<int> document_ids_;
 
 	[[nodiscard]] bool IsStopWord(const std::string &word) const;
-	[[nodiscard]] std::vector<std::string> GetAllWordsInDocument(const int document_id) const;
+
 	[[nodiscard]] std::vector<std::string> SplitIntoWordsNoStop(const std::string &text) const;
 
 	static int ComputeAverageRating(const std::vector<int> &ratings);

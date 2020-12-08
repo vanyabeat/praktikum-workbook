@@ -3,7 +3,7 @@
 #include "paginator.h"
 #include "request_queue.h"
 #include "search_server.h"
-
+#include "remove_duplicates.h"
 //Добавление документов.
 // Добавленный документ должен находиться по поисковому запросу,// который содержит слова из документа.
 void TestAddDocument() {
@@ -524,9 +524,7 @@ int main() {
 
 	std::cout << "Before duplicates removed: "s << search_server.GetDocumentCount() << std::endl;
 
-    for (const int i : search_server){
-        std::cout << i;
-    }
+    RemoveDuplicates(search_server);
 
 	std::cout << "After duplicates removed: "s << search_server.GetDocumentCount() << std::endl;
 }

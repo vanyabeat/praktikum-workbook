@@ -32,8 +32,8 @@ public:
 
 	[[nodiscard]] size_t GetDocumentCount() const;
 
-	std::map<int, std::pair<DocumentStatus, int>>::const_iterator begin() const;
-	std::map<int, std::pair<DocumentStatus, int>>::const_iterator end() const;
+	std::vector<int>::const_iterator begin() const;
+	std::vector<int>::const_iterator end() const;
 
 private:
 	static bool IsValidWord(const std::string &word);
@@ -42,6 +42,7 @@ private:
 	std::set<std::string> stop_words_;
 	std::map<std::string, std::map<int, double>> word_to_document_freqs_;
 	std::map<int, std::pair<DocumentStatus, int>> document_statuses_ratings_;
+	std::vector<int> document_ids_;
 
 	[[nodiscard]] bool IsStopWord(const std::string &word) const;
 	[[nodiscard]] std::vector<std::string> GetAllWordsInDocument(const int document_id) const;

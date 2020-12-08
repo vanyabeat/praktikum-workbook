@@ -1,5 +1,4 @@
 #include "search_server.h"
-#include <algorithm>
 
 const int MAX_RESULT_DOCUMENT_COUNT = 5;
 
@@ -120,6 +119,21 @@ std::vector<std::string> SearchServer::GetAllWordsInDocument(const int document_
 	}
 	return result;
 }
+
+const std::map<std::string, double> &SearchServer::GetWordFrequencies(int document_id) const {
+	static std::map<std::string, double> result;
+	if (std::find(document_ids_.cbegin(), document_ids_.cend(), document_id) != document_ids_.end()) {
+		return result;
+	} else {
+		result = {};
+		for (const auto &[word, freq_map] : word_to_document_freqs_) {
+			auto freq = freq_map.at(document_id);
+			result[word] = freq;
+		}
+		return result;
+	}
+}
+
 std::vector<std::string> SearchServer::SplitIntoWordsNoStop(const std::string &text) const {
 	using std::string_literals::operator""s;
 	std::vector<std::string> words;
@@ -225,16 +239,19 @@ std::vector<int>::const_iterator SearchServer::end() const {
 	return document_ids_.cend();
 }
 
-const std::map<std::string, double> &SearchServer::GetWordFrequencies(int document_id) const {
-	static std::map<std::string, double> result;
-	if (std::find(document_ids_.cbegin(), document_ids_.cend(), document_id) != document_ids_.end()) {
-		return result;
+
+void SearchServer::RemoveDocument(int document_id) {
+	auto it_vec = std::find(document_ids_.begin(), document_ids_.end(), document_id);
+	auto it_map = document_statuses_ratings_.find(document_id);
+	if (std::find(document_ids_.begin(), document_ids_.end(), document_id) == document_ids_.end()) {
+		//throw ??
+		return;
 	} else {
-		auto words = GetAllWordsInDocument(document_id);
-		double words_count = words.size();
-		for (const auto &word : words) {
-			result[word] += 1.0 / words_count;
-		}
-		return result;
+
+		document_ids_.erase(it_vec);
+		document_statuses_ratings_.erase(it_map);
+		// std::copy(document_ids_.begin(), document_ids_.end(), std::ostream_iterator<int>(std::cout, " "));
+
+		return;
 	}
 }

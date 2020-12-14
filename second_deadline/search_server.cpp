@@ -40,41 +40,18 @@ int SearchServer::GetDocumentCount() const {
 	return documents_.size();
 }
 
-/// 1.  двойной не эффективный поиск в document_ids_
-/// 2.  нелогично, вначале достаете значения, потом проверяте есть ли такой, если нет, то поиск был сделан зря, логичнее вначале сделать поиск
-/// 3.  несколько не удачная структура, лишние return-ы
-///     if (a == b) {
-///        return;
-///     } else {
-///      ....
-///       return;
-///     }
-///    может переделать
-///    if (a == b)
-///       return;
-///    ....
-///   или
-///   if (a != b) {
-///      ....
-///   }
-
-
 void SearchServer::RemoveDocument(int document_id) {
-	auto it_vec = std::find(document_ids_.begin(), document_ids_.end(), document_id);				/// объявите переменную по смыслу, которых они в себе хронит, и document_ids_ у вас не вектор, что бы так искать
-	auto it_map = document_to_word_freqs_.find(document_id);							/// объявите переменную по смыслу, которых они в себе хронит
-	auto it_doc = documents_.find(document_id);
-	if (std::find(document_ids_.begin(), document_ids_.end(), document_id) == document_ids_.end()) {		/// set имеет свой более эффективный поиск
-		//throw ??
-		return;
-	} else {
 
-		document_ids_.erase(it_vec);
-		document_to_word_freqs_.erase(it_map);
-		documents_.erase(it_doc);
-		// std::copy(document_ids_.begin(), document_ids_.end(), std::ostream_iterator<int>(std::cout, " "));	/// временный код убирайте
-
+	auto needle_doc_it_set = document_ids_.find(document_id);
+	if (needle_doc_it_set != document_ids_.end()) {
+		auto needle_doc_it_map = document_to_word_freqs_.find(document_id);
+		auto needle_it_map = documents_.find(document_id);
+		document_ids_.erase(needle_doc_it_set);
+		document_to_word_freqs_.erase(needle_doc_it_map);
+		documents_.erase(needle_it_map);
 		return;
 	}
+	return;
 }
 
 const std::map<std::string, double> &SearchServer::GetWordFrequencies(int document_id) const {
@@ -187,11 +164,11 @@ double SearchServer::ComputeWordInverseDocumentFreq(const string &word) const {
 	return log(GetDocumentCount() * 1.0 / word_to_document_freqs_.at(word).size());
 }
 
-std::vector<std::string> SearchServer::GetAllWordsInDocument(const int document_id) const {
-	std::vector<std::string> result;
+std::set<std::string> SearchServer::GetAllWordsInDocument(const int document_id) const {
+	std::set<std::string> result;
 	for (const std::pair<std::string, std::map<int, double>> &item : word_to_document_freqs_) {
 		if (item.second.find(document_id) != item.second.end()) {
-			result.push_back(item.first);
+			result.insert(item.first);
 			continue;
 		}
 	}

@@ -34,7 +34,7 @@ public:
 
 	void RemoveDocument(int document_id);
 
-	std::vector<std::string> GetAllWordsInDocument(const int document_id) const;
+	std::set<std::string> GetAllWordsInDocument(const int document_id) const;
 
 	std::set<int>::const_iterator begin() const;
 

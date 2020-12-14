@@ -40,11 +40,30 @@ int SearchServer::GetDocumentCount() const {
 	return documents_.size();
 }
 
+/// 1.  двойной не эффективный поиск в document_ids_
+/// 2.  нелогично, вначале достаете значения, потом проверяте есть ли такой, если нет, то поиск был сделан зря, логичнее вначале сделать поиск
+/// 3.  несколько не удачная структура, лишние return-ы
+///     if (a == b) {
+///        return;
+///     } else {
+///      ....
+///       return;
+///     }
+///    может переделать
+///    if (a == b)
+///       return;
+///    ....
+///   или
+///   if (a != b) {
+///      ....
+///   }
+
+
 void SearchServer::RemoveDocument(int document_id) {
-	auto it_vec = std::find(document_ids_.begin(), document_ids_.end(), document_id);
-	auto it_map = document_to_word_freqs_.find(document_id);
+	auto it_vec = std::find(document_ids_.begin(), document_ids_.end(), document_id);				/// объявите переменную по смыслу, которых они в себе хронит, и document_ids_ у вас не вектор, что бы так искать
+	auto it_map = document_to_word_freqs_.find(document_id);							/// объявите переменную по смыслу, которых они в себе хронит
 	auto it_doc = documents_.find(document_id);
-	if (std::find(document_ids_.begin(), document_ids_.end(), document_id) == document_ids_.end()) {
+	if (std::find(document_ids_.begin(), document_ids_.end(), document_id) == document_ids_.end()) {		/// set имеет свой более эффективный поиск
 		//throw ??
 		return;
 	} else {
@@ -52,7 +71,7 @@ void SearchServer::RemoveDocument(int document_id) {
 		document_ids_.erase(it_vec);
 		document_to_word_freqs_.erase(it_map);
 		documents_.erase(it_doc);
-		// std::copy(document_ids_.begin(), document_ids_.end(), std::ostream_iterator<int>(std::cout, " "));
+		// std::copy(document_ids_.begin(), document_ids_.end(), std::ostream_iterator<int>(std::cout, " "));	/// временный код убирайте
 
 		return;
 	}

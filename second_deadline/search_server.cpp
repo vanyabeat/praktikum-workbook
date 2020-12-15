@@ -49,9 +49,7 @@ void SearchServer::RemoveDocument(int document_id) {
 		document_ids_.erase(needle_doc_it_set);
 		document_to_word_freqs_.erase(needle_doc_it_map);
 		documents_.erase(needle_it_map);
-		return;					/// зачем этот return?
 	}
-	return;						/// зачем этот return?
 }
 
 const std::map<std::string, double> &SearchServer::GetWordFrequencies(int document_id) const {

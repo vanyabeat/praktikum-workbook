@@ -34,6 +34,7 @@ public:
 
 	void RemoveDocument(int document_id);
 
+/// не знаю, на сколько это корректно понять тип результата по условию задачи, оставим это на вашем понимании задачи
 	std::set<std::string> GetAllWordsInDocument(const int document_id) const;
 
 	std::set<int>::const_iterator begin() const;

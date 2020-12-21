@@ -257,16 +257,14 @@ template <typename Type> class SingleLinkedList
 	// Разыменовывать этот итератор нельзя - попытка разыменования приведёт к неопределённому поведению
 	[[nodiscard]] Iterator before_begin() noexcept
 	{
-		// Реализуйте самостоятельно
-		return {};
+		return Iterator(&head_);
 	}
 
 	// Возвращает константный итератор, указывающий на позицию перед первым элементом односвязного списка.
 	// Разыменовывать этот итератор нельзя - попытка разыменования приведёт к неопределённому поведению
 	[[nodiscard]] ConstIterator cbefore_begin() const noexcept
 	{
-		// Реализуйте самостоятельно
-		return {};
+		return ConstIterator(const_cast<Node*>(&head_));
 	}
 
 	// Возвращает константный итератор, указывающий на позицию перед первым элементом односвязного списка.
@@ -274,7 +272,7 @@ template <typename Type> class SingleLinkedList
 	[[nodiscard]] ConstIterator before_begin() const noexcept
 	{
 		// Реализуйте самостоятельно
-		return {};
+		return ConstIterator(&head_);
 	}
 
 	/*
@@ -296,8 +294,8 @@ template <typename Type> class SingleLinkedList
 		}
 		else
 		{
-			Node * first_item = head_.next_node;
-			Node * second_item = first_item->next_node;
+			Node* first_item = head_.next_node;
+			Node* second_item = first_item->next_node;
 			delete first_item;
 			head_.next_node = second_item;
 			--size_;

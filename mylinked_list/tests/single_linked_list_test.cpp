@@ -534,15 +534,15 @@ TEST_F(SingleLinkedListTests, BeforeBegin)
 {
 	SingleLinkedList<int> empty_list;
 	const auto& const_empty_list = empty_list;
-	assert(empty_list.before_begin() == empty_list.cbefore_begin());
-	assert(++empty_list.before_begin() == empty_list.begin());
-	assert(++empty_list.cbefore_begin() == const_empty_list.begin());
+	ASSERT_EQ(empty_list.before_begin(), empty_list.cbefore_begin());
+	ASSERT_EQ(++empty_list.before_begin(), empty_list.begin());
+	ASSERT_EQ(++empty_list.cbefore_begin(), const_empty_list.begin());
 
 	SingleLinkedList<int> numbers{1, 2, 3, 4};
 	const auto& const_numbers = numbers;
-	assert(numbers.before_begin() == numbers.cbefore_begin());
-	assert(++numbers.before_begin() == numbers.begin());
-	assert(++numbers.cbefore_begin() == const_numbers.begin());
+	ASSERT_EQ(numbers.before_begin(), numbers.cbefore_begin());
+	ASSERT_EQ(++numbers.before_begin(), numbers.begin());
+	ASSERT_EQ(++numbers.cbefore_begin(), const_numbers.begin());
 }
 
 // Вставка элемента после указанной позиции
@@ -555,6 +555,7 @@ TEST_F(SingleLinkedListTests, InsertEmpty)
 	assert(inserted_item_pos == lst.begin());
 	assert(*inserted_item_pos == 123);
 }
+
 TEST_F(SingleLinkedListTests, NotEmpty)
 // Вставка в непустой список
 {

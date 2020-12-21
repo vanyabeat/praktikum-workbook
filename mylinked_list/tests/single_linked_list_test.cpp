@@ -551,9 +551,9 @@ TEST_F(SingleLinkedListTests, InsertEmpty)
 {
 	SingleLinkedList<int> lst;
 	const auto inserted_item_pos = lst.InsertAfter(lst.before_begin(), 123);
-	assert((lst == SingleLinkedList<int>{123}));
-	assert(inserted_item_pos == lst.begin());
-	assert(*inserted_item_pos == 123);
+	ASSERT_EQ(lst, SingleLinkedList<int>{123});
+	ASSERT_EQ(inserted_item_pos, lst.begin());
+	ASSERT_EQ(*inserted_item_pos, 123);
 }
 
 TEST_F(SingleLinkedListTests, NotEmpty)
@@ -562,45 +562,19 @@ TEST_F(SingleLinkedListTests, NotEmpty)
 	SingleLinkedList<int> lst{1, 2, 3};
 	auto inserted_item_pos = lst.InsertAfter(lst.before_begin(), 123);
 
-	assert(inserted_item_pos == lst.begin());
-	assert(inserted_item_pos != lst.end());
-	assert(*inserted_item_pos == 123);
-	assert((lst == SingleLinkedList<int>{123, 1, 2, 3}));
+	ASSERT_EQ(inserted_item_pos, lst.begin());
+	ASSERT_NE(inserted_item_pos, lst.end());
+	ASSERT_EQ(*inserted_item_pos, 123);
+	ASSERT_EQ(lst, (SingleLinkedList<int>{123, 1, 2, 3}));
 
 	inserted_item_pos = lst.InsertAfter(lst.begin(), 555);
-	assert(++SingleLinkedList<int>::Iterator(lst.begin()) == inserted_item_pos);
-	assert(*inserted_item_pos == 555);
-	assert((lst == SingleLinkedList<int>{123, 555, 1, 2, 3}));
+	ASSERT_EQ(++SingleLinkedList<int>::Iterator(lst.begin()), inserted_item_pos);
+	ASSERT_EQ(*inserted_item_pos, 555);
+	ASSERT_EQ(lst, (SingleLinkedList<int>{123, 555, 1, 2, 3}));
 }
 
 TEST_F(SingleLinkedListTests, ThrowOnCopy)
 {
-	struct ThrowOnCopy
-	{
-		ThrowOnCopy() = default;
-		explicit ThrowOnCopy(int& copy_counter) noexcept : countdown_ptr(&copy_counter)
-		{
-		}
-		ThrowOnCopy(const ThrowOnCopy& other) : countdown_ptr(other.countdown_ptr) //
-		{
-			if (countdown_ptr)
-			{
-				if (*countdown_ptr == 0)
-				{
-					throw std::bad_alloc();
-				}
-				else
-				{
-					--(*countdown_ptr);
-				}
-			}
-		}
-		// Присваивание элементов этого типа не требуется
-		ThrowOnCopy& operator=(const ThrowOnCopy& rhs) = delete;
-		// Адрес счётчика обратного отсчёта. Если не равен nullptr, то уменьшается при каждом копировании.
-		// Как только обнулится, конструктор копирования выбросит исключение
-		int* countdown_ptr = nullptr;
-	};
 	// Вспомогательный класс, бросающий исключение после создания N-копии
 
 	// Проверка обеспечения строгой гарантии безопасности исключений
@@ -613,16 +587,16 @@ TEST_F(SingleLinkedListTests, ThrowOnCopy)
 			{
 				int copy_counter = max_copy_counter;
 				list.InsertAfter(list.cbegin(), ThrowOnCopy(copy_counter));
-				assert(list.GetSize() == 4u);
+				ASSERT_EQ(list.GetSize(), 4u);
 			}
 			catch (const std::bad_alloc&)
 			{
 				exception_was_thrown = true;
-				assert(list.GetSize() == 3u);
+				ASSERT_EQ(list.GetSize(), 3u);
 				break;
 			}
 		}
-		assert(exception_was_thrown);
+		ASSERT_TRUE(exception_was_thrown);
 	}
 }
 

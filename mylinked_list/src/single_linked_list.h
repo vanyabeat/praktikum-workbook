@@ -282,7 +282,7 @@ template <typename Type> class SingleLinkedList
 	 */
 	Iterator InsertAfter(ConstIterator pos, const Type& value)
 	{
-		Node * new_node = new Node(value, pos.node_->next_node);
+		Node* new_node = new Node(value, pos.node_->next_node);
 		pos.node_->next_node = new_node;
 		++size_;
 		return Iterator{new_node};
@@ -310,8 +310,16 @@ template <typename Type> class SingleLinkedList
 	 */
 	Iterator EraseAfter(ConstIterator pos) noexcept
 	{
-		// Заглушка. Реализуйте метод самостоятельно
-		return {};
+		if (pos.node_->next_node == nullptr)
+		{
+			return {};
+		}
+
+		auto node_to_delete = pos.node_->next_node;
+		pos.node_->next_node = node_to_delete->next_node;
+		--size_;
+		delete node_to_delete;
+		return Iterator{pos.node_->next_node};
 	}
 
 	[[nodiscard]] size_t size() const noexcept

@@ -282,8 +282,10 @@ template <typename Type> class SingleLinkedList
 	 */
 	Iterator InsertAfter(ConstIterator pos, const Type& value)
 	{
-		// Заглушка. Реализуйте метод самостоятельно
-		return {};
+		Node * new_node = new Node(value, pos.node_->next_node);
+		pos.node_->next_node = new_node;
+		++size_;
+		return Iterator{new_node};
 	}
 
 	void PopFront() noexcept

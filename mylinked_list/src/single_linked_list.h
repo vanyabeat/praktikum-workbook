@@ -253,6 +253,67 @@ template <typename Type> class SingleLinkedList
 		return {};
 	}
 
+	// Возвращает итератор, указывающий на позицию перед первым элементом односвязного списка.
+	// Разыменовывать этот итератор нельзя - попытка разыменования приведёт к неопределённому поведению
+	[[nodiscard]] Iterator before_begin() noexcept
+	{
+		// Реализуйте самостоятельно
+		return {};
+	}
+
+	// Возвращает константный итератор, указывающий на позицию перед первым элементом односвязного списка.
+	// Разыменовывать этот итератор нельзя - попытка разыменования приведёт к неопределённому поведению
+	[[nodiscard]] ConstIterator cbefore_begin() const noexcept
+	{
+		// Реализуйте самостоятельно
+		return {};
+	}
+
+	// Возвращает константный итератор, указывающий на позицию перед первым элементом односвязного списка.
+	// Разыменовывать этот итератор нельзя - попытка разыменования приведёт к неопределённому поведению
+	[[nodiscard]] ConstIterator before_begin() const noexcept
+	{
+		// Реализуйте самостоятельно
+		return {};
+	}
+
+	/*
+	 * Вставляет элемент value после элемента, на который указывает pos.
+	 * Возвращает итератор на вставленный элемент
+	 * Если при создании элемента будет выброшено исключение, список останется в прежнем состоянии
+	 */
+	Iterator InsertAfter(ConstIterator pos, const Type& value)
+	{
+		// Заглушка. Реализуйте метод самостоятельно
+		return {};
+	}
+
+	void PopFront() noexcept
+	{
+		if (IsEmpty())
+		{
+			return;
+		}
+		else
+		{
+			Node * first_item = head_.next_node;
+			Node * second_item = first_item->next_node;
+			delete first_item;
+			head_.next_node = second_item;
+			--size_;
+		}
+	}
+
+	/*
+	 * Удаляет элемент, следующий за pos.
+	 * Возвращает итератор на элемент, следующий за удалённым
+	 */
+	Iterator EraseAfter(ConstIterator pos) noexcept
+	{
+		// Заглушка. Реализуйте метод самостоятельно
+		return {};
+	}
+
 	[[nodiscard]] size_t size() const noexcept
 	{
 		return GetSize();

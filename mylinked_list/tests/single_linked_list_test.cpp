@@ -3,6 +3,7 @@
 #include <gtest/gtest.h>
 #include <iostream>
 #include <set>
+#include <algorithm>
 
 class SingleLinkedListTests : public ::testing::Test
 {

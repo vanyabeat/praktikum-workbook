@@ -1,4 +1,5 @@
 #include <cstdio>
+#include <iterator>
 
 template <typename Type> class BidirectionalList
 {
@@ -18,6 +19,16 @@ template <typename Type> class BidirectionalList
 	BidirectionalList() : size_(0), head_(Node())
 	{
 	}
+#pragma endregion
+#pragma region Iterator
+	template <typename ValueType> struct iterator
+	{
+		using iterator_category = std::random_access_iterator_tag;
+		using difference_type = std::ptrdiff_t;
+		using value_type = ValueType;
+		using pointer = ValueType*;	// or also value_type*
+		using reference = ValueType&; // or also value_type&
+	};
 #pragma endregion
 	size_t size() const
 	{

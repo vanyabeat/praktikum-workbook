@@ -154,3 +154,171 @@ TEST_F(BidirectLinkedListTests, DeletionSpy)
 		ASSERT_EQ(item2_counter, 0);
 	}
 }
+
+TEST_F(BidirectLinkedListTests, Throw)
+{
+	// Вспомогательный класс, бросающий исключение после создания N-копии
+	struct ThrowOnCopy
+	{
+		ThrowOnCopy() = default;
+		explicit ThrowOnCopy(int& copy_counter) noexcept : countdown_ptr(&copy_counter)
+		{
+		}
+		ThrowOnCopy(const ThrowOnCopy& other) : countdown_ptr(other.countdown_ptr) //
+		{
+			if (countdown_ptr)
+			{
+				if (*countdown_ptr == 0)
+				{
+					throw std::bad_alloc();
+				}
+				else
+				{
+					--(*countdown_ptr);
+				}
+			}
+		}
+		// Присваивание элементов этого типа не требуется
+		ThrowOnCopy& operator=(const ThrowOnCopy& rhs) = delete;
+		// Адрес счётчика обратного отсчёта. Если не равен nullptr, то уменьшается при каждом копировании.
+		// Как только обнулится, конструктор копирования выбросит исключение
+		int* countdown_ptr = nullptr;
+	};
+	// Проверка фактического удаления элементов
+	{
+		bool exception_was_thrown = false;
+		// Последовательно уменьшаем счётчик копирований до нуля, пока не будет выброшено исключение
+		for (int max_copy_counter = 5; max_copy_counter >= 0; --max_copy_counter)
+		{
+			// Создаём непустой список
+			BidirectionalList<ThrowOnCopy> list;
+			list.push_front(ThrowOnCopy{});
+			try
+			{
+				int copy_counter = max_copy_counter;
+				list.push_front(ThrowOnCopy(copy_counter));
+				// Если метод не выбросил исключение, список должен перейти в новое состояние
+				ASSERT_EQ(list.size(), 2);
+			}
+			catch (const std::bad_alloc&)
+			{
+				exception_was_thrown = true;
+				// После выбрасывания исключения состояние списка должно остаться прежним
+				ASSERT_EQ(list.size(), 1);
+				break;
+			}
+		}
+		ASSERT_TRUE(exception_was_thrown);
+	}
+}
+
+TEST_F(BidirectLinkedListTests, IteratorsEmpty)
+{
+
+	// Итерирование по пустому списку
+	{
+		BidirectionalList<int> list;
+		// Константная ссылка для доступа к константным версиям begin()/end()
+		const auto& const_list = list;
+
+		// Итераторы begine и end у пустого диапазона равны друг другу
+		ASSERT_EQ(list.begin(), list.end());
+		ASSERT_EQ(const_list.begin(), const_list.end());
+		ASSERT_EQ(list.cbegin(), list.cend());
+		ASSERT_EQ(list.cbegin(), const_list.begin());
+		ASSERT_EQ(list.cend(), const_list.end());
+	}
+}
+
+TEST_F(BidirectLinkedListTests, IteratorsNonEmpty)
+{
+	// Итерирование по непустому списку
+	{
+		BidirectionalList<int> list;
+		const auto& const_list = list;
+
+		list.push_front(1);
+		ASSERT_EQ(list.size(), 1u);
+		ASSERT_TRUE(!list.empty());
+
+		ASSERT_TRUE(const_list.begin() != const_list.end());
+		ASSERT_TRUE(const_list.cbegin() != const_list.cend());
+		ASSERT_TRUE(list.begin() != list.end());
+
+		ASSERT_TRUE(const_list.begin() == const_list.cbegin());
+
+		ASSERT_TRUE(*list.cbegin() == 1);
+		*list.begin() = -1;
+		ASSERT_TRUE(*list.cbegin() == -1);
+
+		const auto old_begin = list.cbegin();
+		list.push_front(2);
+		ASSERT_EQ(list.size(), 2);
+
+		const auto new_begin = list.cbegin();
+		ASSERT_NE(new_begin, old_begin);
+		// Проверка прединкремента
+		{
+			auto new_begin_copy(new_begin);
+			ASSERT_EQ((++(new_begin_copy)), old_begin);
+		}
+		// Проверка постинкремента
+		{
+			auto new_begin_copy(new_begin);
+			ASSERT_EQ(((new_begin_copy)++), new_begin);
+			ASSERT_EQ(new_begin_copy, old_begin);
+		}
+		// Итератор, указывающий на позицию после последнего элемента равен итератору end()
+		{
+			auto old_begin_copy(old_begin);
+			ASSERT_EQ((++old_begin_copy), list.end());
+		}
+	}
+}
+
+TEST_F(BidirectLinkedListTests, IteratorsDecrement)
+{
+	// Итерирование по непустому списку
+	{
+		BidirectionalList<int> list;
+		const auto& const_list = list;
+
+		list.push_back(100500);
+		list.push_back(1);
+		list.push_back(2);
+		list.push_back(3);
+		ASSERT_EQ(list.size(), 4u);
+		ASSERT_TRUE(!list.empty());
+
+		ASSERT_TRUE(const_list.begin() != const_list.end());
+		ASSERT_TRUE(const_list.cbegin() != const_list.cend());
+		ASSERT_TRUE(list.begin() != list.end());
+
+		ASSERT_TRUE(const_list.begin() == const_list.cbegin());
+
+		ASSERT_EQ(*list.cbegin(), 100500);
+		*list.begin() = -1;
+		ASSERT_TRUE(*list.cbegin() == -1);
+		auto end_list = list.end();
+		auto back = --end_list;
+		ASSERT_EQ(*(end_list), 3);
+
+	}
+}
+
+TEST_F(BidirectLinkedListTests, IteratorsDecrement2)
+{
+	// Итерирование по непустому списку
+	{
+		BidirectionalList<int> list;
+		const auto& const_list = list;
+
+		list.push_back(100500);
+		list.push_back(1);
+		list.push_back(2);
+		list.push_back(3);
+		list.push_front(100501);
+		ASSERT_EQ(*(--(--list.end())), 2);
+		ASSERT_EQ(*(list.begin()), 100501);
+	}
+}

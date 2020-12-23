@@ -11,7 +11,7 @@ else()
     message(WARNING "The file conanbuildinfo.cmake doesn't exist, you have to run conan install first")
 endif()
 
-set(CMAKE_BUILD_TYPE Release)
+set(CMAKE_BUILD_TYPE Debug)
 ucm_add_dirs(tests TO TESTS)
 ucm_add_dirs(src TO SRC)
 add_executable(main main.cpp ${SRC} ${TESTS})

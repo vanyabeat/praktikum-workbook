@@ -302,7 +302,6 @@ TEST_F(BidirectLinkedListTests, IteratorsDecrement)
 		auto end_list = list.end();
 		auto back = --end_list;
 		ASSERT_EQ(*(end_list), 3);
-
 	}
 }
 
@@ -321,4 +320,28 @@ TEST_F(BidirectLinkedListTests, IteratorsDecrement2)
 		ASSERT_EQ(*(--(--list.end())), 2);
 		ASSERT_EQ(*(list.begin()), 100501);
 	}
+}
+
+TEST_F(BidirectLinkedListTests, front)
+{
+	BidirectionalList<int> list;
+	list.push_front(1);
+	list.push_front(2);
+	list.push_front(3);
+	list.push_front(4);
+	for (const auto& i : list)
+	{
+		std::cout << i << std::endl;
+	}
+}
+
+TEST_F(BidirectLinkedListTests, back)
+{
+	BidirectionalList<int> list;
+	list.push_back(1);
+	list.push_back(2);
+	list.push_back(3);
+	list.push_back(4);
+	list.push_front(100);
+	std::cout << list;
 }

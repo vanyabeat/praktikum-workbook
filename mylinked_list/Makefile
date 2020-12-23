@@ -4,8 +4,8 @@ release:
 	rm -rf build &&\
 	mkdir build &&\
 	cd build &&\
-	conan install -s build_type=Release .. --build=missing &&\
-	cmake .. -DCMAKE_BUILD_TYPE=Release &&\
+	conan install -s build_type=Debug .. --build=missing &&\
+	cmake .. -DCMAKE_BUILD_TYPE=Debug &&\
 	cmake --build .;
 
 

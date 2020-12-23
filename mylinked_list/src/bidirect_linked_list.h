@@ -151,7 +151,7 @@ template <typename Type> class BidirectionalList
 	using ConstIterator = iterator<const Type>;
 #pragma endregion
 #pragma region Constructors_and_Destructors
-	BidirectionalList() : size_(0), head_(Node()), tail_(Node())
+	BidirectionalList() : size_(0), head_({}), tail_({})
 	{
 		head_.next_node = &tail_;
 		tail_.prev_node = &head_;
@@ -165,32 +165,24 @@ template <typename Type> class BidirectionalList
 	// добавляет в начало O(1)
 	void push_front(const Type& value)
 	{
-		if (empty())
-		{
-			Node* tmp = new Node(&head_, value, &tail_);
-			head_.next_node = tmp;
-			tail_.prev_node = tmp;
-		}
-		else
-		{
-			head_.next_node = new Node(&head_, value, head_.next_node);
-		}
+
+		Node* first = head_.next_node;
+		Node* new_first = new Node(&head_, value, first);
+		head_.next_node = new_first;
+		first->prev_node = new_first;
+
 		++size_;
 	}
 
 	// добавляет в конец O(1)
 	void push_back(const Type& value)
 	{
-		if (empty())
-		{
-			Node* tmp = new Node(&head_, value, &tail_);
-			head_.next_node = tmp;
-			tail_.prev_node = tmp;
-		}
-		else
-		{
-			tail_.prev_node = new Node(tail_.prev_node, value, &tail_);
-		}
+
+		Node* last = tail_.prev_node;
+		Node* new_last = new Node(tail_.prev_node, value, &tail_);
+		tail_.prev_node = new_last;
+		last->next_node = new_last;
+
 		++size_;
 	}
 
@@ -265,7 +257,27 @@ template <typename Type> class BidirectionalList
 		return ConstIterator{const_cast<Node*>(&tail_)};
 	}
 #pragma endregion
+#pragma region Output
 
+	friend std::ostream& operator<<(std::ostream& out, const BidirectionalList& list)
+	{
+		out << "{";
+		size_t counter = 0;
+		size_t size = list.size();
+		for (const auto& item : list)
+		{
+			if (counter == (size - 1))
+			{
+				out << item;
+				continue;
+			}
+			out << item << ", ";
+			++counter;
+		}
+		out << "}";
+		return out;
+	}
+#pragma endregion
   private:
 	size_t size_;
 	Node head_;

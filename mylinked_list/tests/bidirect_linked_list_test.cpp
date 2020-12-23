@@ -337,11 +337,115 @@ TEST_F(BidirectLinkedListTests, front)
 
 TEST_F(BidirectLinkedListTests, back)
 {
+	{
+		using namespace std;
+		LinkedList<int> list;
+		list.push_back(1);
+		list.push_back(2);
+		list.push_back(3);
+		list.push_back(4);
+		std::stringstream out;
+		out << list;
+		ASSERT_EQ(out.str(), "{1, 2, 3, 4}"s);
+	}
+	{
+		using namespace std;
+		LinkedList<int> list;
+		list.push_back(1);
+		list.push_back(2);
+		list.push_front(-2);
+		list.push_front(-1);
+		std::stringstream out;
+		out << list;
+		ASSERT_EQ(out.str(), "{-1, -2, 1, 2}"s);
+	}
+}
+
+TEST_F(BidirectLinkedListTests, arithmetic)
+{
+	{
+		using namespace std;
+		LinkedList<int> list;
+		list.push_back(1);
+		list.push_back(2);
+		list.push_back(3);
+		list.push_back(4);
+		LinkedList<int>::iterator it = list.begin();
+		ASSERT_EQ(*((it + 1) + 1), 3);
+		ASSERT_EQ(*((it + 3) - 1), 3);
+	}
+	{
+		LinkedList<int> list;
+		list.push_back(1);
+		list.push_back(2);
+		list.push_back(3);
+		list.push_back(4);
+		LinkedList<int>::iterator it = list.end();
+		ASSERT_EQ(*(it - list.size()), 1);
+	}
+	{
+		using namespace std;
+		LinkedList<int> list;
+		list.push_back(1);
+		list.push_back(2);
+		list.push_back(3);
+		list.push_back(4);
+		list.push_back(5);
+		LinkedList<int>::iterator it = list.begin();
+		ASSERT_EQ(*(it + 1), 2);
+	}
+}
+
+TEST_F(BidirectLinkedListTests, distance)
+{
 	LinkedList<int> list;
 	list.push_back(1);
 	list.push_back(2);
 	list.push_back(3);
 	list.push_back(4);
-	list.push_front(100);
-	std::cout << list;
+	list.push_back(5);
+	ASSERT_EQ(*list.begin(), 1);
+	ASSERT_EQ(*(list.begin() + 1), 2);
+	ASSERT_EQ(*(list.begin() + 2), 3);
+	ASSERT_EQ((list.end() - list.begin()), 5);
+	ASSERT_EQ(std::distance(list.begin(), list.end()), 5);
+}
+
+TEST_F(BidirectLinkedListTests, operators)
+{
+	LinkedList<int> list;
+	list.push_back(1);
+	list.push_back(2);
+	list.push_back(3);
+	list.push_back(4);
+	list.push_back(5);
+	ASSERT_EQ(list[0], 1);
+	ASSERT_EQ(list[1], 2);
+	ASSERT_EQ(list[2], 3);
+	list[1] = 100500;
+	std::cout << list << std::endl;
+}
+
+TEST_F(BidirectLinkedListTests, initializer_list)
+{
+	LinkedList<int> list{1, 2, 3, 4, 5, 6};
+	ASSERT_EQ(list[0], 1);
+	ASSERT_EQ(list[list.size() - 1], 6);
+}
+
+TEST_F(BidirectLinkedListTests, initializer_list_strings)
+{
+	using namespace std;
+	LinkedList<std::string> list{"first1"s, "first2"s, "first3"s, "first4"s, "first5"s, "first6"s};
+	ASSERT_EQ(*list.begin(), "first1"s);
+}
+
+TEST_F(BidirectLinkedListTests, memory)
+{
+	using namespace std;
+	for (size_t t = 0; t < 10000000; ++t){
+		{
+			LinkedList<std::string> list{"first1"s, "first2"s, "first3"s, "first4"s, "first5"s, "first6"s};
+		}
+	}
 }

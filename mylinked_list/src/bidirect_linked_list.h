@@ -3,7 +3,7 @@
 #include <iterator>
 #include <vector>
 
-template <typename Type> class BidirectionalList
+template <typename Type> class LinkedList
 {
 #pragma region Node
 	// Узел списка
@@ -151,12 +151,12 @@ template <typename Type> class BidirectionalList
 	using ConstIterator = iterator<const Type>;
 #pragma endregion
 #pragma region Constructors_and_Destructors
-	BidirectionalList() : size_(0), head_({}), tail_({})
+	LinkedList() : size_(0), head_({}), tail_({})
 	{
 		head_.next_node = &tail_;
 		tail_.prev_node = &head_;
 	}
-	~BidirectionalList()
+	~LinkedList()
 	{
 		clear();
 	}
@@ -259,7 +259,7 @@ template <typename Type> class BidirectionalList
 #pragma endregion
 #pragma region Output
 
-	friend std::ostream& operator<<(std::ostream& out, const BidirectionalList& list)
+	friend std::ostream& operator<<(std::ostream& out, const LinkedList& list)
 	{
 		out << "{";
 		size_t counter = 0;

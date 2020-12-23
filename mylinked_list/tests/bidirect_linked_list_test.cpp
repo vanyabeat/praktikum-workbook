@@ -20,13 +20,13 @@ TEST_F(BidirectLinkedListTests, init)
 {
 	using namespace std;
 	{
-		const BidirectionalList<int> empty_int_list;
+		const LinkedList<int> empty_int_list;
 		ASSERT_EQ(empty_int_list.size(), 0u);
 		ASSERT_TRUE(empty_int_list.empty());
 	}
 
 	{
-		const BidirectionalList<string> empty_string_list;
+		const LinkedList<string> empty_string_list;
 		ASSERT_EQ(empty_string_list.size(), 0u);
 		ASSERT_TRUE(empty_string_list.empty());
 	}
@@ -39,7 +39,7 @@ TEST_F(BidirectLinkedListTests, push_front)
 
 	// Проверка вставки в начало
 	{
-		BidirectionalList<int> l;
+		LinkedList<int> l;
 		ASSERT_TRUE(l.empty());
 		ASSERT_EQ(l.size(), 0u);
 
@@ -61,7 +61,7 @@ TEST_F(BidirectLinkedListTests, PushBack)
 
 	// Проверка вставки в начало
 	{
-		BidirectionalList<int> l;
+		LinkedList<int> l;
 		ASSERT_TRUE(l.empty());
 		ASSERT_EQ(l.size(), 0u);
 
@@ -129,7 +129,7 @@ TEST_F(BidirectLinkedListTests, DeletionSpy)
 		int item1_counter = 0;
 		int item2_counter = 0;
 		{
-			BidirectionalList<DeletionSpy> list;
+			LinkedList<DeletionSpy> list;
 			list.push_front(DeletionSpy{item0_counter});
 			list.push_front(DeletionSpy{item1_counter});
 			list.push_front(DeletionSpy{item2_counter});
@@ -191,7 +191,7 @@ TEST_F(BidirectLinkedListTests, Throw)
 		for (int max_copy_counter = 5; max_copy_counter >= 0; --max_copy_counter)
 		{
 			// Создаём непустой список
-			BidirectionalList<ThrowOnCopy> list;
+			LinkedList<ThrowOnCopy> list;
 			list.push_front(ThrowOnCopy{});
 			try
 			{
@@ -217,7 +217,7 @@ TEST_F(BidirectLinkedListTests, IteratorsEmpty)
 
 	// Итерирование по пустому списку
 	{
-		BidirectionalList<int> list;
+		LinkedList<int> list;
 		// Константная ссылка для доступа к константным версиям begin()/end()
 		const auto& const_list = list;
 
@@ -234,7 +234,7 @@ TEST_F(BidirectLinkedListTests, IteratorsNonEmpty)
 {
 	// Итерирование по непустому списку
 	{
-		BidirectionalList<int> list;
+		LinkedList<int> list;
 		const auto& const_list = list;
 
 		list.push_front(1);
@@ -280,7 +280,7 @@ TEST_F(BidirectLinkedListTests, IteratorsDecrement)
 {
 	// Итерирование по непустому списку
 	{
-		BidirectionalList<int> list;
+		LinkedList<int> list;
 		const auto& const_list = list;
 
 		list.push_back(100500);
@@ -309,7 +309,7 @@ TEST_F(BidirectLinkedListTests, IteratorsDecrement2)
 {
 	// Итерирование по непустому списку
 	{
-		BidirectionalList<int> list;
+		LinkedList<int> list;
 		const auto& const_list = list;
 
 		list.push_back(100500);
@@ -324,7 +324,7 @@ TEST_F(BidirectLinkedListTests, IteratorsDecrement2)
 
 TEST_F(BidirectLinkedListTests, front)
 {
-	BidirectionalList<int> list;
+	LinkedList<int> list;
 	list.push_front(1);
 	list.push_front(2);
 	list.push_front(3);
@@ -337,7 +337,7 @@ TEST_F(BidirectLinkedListTests, front)
 
 TEST_F(BidirectLinkedListTests, back)
 {
-	BidirectionalList<int> list;
+	LinkedList<int> list;
 	list.push_back(1);
 	list.push_back(2);
 	list.push_back(3);

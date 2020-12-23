@@ -20,7 +20,7 @@ template <typename Type> class LinkedList
 #pragma endregion
   public:
 #pragma region Iterator
-	template <typename ValueType> class iterator
+	template <typename ValueType> struct iterator
 	{
 	  public:
 		// Класс списка объявляется дружественным, чтобы из методов списка
@@ -135,8 +135,42 @@ template <typename Type> class LinkedList
 			--(*this);
 			return this_copy;
 		}
+
+		iterator operator+(const difference_type value) noexcept
+		{
+			iterator copy(*this);
+			for (auto i = 1; i <= value; ++i)
+			{
+				++(copy);
+			}
+			return copy;
+		}
+
+		iterator operator-(const difference_type& value) noexcept
+		{
+			iterator copy(*this);
+			for (auto i = 1; i <= value; ++i)
+			{
+				--(copy);
+			}
+			return copy;
+		}
+
+		friend difference_type operator-(const iterator& end, const iterator& begin)
+		{
+			difference_type result{};
+			iterator copy(begin);
+
+			for (result = 0; copy != end; ++result)
+			{
+				copy = copy + 1;
+			}
+
+			return result;
+		}
+
 #pragma endregion
-	  private:
+
 		Node* node_ = nullptr;
 	};
 #pragma endregion
@@ -156,6 +190,18 @@ template <typename Type> class LinkedList
 		head_.next_node = &tail_;
 		tail_.prev_node = &head_;
 	}
+
+	LinkedList(std::initializer_list<Type> values) : size_(0), head_({}), tail_({})
+	{
+		head_.next_node = &tail_;
+		tail_.prev_node = &head_;
+
+		for (const auto& val : values)
+		{
+			push_back(val);
+		}
+	}
+
 	~LinkedList()
 	{
 		clear();
@@ -258,7 +304,6 @@ template <typename Type> class LinkedList
 	}
 #pragma endregion
 #pragma region Output
-
 	friend std::ostream& operator<<(std::ostream& out, const LinkedList& list)
 	{
 		out << "{";
@@ -276,6 +321,17 @@ template <typename Type> class LinkedList
 		}
 		out << "}";
 		return out;
+	}
+#pragma endregion
+#pragma region Operators
+	Type operator[](size_t pos) const
+	{
+		return *(begin() + pos);
+	}
+
+	Type& operator[](size_t pos)
+	{
+		return *(begin() + pos);
 	}
 #pragma endregion
   private:

@@ -39,6 +39,13 @@ template <typename Type> class LinkedList
 		}
 		iterator() = default;
 
+		// Конвертирующий конструктор/конструктор копирования
+		// При ValueType, совпадающем с Type, играет роль копирующего конструктора
+		// При ValueType, совпадающем с const Type, играет роль конвертирующего конструктора
+		iterator(const iterator<Type>& other) noexcept : node_(other.node_)
+		{
+		}
+
 #pragma region Operators
 
 		// Чтобы компилятор не выдавал предупреждение об отсутствии оператора = при наличии
@@ -202,6 +209,16 @@ template <typename Type> class LinkedList
 		}
 	}
 
+	LinkedList(const LinkedList& other) : size_(0), head_({}), tail_({})
+	{
+		head_.next_node = &tail_;
+		tail_.prev_node = &head_;
+		for (const auto& item : other)
+		{
+			push_back(item);
+		}
+	}
+
 	~LinkedList()
 	{
 		clear();
@@ -236,11 +253,10 @@ template <typename Type> class LinkedList
 	{
 		while (head_.next_node != &tail_)
 		{
-			Node* next_element = head_.next_node;
-			head_.next_node = next_element->next_node;
-			delete next_element;
+			Node* next = head_.next_node;
+			head_.next_node = next->next_node;
+			delete next;
 		}
-
 		size_ = 0;
 	}
 
@@ -256,6 +272,14 @@ template <typename Type> class LinkedList
 			return true;
 		}
 		return false;
+	}
+
+	// Обменивает содержимое списков за время O(1)
+	void swap(LinkedList& other) noexcept
+	{
+		std::swap(head_, other.head_);
+		std::swap(tail_, other.tail_);
+		std::swap(size_, other.size_);
 	}
 #pragma endregion
 #pragma region Accessors
@@ -332,6 +356,29 @@ template <typename Type> class LinkedList
 	Type& operator[](size_t pos)
 	{
 		return *(begin() + pos);
+	}
+
+	friend bool operator==(const LinkedList& own, const LinkedList& other)
+	{
+		if (own.size() != own.size())
+		{
+			return false;
+		}
+		else
+		{
+			auto this_begin = own.begin();
+			auto other_begin = other.begin();
+			while (this_begin != own.end() && other_begin != other.end())
+			{
+				if (*this_begin != *other_begin)
+				{
+					return false;
+				}
+				++this_begin;
+				++other_begin;
+			}
+		}
+		return true;
 	}
 #pragma endregion
   private:

@@ -322,19 +322,6 @@ TEST_F(BidirectLinkedListTests, IteratorsDecrement2)
 	}
 }
 
-TEST_F(BidirectLinkedListTests, front)
-{
-	LinkedList<int> list;
-	list.push_front(1);
-	list.push_front(2);
-	list.push_front(3);
-	list.push_front(4);
-	for (const auto& i : list)
-	{
-		std::cout << i << std::endl;
-	}
-}
-
 TEST_F(BidirectLinkedListTests, back)
 {
 	{
@@ -423,7 +410,6 @@ TEST_F(BidirectLinkedListTests, operators)
 	ASSERT_EQ(list[1], 2);
 	ASSERT_EQ(list[2], 3);
 	list[1] = 100500;
-	std::cout << list << std::endl;
 }
 
 TEST_F(BidirectLinkedListTests, initializer_list)
@@ -440,12 +426,73 @@ TEST_F(BidirectLinkedListTests, initializer_list_strings)
 	ASSERT_EQ(*list.begin(), "first1"s);
 }
 
-TEST_F(BidirectLinkedListTests, memory)
+TEST_F(BidirectLinkedListTests, IteratorsOperator)
 {
-	using namespace std;
-	for (size_t t = 0; t < 10000000; ++t){
-		{
-			LinkedList<std::string> list{"first1"s, "first2"s, "first3"s, "first4"s, "first5"s, "first6"s};
-		}
+	// Проверка оператора ->
+	{
+		using namespace std;
+		LinkedList<std::string> string_list;
+
+		string_list.push_front("one"s);
+		ASSERT_EQ(string_list.cbegin()->length(), 3u);
+		string_list.begin()->push_back('!');
+		ASSERT_EQ(*string_list.begin(), std::string("one!"));
 	}
+}
+
+TEST_F(BidirectLinkedListTests, Swap)
+{
+	LinkedList<int> list1{1, 2, 3, 4, 5, 6};
+	LinkedList<int> list2{666, 667, 668};
+	list1.swap(list2);
+	std::cout << list2 << list1 << std::endl;
+}
+
+TEST_F(BidirectLinkedListTests, IteratorsPolyForm)
+{
+	// Проверка оператора ->
+	// Преобразование итераторов
+	{
+		LinkedList<int> list;
+		list.push_front(1);
+		// Конструирование ConstItrator из Iterator
+		LinkedList<int>::ConstIterator const_it(list.begin());
+		ASSERT_EQ(const_it, list.cbegin());
+		ASSERT_EQ(*const_it, *list.cbegin());
+
+		LinkedList<int>::ConstIterator const_it1;
+		// Присваивание ConstIterator-у значения Iterator
+		const_it1 = list.begin();
+		ASSERT_EQ(const_it1, const_it);
+	}
+}
+
+TEST_F(BidirectLinkedListTests, Equals2)
+{
+	// Проверка списков на равенство и неравенство
+	LinkedList<int> list_1;
+	list_1.push_front(1);
+	list_1.push_front(2);
+
+	LinkedList<int> list_2;
+	list_2.push_front(1);
+	list_2.push_front(2);
+	list_2.push_front(3);
+
+	LinkedList<int> list_1_copy;
+	list_1_copy.push_front(1);
+	list_1_copy.push_front(2);
+
+	LinkedList<int> empty_list;
+	LinkedList<int> another_empty_list;
+
+	// Список равен самому себе
+	ASSERT_TRUE(list_1 == list_1);
+	ASSERT_TRUE(empty_list == empty_list);
+
+	// Списки с одинаковым содержимым равны, а с разным - не равны
+	ASSERT_TRUE(list_1 == list_1_copy);
+	ASSERT_TRUE(list_1 != list_2);
+	ASSERT_TRUE(list_2 != list_1);
+	ASSERT_TRUE(empty_list == another_empty_list);
 }

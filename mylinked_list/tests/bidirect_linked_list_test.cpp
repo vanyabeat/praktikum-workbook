@@ -509,3 +509,48 @@ TEST_F(BidirectLinkedListTests, Swap)
 	list_1.swap(list_2);
 	ASSERT_EQ(list_1, (LinkedList<int>{-1, -2}));
 }
+
+TEST_F(BidirectLinkedListTests, Swap2)
+{
+	// Обмен содержимого списков
+
+	LinkedList<int> first;
+	first.push_back(1);
+	first.push_back(2);
+
+	LinkedList<int> second;
+	second.push_back(10);
+	second.push_back(11);
+	second.push_back(15);
+
+	const auto old_first_begin = first.begin();
+	const auto old_second_begin = second.begin();
+	const auto old_first_size = first.size();
+	const auto old_second_size = second.size();
+
+	first.swap(second);
+
+	ASSERT_EQ(second.begin(), old_first_begin);
+	ASSERT_EQ(first.begin(), old_second_begin);
+	ASSERT_EQ(second.size(), old_first_size);
+	ASSERT_EQ(first.size(), old_second_size);
+
+	// Обмен при помощи функции swap
+	{
+		using std::swap;
+
+		// В отсутствие пользовательской перегрузки будет вызвана функция std::swap, которая
+		// выполнит обмен через создание временной копии
+		swap(first, second);
+
+		// Убеждаемся, что используется не std::swap, а пользовательская перегрузка
+
+		// Если бы обмен был выполнен с созданием временной копии,
+		// то итератор first.begin() не будет равен ранее сохранённому значению,
+		// так как копия будет хранить свои узлы по иным адресам
+		ASSERT_EQ(first.begin(), old_first_begin);
+		ASSERT_EQ(second.begin(), old_second_begin);
+		ASSERT_EQ(first.size(), old_first_size);
+		ASSERT_EQ(second.size(), old_second_size);
+	}
+}

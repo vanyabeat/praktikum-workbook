@@ -507,5 +507,5 @@ TEST_F(BidirectLinkedListTests, Swap)
 	LinkedList<int> list_1{1, 2, 3};
 	LinkedList<int> list_2{-1, -2};
 	list_1.swap(list_2);
-	std::cout << list_1;
+	ASSERT_EQ(list_1, (LinkedList<int>{-1, -2}));
 }

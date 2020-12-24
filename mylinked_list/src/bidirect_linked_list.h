@@ -192,16 +192,20 @@ template <typename Type> class LinkedList
 	using ConstIterator = iterator<const Type>;
 #pragma endregion
 #pragma region Constructors_and_Destructors
-	LinkedList() : size_(0), head_({}), tail_({})
+	LinkedList() : size_(0)
 	{
-		head_.next_node = &tail_;
-		tail_.prev_node = &head_;
+		head_ = new Node();
+		tail_ = new Node();
+		head_->next_node = tail_;
+		tail_->prev_node = head_;
 	}
 
-	LinkedList(std::initializer_list<Type> values) : size_(0), head_({}), tail_({})
+	LinkedList(std::initializer_list<Type> values) : size_(0)
 	{
-		head_.next_node = &tail_;
-		tail_.prev_node = &head_;
+		head_ = new Node();
+		tail_ = new Node();
+		head_->next_node = tail_;
+		tail_->prev_node = head_;
 
 		for (const auto& val : values)
 		{
@@ -209,10 +213,12 @@ template <typename Type> class LinkedList
 		}
 	}
 
-	LinkedList(const LinkedList& other) : size_(0), head_({}), tail_({})
+	LinkedList(const LinkedList& other) : size_(0)
 	{
-		head_.next_node = &tail_;
-		tail_.prev_node = &head_;
+		head_ = new Node();
+		tail_ = new Node();
+		head_->next_node = tail_;
+		tail_->prev_node = head_;
 		for (const auto& item : other)
 		{
 			push_back(item);
@@ -222,6 +228,8 @@ template <typename Type> class LinkedList
 	~LinkedList()
 	{
 		clear();
+		delete head_;
+		delete tail_;
 	}
 #pragma endregion
 #pragma region Methods
@@ -229,9 +237,9 @@ template <typename Type> class LinkedList
 	void push_front(const Type& value)
 	{
 
-		Node* first = head_.next_node;
-		Node* new_first = new Node(&head_, value, first);
-		head_.next_node = new_first;
+		Node* first = head_->next_node;
+		Node* new_first = new Node(head_, value, first);
+		head_->next_node = new_first;
 		first->prev_node = new_first;
 
 		++size_;
@@ -241,9 +249,9 @@ template <typename Type> class LinkedList
 	void push_back(const Type& value)
 	{
 
-		Node* last = tail_.prev_node;
-		Node* new_last = new Node(tail_.prev_node, value, &tail_);
-		tail_.prev_node = new_last;
+		Node* last = tail_->prev_node;
+		Node* new_last = new Node(tail_->prev_node, value, tail_);
+		tail_->prev_node = new_last;
 		last->next_node = new_last;
 
 		++size_;
@@ -251,10 +259,10 @@ template <typename Type> class LinkedList
 
 	void clear() noexcept
 	{
-		while (head_.next_node != &tail_)
+		while (head_->next_node != tail_)
 		{
-			Node* next = head_.next_node;
-			head_.next_node = next->next_node;
+			Node* next = head_->next_node;
+			head_->next_node = next->next_node;
 			delete next;
 		}
 		size_ = 0;
@@ -287,14 +295,14 @@ template <typename Type> class LinkedList
 	// Если список пустой, возвращённый итератор будет равен end()
 	[[nodiscard]] Iterator begin() noexcept
 	{
-		return Iterator{head_.next_node};
+		return Iterator{head_->next_node};
 	}
 
 	// Возвращает итератор, указывающий на позицию, следующую за последним элементом односвязного списка
 	// Разыменовывать этот итератор нельзя - попытка разыменования приведёт к неопределённому поведению
 	[[nodiscard]] Iterator end() noexcept
 	{
-		return Iterator{&tail_};
+		return Iterator{tail_};
 	}
 
 	// Возвращает константный итератор, ссылающийся на первый элемент
@@ -302,7 +310,7 @@ template <typename Type> class LinkedList
 	// Результат вызова эквивалентен вызову метода cbegin()
 	[[nodiscard]] ConstIterator begin() const noexcept
 	{
-		return ConstIterator{head_.next_node};
+		return ConstIterator{head_->next_node};
 	}
 
 	// Возвращает константный итератор, указывающий на позицию, следующую за последним элементом односвязного списка
@@ -310,21 +318,21 @@ template <typename Type> class LinkedList
 	// Результат вызова эквивалентен вызову метода cend()
 	[[nodiscard]] ConstIterator end() const noexcept
 	{
-		return ConstIterator{const_cast<Node*>(&tail_)};
+		return ConstIterator{tail_};
 	}
 
 	// Возвращает константный итератор, ссылающийся на первый элемент
 	// Если список пустой, возвращённый итератор будет равен cend()
 	[[nodiscard]] ConstIterator cbegin() const noexcept
 	{
-		return ConstIterator{head_.next_node};
+		return ConstIterator{head_->next_node};
 	}
 
 	// Возвращает константный итератор, указывающий на позицию, следующую за последним элементом односвязного списка
 	// Разыменовывать этот итератор нельзя - попытка разыменования приведёт к неопределённому поведению
 	[[nodiscard]] ConstIterator cend() const noexcept
 	{
-		return ConstIterator{const_cast<Node*>(&tail_)};
+		return ConstIterator{tail_};
 	}
 #pragma endregion
 #pragma region Output
@@ -383,6 +391,6 @@ template <typename Type> class LinkedList
 #pragma endregion
   private:
 	size_t size_;
-	Node head_;
-	Node tail_;
+	Node* head_ = nullptr;
+	Node* tail_ = nullptr;
 };

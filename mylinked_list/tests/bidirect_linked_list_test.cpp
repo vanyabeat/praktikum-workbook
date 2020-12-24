@@ -440,12 +440,16 @@ TEST_F(BidirectLinkedListTests, IteratorsOperator)
 	}
 }
 
-TEST_F(BidirectLinkedListTests, Swap)
+TEST_F(BidirectLinkedListTests, Equals)
 {
 	LinkedList<int> list1{1, 2, 3, 4, 5, 6};
+	LinkedList<int> list1_1{1, 2, 3, 4, 5, 6};
+	LinkedList<int> list3{1, 2, 3, 3, 5, 6};
 	LinkedList<int> list2{666, 667, 668};
-	list1.swap(list2);
-	std::cout << list2 << list1 << std::endl;
+	ASSERT_FALSE(list1 == list2);
+	ASSERT_FALSE(list1 == list3);
+	ASSERT_TRUE(list1 == list1_1);
+//	std::cout << list2 << list1 << std::endl;
 }
 
 TEST_F(BidirectLinkedListTests, IteratorsPolyForm)

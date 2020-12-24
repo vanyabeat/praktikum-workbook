@@ -202,26 +202,25 @@ template <typename Type> class LinkedList
 
 	LinkedList(std::initializer_list<Type> values) : size_(0)
 	{
-		head_ = new Node();
-		tail_ = new Node();
-		head_->next_node = tail_;
-		tail_->prev_node = head_;
+		LinkedList<Type> tmp;
 
 		for (const auto& val : values)
 		{
-			push_back(val);
+			tmp.push_back(val);
 		}
+		swap(tmp);
 	}
 
 	LinkedList(const LinkedList& other) : size_(0)
 	{
-		head_ = new Node();
-		tail_ = new Node();
-		head_->next_node = tail_;
-		tail_->prev_node = head_;
-		for (const auto& item : other)
+		if (*this != &other)
 		{
-			push_back(item);
+			LinkedList<Type> tmp;
+			for (const auto& item : other)
+			{
+				tmp.push_back(item);
+			}
+			swap(tmp);
 		}
 	}
 
@@ -259,6 +258,10 @@ template <typename Type> class LinkedList
 
 	void clear() noexcept
 	{
+		if (empty())
+		{
+			return;
+		}
 		while (head_->next_node != tail_)
 		{
 			Node* next = head_->next_node;
@@ -288,6 +291,11 @@ template <typename Type> class LinkedList
 		std::swap(head_, other.head_);
 		std::swap(tail_, other.tail_);
 		std::swap(size_, other.size_);
+	}
+
+	friend void swap(LinkedList& lhs, LinkedList& rhs) noexcept
+	{
+		lhs.swap(rhs);
 	}
 #pragma endregion
 #pragma region Accessors
@@ -388,6 +396,12 @@ template <typename Type> class LinkedList
 		}
 		return true;
 	}
+
+	friend bool operator!=(const LinkedList& own, const LinkedList& other)
+	{
+		return !(own == other);
+	}
+
 #pragma endregion
   private:
 	size_t size_;

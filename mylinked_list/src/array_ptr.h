@@ -1,3 +1,4 @@
+/// в h-файлах не забывайте #pragma once
 #include <algorithm>
 #include <cassert>
 #include <cstdlib>
@@ -21,8 +22,8 @@ template <typename Type> class ArrayPtr
 	// Конструктор из сырого указателя, хранящего адрес массива в куче либо nullptr
 	explicit ArrayPtr(Type* raw_ptr) noexcept
 	{
-		if (raw_ptr)
-		{
+		if (raw_ptr)	/// этот код идентичен raw_ptr_ = raw_ptr, значит инициализацию поля можно перенести в список инициализации: ArrayPtr(...) : raw_ptr_(...) {}
+		{		/// иначе у вас получается двойная инициализация, вначале с nullptr,  а затем с новым значением
 			raw_ptr_ = raw_ptr;
 		}
 		else
@@ -37,7 +38,7 @@ template <typename Type> class ArrayPtr
 	~ArrayPtr()
 	{
 		delete[] raw_ptr_;
-		raw_ptr_ = nullptr;
+		raw_ptr_ = nullptr;	/// нет смысла обнулять значение, оно после деструктора будет удалено, в большенстве случаев
 	}
 
 	// Запрещаем присваивание
@@ -67,7 +68,7 @@ template <typename Type> class ArrayPtr
 	// Возвращает true, если указатель ненулевой, и false в противном случае
 	explicit operator bool() const
 	{
-		if (raw_ptr_ != nullptr)
+		if (raw_ptr_ != nullptr)	/// почему не проще returb raw_ptr_ != nullptr; ?
 		{
 			return true;
 		}
@@ -84,7 +85,7 @@ template <typename Type> class ArrayPtr
 	// Обменивается значениям указателя на массив с объектом other
 	void swap(ArrayPtr& other) noexcept
 	{
-		auto tmp = other.Get();
+		auto tmp = other.Get();		/// пользуйтесь sts::swap
 		other.raw_ptr_ = raw_ptr_;
 		raw_ptr_ = tmp;
 	}

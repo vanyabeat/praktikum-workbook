@@ -1,3 +1,4 @@
+/// в h-файлах не забывайте #pragma once
 #include <algorithm>
 #include <cassert>
 #include <cstddef>
@@ -144,13 +145,13 @@ template <typename Type> class SingleLinkedList
 	// Константный итератор, предоставляющий доступ для чтения к элементам списка
 	using ConstIterator = BasicIterator<const Type>;
 
-	SingleLinkedList() : size_(0), head_({})
+	SingleLinkedList() : size_(0), head_({})					/// начальные значения полей лучше описать как значения "по умолчанию"
 	{
 	}
 
-	SingleLinkedList(std::initializer_list<Type> values) : size_(0), head_({})
+	SingleLinkedList(std::initializer_list<Type> values) : size_(0), head_({})	/// начальные значения полей лучше описать как значения "по умолчанию"
 	{
-		for (auto it = std::rbegin(values); it != std::rend(values); ++it)
+		for (auto it = std::rbegin(values); it != std::rend(values); ++it)	/// почему не Assign?
 		{
 			PushFront(*it);
 		}
@@ -194,7 +195,7 @@ template <typename Type> class SingleLinkedList
 	{
 		while (head_.next_node != nullptr)
 		{
-			auto next_element = head_.next_node;
+			auto next_element = head_.next_node;		/// дублирование кода PopFront, используйте этот метод для очистки
 			head_.next_node = next_element->next_node;
 			delete next_element;
 		}
@@ -294,7 +295,7 @@ template <typename Type> class SingleLinkedList
 		{
 			return;
 		}
-		else
+		else	/// если в if был return, то не нужно использовать else
 		{
 			Node* first_item = head_.next_node;
 			Node* second_item = first_item->next_node;
@@ -339,7 +340,7 @@ template <typename Type> class SingleLinkedList
 		std::swap(head_.next_node, other.head_.next_node);
 		std::swap(size_, other.size_);
 	}
-
+/// почему не использовали std::equal? он делает тоже самое
 	friend bool operator==(const SingleLinkedList& own, const SingleLinkedList& other)
 	{
 		if (own.size() != other.size())
@@ -385,12 +386,12 @@ template <typename Type> class SingleLinkedList
 
 	friend bool operator<=(const SingleLinkedList& lhs, const SingleLinkedList& rhs)
 	{
-		return (lhs == rhs) || (lhs < rhs);
+		return (lhs == rhs) || (lhs < rhs);	/// постарайтесь выразить через один оператор <
 	}
 
 	friend bool operator>=(const SingleLinkedList& lhs, const SingleLinkedList& rhs)
 	{
-		return (rhs <= lhs);
+		return (rhs <= lhs);			/// постарайтесь выразить через один оператор <
 	}
 
 	friend void swap(SingleLinkedList& lhs, SingleLinkedList& rhs) noexcept
@@ -399,6 +400,11 @@ template <typename Type> class SingleLinkedList
 	}
 
   private:
+///  желательно не использовать временный объект (tmp), т.к. этот метод скорее всего будет использоваться только
+///  в конструкторе (для этого желательно добавить assign для проверки, что пустой)
+///  поэтому конструируемый объект уже пустой и его можно использовать для создания
+///  в правильности реализации я не сомневаюсь, но попрошу упростить, у вас есть метод InserAfter, который после вставки выдает итератор хвоста
+///  и этот метод можно использовать для вставки в прямом порядке
 	template <typename InputIterator> void Assign(InputIterator from, InputIterator to)
 	{
 		SingleLinkedList<Type> tmp;
@@ -414,6 +420,6 @@ template <typename Type> class SingleLinkedList
 
 		swap(tmp);
 	}
-	size_t size_;
+	size_t size_;	/// про значения "по умолчанию", что бы было понятно, выглядит так: size_t size_ = 0;
 	Node head_;
 };

@@ -1,4 +1,5 @@
-/// в h-файлах не забывайте #pragma once
+#pragma once
+
 #include <algorithm>
 #include <cassert>
 #include <cstdlib>

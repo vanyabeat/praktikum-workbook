@@ -554,3 +554,11 @@ TEST_F(BidirectLinkedListTests, Swap2)
 		ASSERT_EQ(second.size(), old_second_size);
 	}
 }
+
+TEST(Booltest, test1)
+{
+	int a = 10;
+	int b = 6;
+	ASSERT_TRUE(!(a < b));
+//	ASSERT_TRUE(a <= b);
+}

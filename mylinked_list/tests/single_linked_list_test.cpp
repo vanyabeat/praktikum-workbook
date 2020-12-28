@@ -332,7 +332,7 @@ TEST_F(SingleLinkedListTests, Compare)
 {
 	// Лексикографическое сравнение списков
 	{
-
+		ASSERT_FALSE((SingleLinkedList<int>{1, 2, 3, 4} <= SingleLinkedList<int>{1, 2, 3, 1}));
 		ASSERT_TRUE((SingleLinkedList<int>{1, 2, 3} < SingleLinkedList<int>{1, 2, 3, 1}));
 		ASSERT_FALSE((SingleLinkedList<int>{3, 2, 1} < SingleLinkedList<int>{1, 2, 3, 1}));
 		ASSERT_FALSE((SingleLinkedList<int>{1, 2, 3} > SingleLinkedList<int>{1, 2, 3, 1}));

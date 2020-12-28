@@ -352,12 +352,12 @@ template <typename Type> class SingleLinkedList
 
 	friend bool operator<=(const SingleLinkedList& lhs, const SingleLinkedList& rhs)
 	{
-		return (lhs == rhs) || (lhs < rhs); /// постарайтесь выразить через один оператор <
+		return !(rhs < lhs);
 	}
 
 	friend bool operator>=(const SingleLinkedList& lhs, const SingleLinkedList& rhs)
 	{
-		return (rhs <= lhs); /// постарайтесь выразить через один оператор <
+		return !(lhs < rhs);
 	}
 
 	friend void swap(SingleLinkedList& lhs, SingleLinkedList& rhs) noexcept
@@ -373,9 +373,9 @@ template <typename Type> class SingleLinkedList
 	///  вставки выдает итератор хвоста и этот метод можно использовать для вставки в прямом порядке
 	template <typename InputIterator> void Assign(InputIterator from, InputIterator to)
 	{
-		Iterator iter_begin(&head_);
 		if (IsEmpty())
 		{
+			Iterator iter_begin(&head_);
 			while (from != to)
 			{
 				iter_begin = InsertAfter(iter_begin, *from);

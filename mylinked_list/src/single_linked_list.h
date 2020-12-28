@@ -145,16 +145,11 @@ template <typename Type> class SingleLinkedList
 	// Константный итератор, предоставляющий доступ для чтения к элементам списка
 	using ConstIterator = BasicIterator<const Type>;
 
-	SingleLinkedList() : size_(0), head_({})					/// начальные значения полей лучше описать как значения "по умолчанию"
-	{
-	}
+	SingleLinkedList() = default;
 
-	SingleLinkedList(std::initializer_list<Type> values) : size_(0), head_({})	/// начальные значения полей лучше описать как значения "по умолчанию"
+	SingleLinkedList(std::initializer_list<Type> values)
 	{
-		for (auto it = std::rbegin(values); it != std::rend(values); ++it)	/// почему не Assign?
-		{
-			PushFront(*it);
-		}
+		Assign(values.begin(), values.end());
 	}
 
 	SingleLinkedList(const SingleLinkedList& other)
@@ -193,14 +188,10 @@ template <typename Type> class SingleLinkedList
 
 	void Clear() noexcept
 	{
-		while (head_.next_node != nullptr)
+		while (size_ != 0)
 		{
-			auto next_element = head_.next_node;		/// дублирование кода PopFront, используйте этот метод для очистки
-			head_.next_node = next_element->next_node;
-			delete next_element;
+			PopFront();
 		}
-
-		size_ = 0;
 	}
 
 	// Сообщает, пустой ли список за время O(1)
@@ -291,11 +282,7 @@ template <typename Type> class SingleLinkedList
 
 	void PopFront() noexcept
 	{
-		if (IsEmpty())
-		{
-			return;
-		}
-		else	/// если в if был return, то не нужно использовать else
+		if (!IsEmpty())
 		{
 			Node* first_item = head_.next_node;
 			Node* second_item = first_item->next_node;
@@ -340,31 +327,10 @@ template <typename Type> class SingleLinkedList
 		std::swap(head_.next_node, other.head_.next_node);
 		std::swap(size_, other.size_);
 	}
-/// почему не использовали std::equal? он делает тоже самое
+	/// Q: почему не использовали std::equal? | A: да, что-то решил прокатиться на "велосипеде" сам)
 	friend bool operator==(const SingleLinkedList& own, const SingleLinkedList& other)
 	{
-		if (own.size() != other.size())
-		{
-			return false;
-		}
-		else
-		{
-			Node this_head = own.head_;
-			Node other_head = other.head_;
-			while (this_head.next_node != nullptr && other_head.next_node != nullptr)
-			{
-				auto this_next_element = this_head.next_node;
-				this_head.next_node = this_next_element->next_node;
-
-				auto other_next_element = other_head.next_node;
-				other_head.next_node = other_next_element->next_node;
-				if (this_next_element->value != other_next_element->value)
-				{
-					return false;
-				}
-			}
-		}
-		return true;
+		return std::equal(own.begin(), own.end(), other.begin(), other.end());
 	}
 
 	friend bool operator!=(const SingleLinkedList& own, const SingleLinkedList& other)
@@ -386,12 +352,12 @@ template <typename Type> class SingleLinkedList
 
 	friend bool operator<=(const SingleLinkedList& lhs, const SingleLinkedList& rhs)
 	{
-		return (lhs == rhs) || (lhs < rhs);	/// постарайтесь выразить через один оператор <
+		return (lhs == rhs) || (lhs < rhs); /// постарайтесь выразить через один оператор <
 	}
 
 	friend bool operator>=(const SingleLinkedList& lhs, const SingleLinkedList& rhs)
 	{
-		return (rhs <= lhs);			/// постарайтесь выразить через один оператор <
+		return (rhs <= lhs); /// постарайтесь выразить через один оператор <
 	}
 
 	friend void swap(SingleLinkedList& lhs, SingleLinkedList& rhs) noexcept
@@ -400,26 +366,30 @@ template <typename Type> class SingleLinkedList
 	}
 
   private:
-///  желательно не использовать временный объект (tmp), т.к. этот метод скорее всего будет использоваться только
-///  в конструкторе (для этого желательно добавить assign для проверки, что пустой)
-///  поэтому конструируемый объект уже пустой и его можно использовать для создания
-///  в правильности реализации я не сомневаюсь, но попрошу упростить, у вас есть метод InserAfter, который после вставки выдает итератор хвоста
-///  и этот метод можно использовать для вставки в прямом порядке
+	///  желательно не использовать временный объект (tmp), т.к. этот метод скорее всего будет использоваться только
+	///  в конструкторе (для этого желательно добавить assign для проверки, что пустой)
+	///  поэтому конструируемый объект уже пустой и его можно использовать для создания
+	///  в правильности реализации я не сомневаюсь, но попрошу упростить, у вас есть метод InserAfter, который после
+	///  вставки выдает итератор хвоста и этот метод можно использовать для вставки в прямом порядке
 	template <typename InputIterator> void Assign(InputIterator from, InputIterator to)
 	{
-		SingleLinkedList<Type> tmp;
-		Node** node_ptr = &tmp.head_.next_node;
-		while (from != to)
+		Iterator iter_begin(&head_);
+		if (IsEmpty())
 		{
-			assert(*node_ptr == nullptr);
-			*node_ptr = new Node(*from, nullptr);
-			++tmp.size_;
-			node_ptr = &((*node_ptr)->next_node);
-			++from;
+			while (from != to)
+			{
+				iter_begin = InsertAfter(iter_begin, *from);
+				++from;
+			}
+			return;
 		}
-
-		swap(tmp);
+		else /// A: Логично нет ? Если вектор не пуст (навсякий случай), очищаем его, И вызываем Assign снова ?
+		{
+			Clear();
+			Assign(from, to);
+		}
 	}
-	size_t size_;	/// про значения "по умолчанию", что бы было понятно, выглядит так: size_t size_ = 0;
-	Node head_;
+
+	size_t size_ = 0;
+	Node head_ = Node();
 };

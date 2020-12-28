@@ -1,9 +1,9 @@
 #include "../src/single_linked_list.h"
 #include "helper.h"
+#include <algorithm>
 #include <gtest/gtest.h>
 #include <iostream>
 #include <set>
-#include <algorithm>
 
 class SingleLinkedListTests : public ::testing::Test
 {
@@ -435,6 +435,7 @@ TEST_F(SingleLinkedListTests, Assign)
 	// Вспомогательный класс, бросающий исключение после создания N-копии
 	struct ThrowOnCopy
 	{
+
 		ThrowOnCopy() = default;
 		explicit ThrowOnCopy(int& copy_counter) noexcept : countdown_ptr(&copy_counter)
 		{
@@ -455,11 +456,11 @@ TEST_F(SingleLinkedListTests, Assign)
 		}
 		// Присваивание элементов этого типа не требуется
 		ThrowOnCopy& operator=(const ThrowOnCopy& rhs) = delete;
+
 		// Адрес счётчика обратного отсчёта. Если не равен nullptr, то уменьшается при каждом копировании.
 		// Как только обнулится, конструктор копирования выбросит исключение
 		int* countdown_ptr = nullptr;
 	};
-
 	// Безопасное присваивание списков
 	{
 		SingleLinkedList<ThrowOnCopy> src_list;

@@ -1,7 +1,5 @@
 #include <gtest/gtest.h>
-#include <iostream>
 
-#include "src/bidirect_linked_list.h"
 int main(int argc, char** argv)
 {
 	::testing::InitGoogleTest(&argc, argv);

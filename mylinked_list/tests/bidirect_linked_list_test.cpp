@@ -1,5 +1,4 @@
-#include "../src/bidirect_linked_list.h"
-#include "helper.h"
+#include "linked_list.h"
 #include <gtest/gtest.h>
 #include <iostream>
 #include <set>
@@ -553,12 +552,4 @@ TEST_F(BidirectLinkedListTests, Swap2)
 		ASSERT_EQ(first.size(), old_first_size);
 		ASSERT_EQ(second.size(), old_second_size);
 	}
-}
-
-TEST(Booltest, test1)
-{
-	int a = 10;
-	int b = 6;
-	ASSERT_TRUE(!(a < b));
-//	ASSERT_TRUE(a <= b);
 }

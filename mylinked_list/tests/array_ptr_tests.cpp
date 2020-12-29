@@ -1,4 +1,4 @@
-#include "../src/array_ptr.h"
+#include "array_ptr.h"
 #include <gtest/gtest.h>
 
 TEST(ArrayTest, Arrayptr)

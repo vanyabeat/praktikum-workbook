@@ -327,9 +327,10 @@ public:
     }
 
     template<typename InputIterator>
-    void reassign(InputIterator from, InputIterator to){
+    void reassign(InputIterator from, InputIterator to) {
         assign_(from, to);
     }
+
 private:
     template<typename InputIterator>
     void assign_(InputIterator from, InputIterator to) {

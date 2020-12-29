@@ -145,6 +145,10 @@ public:
             return copy;
         }
 
+        iterator operator+=(const difference_type value) noexcept {
+            return ((*this) + value);
+        }
+
         iterator operator-(const difference_type &value) noexcept {
             iterator copy(*this);
             for (auto i = 1; i <= value; ++i) {
@@ -182,14 +186,25 @@ public:
 #pragma endregion
 #pragma region Constructors_and_Destructors
 
-    LinkedList() : size_(0) {
+    LinkedList() {
         head_ = new Node();
         tail_ = new Node();
         head_->next_node = tail_;
         tail_->prev_node = head_;
     }
 
-    LinkedList(std::initializer_list<Type> values) : size_(0) {
+    template<typename it>
+    LinkedList(it begin, it end) {
+        LinkedList<Type> tmp;
+        it beg_copy(begin);
+        while (beg_copy != end) {
+            tmp.push_back(*beg_copy);
+            ++beg_copy;
+        }
+        swap(tmp);
+    }
+
+    LinkedList(std::initializer_list<Type> values) {
         LinkedList<Type> tmp;
 
         for (const auto &val : values) {
@@ -198,7 +213,7 @@ public:
         swap(tmp);
     }
 
-    LinkedList(const LinkedList &other) : size_(0) {
+    LinkedList(const LinkedList &other) {
         if (*this != &other) {
             LinkedList<Type> tmp;
             for (const auto &item : other) {
@@ -367,7 +382,7 @@ public:
 
 #pragma endregion
 private:
-    size_t size_;
+    size_t size_ = 0;
     Node *head_ = nullptr;
     Node *tail_ = nullptr;
 };

@@ -17,21 +17,18 @@ std::vector<std::string> SplitIntoWords(const std::string &text) {
 }
 
 
-std::vector<std::string_view> SplitIntoWordsView(std::string_view str)
-{
-	using namespace std;
+std::vector<std::string_view> SplitIntoWordsView(std::string_view str) {
 	std::vector<std::string_view> result;
-	size_t first = 0;
+	const int64_t end = std::string_view::npos;
+	while (true) {
+		int64_t space = str.find(' ');
+		result.push_back(str.substr(0, space));
+		if (space == end) {
+			break;
+		} else {
+			str.remove_prefix(space + 1);
+		}
 
-	while (first != std::string_view::npos)
-	{
-		first = str.find_first_of(" "s, first);
-
-		if (first != str.size())
-			result.emplace_back(str.substr(0, first));
-
-		str.remove_prefix(first + 1);
 	}
-
 	return result;
 }

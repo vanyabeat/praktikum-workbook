@@ -3,7 +3,7 @@
 #include <vector>
 #include <set>
 std::vector<std::string> SplitIntoWords(const std::string &text);
-
+std::vector<std::string_view> SplitIntoWordsView(std::string_view str);
 template<typename StringContainer>
 static std::set<std::string> MakeUniqueNonEmptyStrings(const StringContainer &strings) {
 	std::set<std::string> non_empty_strings;

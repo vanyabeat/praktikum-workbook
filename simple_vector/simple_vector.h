@@ -5,13 +5,26 @@
 #include <initializer_list>
 #include <iterator>
 
+class ProxyObject {
+public:
+	ProxyObject(size_t capacity) : capacity_(capacity) {}
+
+	size_t GetCapacity() {
+		return capacity_;
+	}
+
+private:
+	size_t capacity_;
+};
+
 template<typename Type>
 class SimpleVector {
+public:
 public:
 	using Iterator = Type *;
 	using ConstIterator = const Type *;
 
-#pragma region Constructors
+	//#pragma region Constructors
 	SimpleVector() noexcept = default;
 
 	SimpleVector(size_t size, const Type &value = Type{})
@@ -31,8 +44,12 @@ public:
 		  data(size_) {
 		std::copy(init.begin(), init.end(), begin());
 	}
-#pragma endregion
-#pragma region Swaps
+
+	SimpleVector(ProxyObject obj) {
+		capacity_ = obj.GetCapacity();
+	}
+	//#pragma endregion
+	//#pragma region Swaps
 	void swap(SimpleVector &other) noexcept {
 		std::swap(size_, other.size_);
 		std::swap(capacity_, other.capacity_);
@@ -42,8 +59,8 @@ public:
 	friend void swap(SimpleVector<Type> &lhs, SimpleVector<Type> &rhs) {
 		lhs.swap(rhs);
 	}
-#pragma endregion
-#pragma region Operators
+//#pragma endregion
+//#pragma region Operators
 	SimpleVector &operator=(const SimpleVector<Type> &other) {
 		if (this != &other) {
 			if (other.IsEmpty()) {
@@ -83,8 +100,19 @@ public:
 	friend bool operator>=(const SimpleVector &lhs, const SimpleVector &rhs) {
 		return !(lhs < rhs);
 	}
-#pragma endregion
 
+	// Возвращает ссылку на элемент с индексом index
+	Type &operator[](size_t index) noexcept {
+		//        assert(index >= 0 && index < size_);
+		return data[index];
+	}
+
+	// Возвращает константную ссылку на элемент с индексом index
+	const Type &operator[](size_t index) const noexcept {
+		//        assert(index >= 0 && index < size_);
+		return data[index];
+	}
+	//#pragma endregion
 
 	// Добавляет элемент в конец вектора
 	// При нехватке места увеличивает вдвое вместимость вектора
@@ -162,17 +190,6 @@ public:
 		return (size_ == 0);
 	}
 
-	// Возвращает ссылку на элемент с индексом index
-	Type &operator[](size_t index) noexcept {
-		//        assert(index >= 0 && index < size_);
-		return data[index];
-	}
-
-	// Возвращает константную ссылку на элемент с индексом index
-	const Type &operator[](size_t index) const noexcept {
-		//        assert(index >= 0 && index < size_);
-		return data[index];
-	}
 
 	// Возвращает константную ссылку на элемент с индексом index
 	// Выбрасывает исключение std::out_of_range, если index >= size
@@ -216,7 +233,15 @@ public:
 		size_ = new_size;
 	}
 
-#pragma region Iterators
+	void Reserve(size_t new_capacity) {
+		if (new_capacity > capacity_) {
+			ArrayPtr<Type> tmp(new_capacity);
+			std::copy(begin(), end(), tmp.Get());
+			data.swap(tmp);
+			capacity_ = new_capacity;
+		}
+	}
+	//#pragma region Iterators
 	Iterator begin() noexcept {
 		return data.Get();
 	}
@@ -240,9 +265,13 @@ public:
 	ConstIterator cend() const noexcept {
 		return end();
 	}
-#pragma endregion
+	//#pragma endregion
 private:
 	size_t size_ = 0;
 	size_t capacity_ = 0;
 	ArrayPtr<Type> data;
 };
+
+ProxyObject Reserve(size_t capacity_to_reserve) {
+	return ProxyObject(capacity_to_reserve);
+}

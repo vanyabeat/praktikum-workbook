@@ -107,12 +107,12 @@ public:
 
 	// Удаляет элемент вектора в указанной позиции
 	Iterator Erase(ConstIterator pos) {
-		size_t size_pos = pos - data;
-		std::copy(data + size_pos + 1, data + size_, data + size_pos);
-		--size_;
-		Iterator it = data;
-		std::advance(it, size_pos);
-		return it;
+		size_t index = pos - cbegin();
+		if (!IsEmpty()) {
+			std::move(begin() + index + 1, end(), begin() + index);
+			--size_;
+		}
+		return begin() + index;
 	}
 
 	friend bool operator==(const SimpleVector<Type> &lhs, const SimpleVector<Type> &rhs) {

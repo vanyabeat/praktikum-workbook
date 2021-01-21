@@ -220,7 +220,7 @@ public:
 	// Обнуляет размер массива, не изменяя его вместимость
 	void Clear() noexcept {
 		size_ = 0;
-		std::fill(data, data + capacity_, Type{});
+
 	}
 
 	// Изменяет размер массива.

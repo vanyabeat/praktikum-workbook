@@ -27,5 +27,5 @@ ucm_add_flags(
     # "-fno-optimize-sibling-calls"
     # "-fsanitize=leak"
 )
-add_executable(simple_vector tests.cpp simple_vector.h)
+add_executable(simple_vector tests.cpp simple_vector.h array_ptr.h)
 target_link_libraries(simple_vector ${CONAN_LIBS})

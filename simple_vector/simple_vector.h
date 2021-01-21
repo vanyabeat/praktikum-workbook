@@ -19,8 +19,10 @@ public:
 		std::fill(begin(), end(), value);
 	}
 
-	SimpleVector(const SimpleVector<Type> &other) : size_(other.size_), capacity_(other.size_), data(other.size_) {
-		std::copy(other.begin(), other.end(), data);
+	SimpleVector(const SimpleVector<Type> &other) : size_(other.GetSize()),
+													capacity_(other.GetCapacity()),
+													data(size_) {
+		std::copy(other.begin(), other.end(), begin());
 	}
 
 	SimpleVector(std::initializer_list<Type> init)
@@ -30,19 +32,18 @@ public:
 		std::copy(init.begin(), init.end(), begin());
 	}
 #pragma endregion
-
-
-	// Обменивает содержимое списков за время O(1)
-	void swap(SimpleVector<Type> &other) noexcept {
-		std::swap(data, other.data);
+#pragma region Swaps
+	void swap(SimpleVector &other) noexcept {
 		std::swap(size_, other.size_);
 		std::swap(capacity_, other.capacity_);
+		data.swap(other.data);
 	}
 
 	friend void swap(SimpleVector<Type> &lhs, SimpleVector<Type> &rhs) {
 		lhs.swap(rhs);
 	}
-
+#pragma endregion
+#pragma region Operators
 	SimpleVector &operator=(const SimpleVector<Type> &other) {
 		if (this != &other) {
 			if (other.IsEmpty()) {
@@ -54,6 +55,36 @@ public:
 		}
 		return *this;
 	}
+
+	friend bool operator==(const SimpleVector<Type> &lhs, const SimpleVector<Type> &rhs) {
+		return std::equal(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
+	}
+
+	friend bool operator!=(const SimpleVector<Type> &lhs, const SimpleVector<Type> &rhs) {
+
+		return !(lhs == rhs);
+	}
+
+	friend bool operator<(const SimpleVector &lhs, const SimpleVector &rhs) {
+
+		return std::lexicographical_compare(lhs.cbegin(), lhs.cend(), rhs.cbegin(), rhs.cend());
+	}
+
+
+	friend bool operator>(const SimpleVector &lhs, const SimpleVector &rhs) {
+
+		return (rhs < lhs);
+	}
+
+	friend bool operator<=(const SimpleVector &lhs, const SimpleVector &rhs) {
+		return !(rhs < lhs);
+	}
+
+	friend bool operator>=(const SimpleVector &lhs, const SimpleVector &rhs) {
+		return !(lhs < rhs);
+	}
+#pragma endregion
+
 
 	// Добавляет элемент в конец вектора
 	// При нехватке места увеличивает вдвое вместимость вектора
@@ -86,14 +117,11 @@ public:
 	// вместимость вектора должна увеличиться вдвое, а для вектора вместимостью 0 стать равной 1
 	Iterator Insert(ConstIterator pos, const Type &value) {
 		size_t npos = pos - cbegin();
-		// если он пустой
 		if (capacity_ == 0) {
 			SimpleVector<Type> tmp(1);
 			tmp.data[0] = value;
 			swap(tmp);
-		}
-		// иначе
-		else {
+		} else {
 			SimpleVector<Type> tmp(capacity_);
 			if (size_ == capacity_) {
 				tmp.Resize(2 * capacity_);
@@ -116,35 +144,6 @@ public:
 		}
 		return begin() + index;
 	}
-
-	friend bool operator==(const SimpleVector<Type> &lhs, const SimpleVector<Type> &rhs) {
-		return std::equal(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
-	}
-
-	friend bool operator!=(const SimpleVector<Type> &lhs, const SimpleVector<Type> &rhs) {
-
-		return !(lhs == rhs);
-	}
-
-	friend bool operator<(const SimpleVector &lhs, const SimpleVector &rhs) {
-
-		return std::lexicographical_compare(lhs.cbegin(), lhs.cend(), rhs.cbegin(), rhs.cend());
-	}
-
-
-	friend bool operator>(const SimpleVector &lhs, const SimpleVector &rhs) {
-
-		return (rhs < lhs);
-	}
-
-	friend bool operator<=(const SimpleVector &lhs, const SimpleVector &rhs) {
-		return !(rhs < lhs);
-	}
-
-	friend bool operator>=(const SimpleVector &lhs, const SimpleVector &rhs) {
-		return !(lhs < rhs);
-	}
-
 
 	// Возвращает количество элементов в массиве
 	size_t GetSize() const noexcept {
@@ -205,72 +204,45 @@ public:
 	void Resize(size_t new_size) {
 		if (new_size > capacity_) {
 			size_t new_capacity = std::max(new_size, capacity_ * 2);
-			//            ArrayPtr <Type> tmp(new_capacity);
-			Type *new_data = new Type[new_capacity];
-			std::fill(new_data, new_data + new_capacity, Type());
-			std::copy(begin(), end(), new_data);
+			ArrayPtr<Type> tmp(new_capacity);
+			std::copy(begin(), end(), tmp.Get());
+			data.swap(tmp);
+			std::fill(end(), begin() + (new_capacity - capacity_), Type{});
 			capacity_ = new_capacity;
-
-			Type *old_data = data;
-			data = new_data;
-			delete[] old_data;
-			old_data = nullptr;
 		} else if (new_size > size_) {
 			std::fill(end(), begin() + new_size, Type{});
 		}
+
 		size_ = new_size;
 	}
 
-	// Возвращает итератор на начало массива
-	// Для пустого массива может быть равен (или не равен) nullptr
+#pragma region Iterators
 	Iterator begin() noexcept {
-		return data;
+		return data.Get();
 	}
 
-	// Возвращает итератор на элемент, следующий за последним
-	// Для пустого массива может быть равен (или не равен) nullptr
 	Iterator end() noexcept {
-		if (size_) {
-			return data + size_;
-		} else {
-			return nullptr;
-		}
+		return data.Get() + size_;
 	}
 
-	// Возвращает константный итератор на начало массива
-	// Для пустого массива может быть равен (или не равен) nullptr
 	ConstIterator begin() const noexcept {
-		return data;
+		return data.Get();
 	}
 
-	// Возвращает итератор на элемент, следующий за последним
-	// Для пустого массива может быть равен (или не равен) nullptr
 	ConstIterator end() const noexcept {
-		if (size_) {
-			return data + size_;
-		} else {
-			return nullptr;
-		}
+		return data.Get() + size_;
 	}
 
-	// Возвращает константный итератор на начало массива
-	// Для пустого массива может быть равен (или не равен) nullptr
 	ConstIterator cbegin() const noexcept {
-		return data;
+		return begin();
 	}
 
-	// Возвращает итератор на элемент, следующий за последним
-	// Для пустого массива может быть равен (или не равен) nullptr
 	ConstIterator cend() const noexcept {
-		if (size_) {
-			return data + size_;
-		} else {
-			return nullptr;
-		}
+		return end();
 	}
-
+#pragma endregion
 private:
-	ArrayPtr<Type> data;
 	size_t size_ = 0;
 	size_t capacity_ = 0;
+	ArrayPtr<Type> data;
 };

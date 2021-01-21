@@ -74,9 +74,11 @@ public:
 		}
 	}
 
-    void PopBack() {
-        --size_;
-    }
+	void PopBack() noexcept{
+		if(!IsEmpty()) {
+			--size_;
+		}
+	}
 
     // Вставляет значение value в позицию pos.
     // Возвращает итератор на вставленное значение

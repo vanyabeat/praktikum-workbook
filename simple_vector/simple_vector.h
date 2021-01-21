@@ -1,9 +1,9 @@
 #pragma once
 
+#include "array_ptr.h"
 #include <cassert>
 #include <initializer_list>
 #include <iterator>
-
 
 template<typename Type>
 class SimpleVector {
@@ -11,24 +11,26 @@ public:
 	using Iterator = Type *;
 	using ConstIterator = const Type *;
 
+#pragma region Constructors
 	SimpleVector() noexcept = default;
 
-	// Создаёт вектор из size элементов, инициализированных значением по умолчанию
-	explicit SimpleVector(size_t size) {
-		if (size) {
-			size_ = size;
-			capacity_ = size_;
-			data = new Type[capacity_];
-			std::fill(data, data + size, Type());
-		}
+	SimpleVector(size_t size, const Type &value = Type{})
+		: size_(size), capacity_(size), data(size_) {
+		std::fill(begin(), end(), value);
 	}
 
-	SimpleVector(const SimpleVector<Type> &other) {
-		size_ = other.size_;
-		capacity_ = size_;
-		data = new Type[capacity_];
+	SimpleVector(const SimpleVector<Type> &other) : size_(other.size_), capacity_(other.size_), data(other.size_) {
 		std::copy(other.begin(), other.end(), data);
 	}
+
+	SimpleVector(std::initializer_list<Type> init)
+		: size_(init.size()),
+		  capacity_(size_),
+		  data(size_) {
+		std::copy(init.begin(), init.end(), begin());
+	}
+#pragma endregion
+
 
 	// Обменивает содержимое списков за время O(1)
 	void swap(SimpleVector<Type> &other) noexcept {
@@ -144,30 +146,6 @@ public:
 	}
 
 
-	// Создаёт вектор из size элементов, инициализированных значением value
-	SimpleVector(size_t size, const Type &value) {
-		if (size) {
-			size_ = size;
-			capacity_ = size_;
-			data = new Type[capacity_];
-			std::fill(data, data + size, value);
-		}
-	}
-
-	// Создаёт вектор из std::initializer_list
-	SimpleVector(std::initializer_list<Type> init) {
-		if (init.size()) {
-			size_ = init.size();
-			capacity_ = size_;
-			data = new Type[init.size()];
-			std::copy(init.begin(), init.end(), data);
-		}
-	}
-
-	~SimpleVector() {
-		delete[] data;
-	}
-
 	// Возвращает количество элементов в массиве
 	size_t GetSize() const noexcept {
 		// Напишите тело самостоятельно
@@ -220,7 +198,6 @@ public:
 	// Обнуляет размер массива, не изменяя его вместимость
 	void Clear() noexcept {
 		size_ = 0;
-
 	}
 
 	// Изменяет размер массива.
@@ -293,7 +270,7 @@ public:
 	}
 
 private:
-	Type *data = nullptr;
+	ArrayPtr<Type> data;
 	size_t size_ = 0;
 	size_t capacity_ = 0;
 };

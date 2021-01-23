@@ -38,6 +38,10 @@ public:
 		std::copy(other.begin(), other.end(), begin());
 	}
 
+	SimpleVector(SimpleVector<Type> &&rvl) {
+		swap(rvl);
+	}
+
 	SimpleVector(std::initializer_list<Type> init)
 		: size_(init.size()),
 		  capacity_(size_),
@@ -59,8 +63,8 @@ public:
 	friend void swap(SimpleVector<Type> &lhs, SimpleVector<Type> &rhs) {
 		lhs.swap(rhs);
 	}
-//#pragma endregion
-//#pragma region Operators
+	//#pragma endregion
+	//#pragma region Operators
 	SimpleVector &operator=(const SimpleVector<Type> &other) {
 		if (this != &other) {
 			if (other.IsEmpty()) {

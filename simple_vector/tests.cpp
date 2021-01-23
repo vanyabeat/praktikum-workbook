@@ -430,14 +430,69 @@ TEST(SimpleVectorTest, noncopybable2) {
 		ASSERT_EQ(vector_to_move[i].GetX(), i);
 	}
 
-		SimpleVector<X> moved_vector = move(vector_to_move);
-		ASSERT_EQ(moved_vector.GetSize(), size);
-		ASSERT_EQ(vector_to_move.GetSize() , 0);
+	SimpleVector<X> moved_vector = move(vector_to_move);
+	ASSERT_EQ(moved_vector.GetSize(), size);
+	ASSERT_EQ(vector_to_move.GetSize(), 0);
 
-		for (size_t i = 0; i < size; ++i) {
-			ASSERT_EQ(moved_vector[i].GetX(), i);
-		}
+	for (size_t i = 0; i < size; ++i) {
+		ASSERT_EQ(moved_vector[i].GetX(), i);
+	}
 	cout << "Done!" << endl
 		 << endl;
 }
 
+TEST(SimpleVectorTest, noncopypable3) {
+
+	const size_t size = 5;
+	cout << "Test noncopiable push back" << endl;
+	SimpleVector<X> v;
+	for (size_t i = 0; i < size; ++i) {
+		v.PushBack(X(i));
+	}
+
+	ASSERT_EQ(v.GetSize(), size);
+
+	for (size_t i = 0; i < size; ++i) {
+		ASSERT_EQ(v[i].GetX(), i);
+	}
+	cout << "Done!" << endl
+		 << endl;
+}
+
+TEST(SimpleVectorTest, noncopiableinsert) {
+	const size_t size = 5;
+	cout << "Test noncopiable insert" << endl;
+	SimpleVector<X> v;
+	for (size_t i = 0; i < size; ++i) {
+		v.PushBack(X(i));
+	}
+
+	// в начало
+	v.Insert(v.begin(), X(size + 1));
+	ASSERT_EQ(v.GetSize(), size + 1);
+	ASSERT_EQ(v.begin()->GetX(), size + 1);
+	// в конец
+	v.Insert(v.end(), X(size + 2));
+	ASSERT_EQ(v.GetSize(), size + 2);
+	ASSERT_EQ((v.end() - 1)->GetX(), size + 2);
+	// в середину
+	v.Insert(v.begin() + 3, X(size + 3));
+	ASSERT_EQ(v.GetSize(), size + 3);
+	ASSERT_EQ((v.begin() + 3)->GetX(), size + 3);
+	cout << "Done!" << endl
+		 << endl;
+}
+
+TEST(SimpleVectorTest, erasenoncopy) {
+	const size_t size = 3;
+	cout << "Test noncopiable erase" << endl;
+	SimpleVector<X> v;
+	for (size_t i = 0; i < size; ++i) {
+		v.PushBack(X(i));
+	}
+
+	auto it = v.Erase(v.begin());
+	assert(it->GetX() == 1);
+	cout << "Done!" << endl
+		 << endl;
+}

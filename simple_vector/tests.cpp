@@ -395,21 +395,49 @@ TEST(SimpleVectorTest, moveoperator) {
 		 << endl;
 }
 
-TEST(SimpleVectorTest, noncopybable) {
+TEST(SimpleVectorTest, noncopybable1) {
+	const size_t size = 5;
+	cout << "Test noncopiable object, move constructor" << endl;
+	SimpleVector<X> vector_to_move;
+	//	for (size_t i = 0; i < size; ++i) {
+	//		vector_to_move.PushBack(X(i));
+	//	}
+	vector_to_move.Insert(vector_to_move.end(), X(1));
+	int a = 6;
+	//	for (size_t i = 0; i < size; ++i){
+	//		ASSERT_EQ(vector_to_move[i].GetX(), i);
+	//	}
+
+	//	SimpleVector<X> moved_vector = move(vector_to_move);
+	//	ASSERT_EQ(moved_vector.GetSize(), size);
+	//	ASSERT_EQ(vector_to_move.GetSize() , 0);
+	//
+	//	for (size_t i = 0; i < size; ++i) {
+	//		ASSERT_EQ(moved_vector[i].GetX(), i);
+	//	}
+	cout << "Done!" << endl
+		 << endl;
+}
+
+TEST(SimpleVectorTest, noncopybable2) {
 	const size_t size = 5;
 	cout << "Test noncopiable object, move constructor" << endl;
 	SimpleVector<X> vector_to_move;
 	for (size_t i = 0; i < size; ++i) {
 		vector_to_move.PushBack(X(i));
 	}
-
-	SimpleVector<X> moved_vector = move(vector_to_move);
-	assert(moved_vector.GetSize() == size);
-	assert(vector_to_move.GetSize() == 0);
-
 	for (size_t i = 0; i < size; ++i) {
-		assert(moved_vector[i].GetX() == i);
+		ASSERT_EQ(vector_to_move[i].GetX(), i);
 	}
+
+		SimpleVector<X> moved_vector = move(vector_to_move);
+		ASSERT_EQ(moved_vector.GetSize(), size);
+		ASSERT_EQ(vector_to_move.GetSize() , 0);
+
+		for (size_t i = 0; i < size; ++i) {
+			ASSERT_EQ(moved_vector[i].GetX(), i);
+		}
 	cout << "Done!" << endl
 		 << endl;
 }
+

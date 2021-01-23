@@ -381,3 +381,35 @@ TEST(SimpleVectorTest, moveconstructor) {
 	cout << "Done!" << endl
 		 << endl;
 }
+
+TEST(SimpleVectorTest, moveoperator) {
+	const size_t size = 1000000;
+	cout << "Test with named object, operator=" << endl;
+	SimpleVector<int> vector_to_move(GenerateVector(size));
+	ASSERT_EQ(vector_to_move.GetSize(), size);
+
+	SimpleVector<int> moved_vector = move(vector_to_move);
+	ASSERT_EQ(moved_vector.GetSize(), size);
+	ASSERT_EQ(vector_to_move.GetSize(), 0);
+	cout << "Done!" << endl
+		 << endl;
+}
+
+TEST(SimpleVectorTest, noncopybable) {
+	const size_t size = 5;
+	cout << "Test noncopiable object, move constructor" << endl;
+	SimpleVector<X> vector_to_move;
+	for (size_t i = 0; i < size; ++i) {
+		vector_to_move.PushBack(X(i));
+	}
+
+	SimpleVector<X> moved_vector = move(vector_to_move);
+	assert(moved_vector.GetSize() == size);
+	assert(vector_to_move.GetSize() == 0);
+
+	for (size_t i = 0; i < size; ++i) {
+		assert(moved_vector[i].GetX() == i);
+	}
+	cout << "Done!" << endl
+		 << endl;
+}

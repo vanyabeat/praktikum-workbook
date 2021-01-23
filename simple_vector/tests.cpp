@@ -1,7 +1,8 @@
 #include "simple_vector.h"
+#include <cassert>
 #include <gtest/gtest.h>
-#include <list>
-#include <random>
+#include <iostream>
+#include <numeric>
 #include <string>
 
 
@@ -326,4 +327,57 @@ TEST(SimpleVectorTests, Reserve) {
 		}
 		cout << "Done!"s << endl;
 	}
+}
+
+class X {
+public:
+	X()
+		: X(5) {
+	}
+	X(size_t num)
+		: x_(num) {
+	}
+	X(const X &other) = delete;
+	X &operator=(const X &other) = delete;
+	X(X &&other) {
+		x_ = exchange(other.x_, 0);
+	}
+	X &operator=(X &&other) {
+		x_ = exchange(other.x_, 0);
+		return *this;
+	}
+	size_t GetX() const {
+		return x_;
+	}
+
+private:
+	size_t x_;
+};
+
+SimpleVector<int> GenerateVector(size_t size) {
+	SimpleVector<int> v(size);
+	iota(v.begin(), v.end(), 1);
+	return v;
+}
+
+TEST(SimpleVectorTest, temporary) {
+	const size_t size = 1000000;
+	cout << "Test with temporary object, copy elision" << endl;
+	SimpleVector<int> moved_vector(GenerateVector(size));
+	ASSERT_EQ(moved_vector.GetSize(), size);
+	cout << "Done!" << endl
+		 << endl;
+}
+
+TEST(SimpleVectorTest, moveconstructor) {
+	const size_t size = 1000000;
+	cout << "Test with named object, move constructor" << endl;
+	SimpleVector<int> vector_to_move(GenerateVector(size));
+	ASSERT_EQ(vector_to_move.GetSize(), size);
+
+	SimpleVector<int> moved_vector(move(vector_to_move));
+	ASSERT_EQ(moved_vector.GetSize(), size);
+	ASSERT_EQ(vector_to_move.GetSize(), 0);
+	cout << "Done!" << endl
+		 << endl;
 }

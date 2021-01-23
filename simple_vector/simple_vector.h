@@ -137,6 +137,9 @@ public:
 		}
 	}
 
+	void PushBack(Type &&item) {
+		Insert(end(), std::move(item));
+	}
 	void PopBack() noexcept {
 		if (!IsEmpty()) {
 			--size_;
@@ -165,6 +168,27 @@ public:
 			swap(tmp);
 		}
 		return begin() + npos;
+	}
+
+	Iterator Insert(ConstIterator pos, Type&& value) {
+		size_t n = pos - cbegin();
+		if (capacity_ == 0) {
+			ArrayPtr<Type> temp(1);
+			temp[0] = std::move(value);
+			data.swap(temp);
+			capacity_ = 1;
+		} else {
+			if (size_ == capacity_) {
+				capacity_ *= 2;
+			}
+			ArrayPtr<Type> temp(capacity_);
+			std::move(begin(), begin() + n, temp.Get());
+			std::move_backward(begin() + n, begin() + size_ , temp.Get() + size_ + 1);
+			temp[n] = std::move(value);
+			data.swap(temp);
+		}
+		size_++;
+		return begin() + n;
 	}
 
 	// Удаляет элемент вектора в указанной позиции

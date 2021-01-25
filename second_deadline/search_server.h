@@ -31,18 +31,17 @@ public:
 	std::tuple<std::vector<std::string>, DocumentStatus> MatchDocument(const std::string &raw_query, int document_id) const;
 	const std::map<std::string, double> &GetWordFrequencies(int document_id) const;
 	int GetDocumentCount() const;
-
 	void RemoveDocument(int document_id);
 
 /// не знаю, на сколько это корректно понять тип результата по условию задачи, оставим это на вашем понимании задачи
-	// 
+	//
 	std::set<std::string> GetAllWordsInDocument(const int document_id) const;
 
 	std::set<int>::const_iterator begin() const;
 
 	std::set<int>::const_iterator end() const;
 
-private:
+  private:
 	struct DocumentData {
 		int rating;
 		DocumentStatus status;

@@ -9,7 +9,7 @@ class ProxyObject {
 public:
 	ProxyObject(size_t capacity) : capacity_(capacity) {}
 
-	size_t GetCapacity() {
+	size_t GetCapacity() {	/// метод не меняет объект, пожтому должен быть константныйм
 		return capacity_;
 	}
 
@@ -20,7 +20,7 @@ private:
 template<typename Type>
 class SimpleVector {
 public:
-public:
+public:	/// повторныый public: можно подчистить
 	using Iterator = Type *;
 	using ConstIterator = const Type *;
 
@@ -50,7 +50,7 @@ public:
 	}
 
 	SimpleVector(ProxyObject obj) {
-		capacity_ = obj.GetCapacity();
+		capacity_ = obj.GetCapacity();	/// этого не достаточно, выделланя память в data должна равная capacity_ и переместите инициализацию в список инициализации
 	}
 	//#pragma endregion
 	//#pragma region Swaps
@@ -120,6 +120,7 @@ public:
 
 	// Добавляет элемент в конец вектора
 	// При нехватке места увеличивает вдвое вместимость вектора
+/// предлагаю пересмотреть реализацию для проверки и изменения размера у вас есть методы Resize, получается тут дублирование кода
 	void PushBack(const Type &item) {
 		if (capacity_ == 0) {
 			SimpleVector<Type> tmp(1);
@@ -146,13 +147,22 @@ public:
 		}
 	}
 
+
+/// предлагая пересмотреть реализации копирующего и перемещаящего Insert
+/// 1. код у них должен быть полностью идентичным, отличается он только перемещением или копированием всего одного нового элемента.
+///    поэтому замечания пишу только для первого метода, хотя вариант реализации у перемещаемого Insert более интересна
+/// 2. раз код оплностью должен быть идентичным, то значит есть проблема повтора кода и ее нужно решать, могу предлодить 3 варианта
+///	1. общую часть можно выделить в отдельный приватный метод
+///	2. можно копирующий метод реализовать через перемещаемый с копией во временной переменной: f(const T & a) { T copy_a = a; return f(std::move(copy_a)); }
+///	3. более правильный испольщзовать std::forward, но его пока что не советую использовать, вы его еще не проходили
+/// 3. повозможности пльзуйтесь уже имеющимеся методами по изменения размерности (Reserve, Resize)
 	// Вставляет значение value в позицию pos.
 	// Возвращает итератор на вставленное значение
 	// Если перед вставкой значения вектор был заполнен полностью,
 	// вместимость вектора должна увеличиться вдвое, а для вектора вместимостью 0 стать равной 1
 	Iterator Insert(ConstIterator pos, const Type &value) {
-		size_t npos = pos - cbegin();
-		if (capacity_ == 0) {
+		size_t npos = pos - cbegin();				/// далее не меняется должна быть const
+		if (capacity_ == 0) {					/// нет смысла выделять данный случай, по сути это тоже Resive
 			SimpleVector<Type> tmp(1);
 			tmp.data[0] = value;
 			swap(tmp);
@@ -162,7 +172,7 @@ public:
 				tmp.Resize(2 * capacity_);
 			}
 			tmp.size_ = size_ + 1;
-			std::copy(cbegin(), pos, tmp.begin());
+			std::copy(cbegin(), pos, tmp.begin());		/// значения в старом контейнере уже будут не нужны, правильней использовать std::move
 			tmp.data[npos] = value;
 			std::copy(pos, cend(), tmp.begin() + npos + 1);
 			swap(tmp);
@@ -192,7 +202,7 @@ public:
 	}
 
 	// Удаляет элемент вектора в указанной позиции
-	Iterator Erase(ConstIterator pos) {
+	Iterator Erase(ConstIterator pos) {	/// желательно добавить обработку (условеи или assert) варианта pos == end()
 		size_t index = pos - cbegin();
 		if (!IsEmpty()) {
 			std::move(begin() + index + 1, end(), begin() + index);
@@ -221,17 +231,17 @@ public:
 
 	// Возвращает константную ссылку на элемент с индексом index
 	// Выбрасывает исключение std::out_of_range, если index >= size
-	Type &At(size_t index) {
-		if (index < size_) {
-			return data[index];
-		} else {
-			throw std::out_of_range("Invalid index");
+	Type &At(size_t index) {					/// не замечание, рекомендация, лучше перевернуть условие
+		if (index < size_) {					/// if (...)
+			return data[index];				///	throw ;
+		} else {						/// далее основной код
+			throw std::out_of_range("Invalid index");	/// в таком виде код более читаемый
 		}
 	}
 
 	// Возвращает константную ссылку на элемент с индексом index
 	// Выбрасывает исключение std::out_of_range, если index >= size
-	const Type &At(size_t index) const {
+	const Type &At(size_t index) const {				///    ---//---
 		if (index < size_) {
 			return data[index];
 		} else {
@@ -249,10 +259,10 @@ public:
 	void Resize(size_t new_size) {
 		if (new_size > capacity_) {
 			size_t new_capacity = std::max(new_size, capacity_ * 2);
-			ArrayPtr<Type> tmp(new_capacity);
+			ArrayPtr<Type> tmp(new_capacity);	/// с этого места повтор кода с Reserve, воспользуйтесь этим методом
 			std::copy(begin(), end(), tmp.Get());
 			data.swap(tmp);
-			std::fill(end(), begin() + (new_capacity - capacity_), Type{});
+			std::fill(end(), begin() + (new_capacity - capacity_), Type{}); /// нет смысла обнулять новые ячейки, а только до new_size
 			capacity_ = new_capacity;
 		} else if (new_size > size_) {
 			std::fill(end(), begin() + new_size, Type{});
@@ -264,7 +274,7 @@ public:
 	void Reserve(size_t new_capacity) {
 		if (new_capacity > capacity_) {
 			ArrayPtr<Type> tmp(new_capacity);
-			std::copy(begin(), end(), tmp.Get());
+			std::copy(begin(), end(), tmp.Get());	/// в старом объекте значения ячеек уже будут не нужны, лучше использовать std::move
 			data.swap(tmp);
 			capacity_ = new_capacity;
 		}
@@ -297,7 +307,7 @@ public:
 private:
 	size_t size_ = 0;
 	size_t capacity_ = 0;
-	ArrayPtr<Type> data;
+	ArrayPtr<Type> data;	/// следуйте порядку наименования, в проете поля классов должны заканчиваться подчеркиванием (data_)
 };
 
 ProxyObject Reserve(size_t capacity_to_reserve) {

@@ -55,7 +55,7 @@ public:
 
 	// Возвращает true, если указатель ненулевой, и false в противном случае
 	explicit operator bool() const {
-		if(raw_ptr_ == nullptr) {
+		if(raw_ptr_ == nullptr) {	/// почему не проще return raw_ptr_ != nullptr ? такой вариант более понятный
 			return false;
 		}
 		return true;

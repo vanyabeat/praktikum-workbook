@@ -396,14 +396,12 @@ TEST(SimpleVectorTest, moveoperator) {
 }
 
 TEST(SimpleVectorTest, noncopybable1) {
-	const size_t size = 5;
 	cout << "Test noncopiable object, move constructor" << endl;
 	SimpleVector<X> vector_to_move;
 	//	for (size_t i = 0; i < size; ++i) {
 	//		vector_to_move.PushBack(X(i));
 	//	}
 	vector_to_move.Insert(vector_to_move.end(), X(1));
-	int a = 6;
 	//	for (size_t i = 0; i < size; ++i){
 	//		ASSERT_EQ(vector_to_move[i].GetX(), i);
 	//	}
@@ -495,4 +493,16 @@ TEST(SimpleVectorTest, erasenoncopy) {
 	assert(it->GetX() == 1);
 	cout << "Done!" << endl
 		 << endl;
+}
+
+TEST(SimpleVectorTest, test_new_push) {
+	SimpleVector<int> v;
+	ASSERT_EQ(v.GetCapacity(), 0);
+	ASSERT_EQ(v.GetSize(), 0);
+	v.PushBack(1);
+	ASSERT_EQ(v.GetCapacity(), 1);
+	ASSERT_EQ(v.GetSize(), 1);
+	v.PushBack(2);
+	ASSERT_EQ(v.GetSize(), 2);
+	ASSERT_EQ(v.GetCapacity(), 2);
 }

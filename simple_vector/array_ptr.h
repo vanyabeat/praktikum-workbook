@@ -1,9 +1,9 @@
 #pragma once
 
-#include <cstdlib>
 #include <algorithm>
+#include <cstdlib>
 
-template <typename Type>
+template<typename Type>
 class ArrayPtr {
 public:
 	// Инициализирует ArrayPtr нулевым указателем
@@ -15,61 +15,58 @@ public:
 		if (size == 0)
 			raw_ptr_ = nullptr;
 		else {
-			raw_ptr_ = new Type[size] { };
+			raw_ptr_ = new Type[size]{};
 		}
 	}
 
 	// Конструктор из сырого указателя, хранящего адрес массива в куче либо nullptr
-	explicit ArrayPtr(Type* raw_ptr) noexcept {
+	explicit ArrayPtr(Type *raw_ptr) noexcept {
 		raw_ptr_ = raw_ptr;
 	}
 
 	// Запрещаем копирование
-	ArrayPtr(const ArrayPtr&) = delete;
+	ArrayPtr(const ArrayPtr &) = delete;
 
 	~ArrayPtr() {
 		delete[] raw_ptr_;
 	}
 
 	// Запрещаем присваивание
-	ArrayPtr& operator=(const ArrayPtr&) = delete;
+	ArrayPtr &operator=(const ArrayPtr &) = delete;
 
 	// Прекращает владением массивом в памяти, возвращает значение адреса массива
 	// После вызова метода указатель на массив должен стать обнулиться
-	[[nodiscard]] Type* Release() noexcept {
+	[[nodiscard]] Type *Release() noexcept {
 		auto ptr = raw_ptr_;
 		raw_ptr_ = nullptr;
 		return ptr;
 	}
 
 	// Возвращает ссылку на элемент массива с индексом index
-	Type& operator[](size_t index) noexcept {
+	Type &operator[](size_t index) noexcept {
 
 		return raw_ptr_[index];
 	}
 
 	// Возвращает константную ссылку на элемент массива с индексом index
-	const Type& operator[](size_t index) const noexcept {
-		return const_cast<const Type&>(raw_ptr_[index]);
+	const Type &operator[](size_t index) const noexcept {
+		return const_cast<const Type &>(raw_ptr_[index]);
 	}
 
 	// Возвращает true, если указатель ненулевой, и false в противном случае
 	explicit operator bool() const {
-		if(raw_ptr_ == nullptr) {	/// почему не проще return raw_ptr_ != nullptr ? такой вариант более понятный
-			return false;
-		}
-		return true;
+		return (raw_ptr_ != nullptr);
 	}
 
 	// Возвращает значение сырого указателя, хранящего адрес начала массива
-	Type* Get() const noexcept {
+	Type *Get() const noexcept {
 		return raw_ptr_;
 	}
 
-	void swap(ArrayPtr& other) noexcept{
+	void swap(ArrayPtr &other) noexcept {
 		std::swap(raw_ptr_, other.raw_ptr_);
 	}
 
 private:
-	Type* raw_ptr_ = nullptr;
+	Type *raw_ptr_ = nullptr;
 };

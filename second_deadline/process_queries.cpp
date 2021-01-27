@@ -10,6 +10,7 @@ std::vector<std::vector<Document>> ProcessQueries(const SearchServer& search_ser
 				   [&search_server](const std::string query) { return search_server.FindTopDocuments(query); });
 	return result;
 }
+
 std::vector<Document> ProcessQueriesJoined(const SearchServer& search_server, const std::vector<std::string>& queries)
 {
 	std::vector<Document> result;

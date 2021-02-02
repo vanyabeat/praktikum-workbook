@@ -13,13 +13,20 @@
 
 const int MAX_RESULT_DOCUMENT_COUNT = 5;
 
-/*Меня взбесило то, что моя старая реализация не проходит тесты! Это очень обидно, какой-то бред
-Тренажер очень глупый ! И подбивает всех под одну гребенку*/
+//Следующие методы теперь должны позволять принять string_view вместо строки:
+//конструктор;
+// AddDocument;
+// FindTopDocuments;
+// MatchDocument.
+//Эти методы должны возвращать string_view вместо строк:
+// MatchDocument;
+// GetWordFrequencies.
 class SearchServer
 {
   public:
 	template <typename StringContainer> explicit SearchServer(const StringContainer& stop_words);
 	explicit SearchServer(const std::string& stop_words_text);
+	explicit SearchServer(std::string_view stop_words_text);
 
 	void AddDocument(int document_id, const std::string& document, DocumentStatus status,
 					 const std::vector<int>& ratings);
@@ -238,4 +245,9 @@ std::tuple<std::vector<std::string>, DocumentStatus> SearchServer::MatchDocument
 	{
 		throw std::runtime_error("Unknown ExecutionPolicy");
 	}
+}
+
+SearchServer::SearchServer(std::string_view stop_words_text)
+	: SearchServer(SplitIntoWords(std::string(stop_words_text)))
+{
 }

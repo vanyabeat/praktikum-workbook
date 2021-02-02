@@ -110,17 +110,6 @@ tuple<vector<string>, DocumentStatus> SearchServer::MatchDocument(const string& 
 	return {matched_words, documents_.at(document_id).status};
 }
 
-bool SearchServer::IsStopWord(const string& word) const
-{
-	return stop_words_.count(word) > 0;
-}
-
-bool SearchServer::IsValidWord(const string& word)
-{
-	// A valid word must not contain special characters
-	return none_of(word.begin(), word.end(), [](char c) { return c >= '\0' && c < ' '; });
-}
-
 vector<string> SearchServer::SplitIntoWordsNoStop(const string& text) const
 {
 	vector<string> words;
@@ -245,3 +234,23 @@ std::vector<std::string_view> SearchServer::SplitIntoWordsNoStop(std::string_vie
 	}
 	return words;
 }
+
+bool SearchServer::IsStopWord(const std::string_view word) const
+{
+	return stop_words_.count(std::string(word)) > 0;
+}
+bool SearchServer::IsValidWord(const std::string_view word)
+{
+	return std::none_of(word.begin(), word.end(), [](char c) { return c >= '\0' && c < ' '; });
+}
+
+bool SearchServer::IsStopWord(const string& word) const
+{
+	return stop_words_.count(word) > 0;
+}
+
+//bool SearchServer::IsValidWord(const string& word) const
+//{
+//	// A valid word must not contain special characters
+//	return none_of(word.begin(), word.end(), [](char c) { return c >= '\0' && c < ' '; });
+//}

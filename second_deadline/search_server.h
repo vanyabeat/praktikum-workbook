@@ -70,7 +70,8 @@ class SearchServer
 
 	bool IsStopWord(const std::string& word) const;
 	bool IsStopWord(const std::string_view word) const;
-	static bool IsValidWord(const std::string& word);
+//static bool IsValidWord(const std::string& word);
+	static bool IsValidWord(const std::string_view word);
 	std::vector<std::string> SplitIntoWordsNoStop(const std::string& text) const;
 	std::vector<std::string_view> SplitIntoWordsNoStop(std::string_view text) const;
 	static int ComputeAverageRating(const std::vector<int>& ratings);
@@ -247,8 +248,4 @@ std::tuple<std::vector<std::string>, DocumentStatus> SearchServer::MatchDocument
 	{
 		throw std::runtime_error("Unknown ExecutionPolicy");
 	}
-}
-bool SearchServer::IsStopWord(const std::string_view word) const
-{
-	return stop_words_.count(std::string(word)) > 0;
 }

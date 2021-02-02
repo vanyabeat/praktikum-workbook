@@ -28,7 +28,7 @@ class SearchServer
 	explicit SearchServer(const std::string& stop_words_text);
 	explicit SearchServer(std::string_view stop_words_text);
 
-	void AddDocument(int document_id, const std::string& document, DocumentStatus status,
+	void AddDocument(int document_id, const std::string_view document, DocumentStatus status,
 					 const std::vector<int>& ratings);
 
 	template <typename DocumentPredicate>
@@ -69,8 +69,10 @@ class SearchServer
 	std::set<int> document_ids_;
 
 	bool IsStopWord(const std::string& word) const;
+	bool IsStopWord(const std::string_view word) const;
 	static bool IsValidWord(const std::string& word);
 	std::vector<std::string> SplitIntoWordsNoStop(const std::string& text) const;
+	std::vector<std::string_view> SplitIntoWordsNoStop(std::string_view text) const;
 	static int ComputeAverageRating(const std::vector<int>& ratings);
 
 	struct QueryWord
@@ -246,8 +248,7 @@ std::tuple<std::vector<std::string>, DocumentStatus> SearchServer::MatchDocument
 		throw std::runtime_error("Unknown ExecutionPolicy");
 	}
 }
-
-SearchServer::SearchServer(std::string_view stop_words_text)
-	: SearchServer(SplitIntoWords(std::string(stop_words_text)))
+bool SearchServer::IsStopWord(const std::string_view word) const
 {
+	return stop_words_.count(std::string(word)) > 0;
 }

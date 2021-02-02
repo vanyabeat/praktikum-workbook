@@ -32,15 +32,15 @@ class SearchServer
 					 const std::vector<int>& ratings);
 
 	template <typename DocumentPredicate>
-	std::vector<Document> FindTopDocuments(const std::string& raw_query, DocumentPredicate document_predicate) const;
-	std::vector<Document> FindTopDocuments(const std::string& raw_query, DocumentStatus status) const;
-	std::vector<Document> FindTopDocuments(const std::string& raw_query) const;
+	std::vector<Document> FindTopDocuments(const std::string_view raw_query, DocumentPredicate document_predicate) const;
+	std::vector<Document> FindTopDocuments(const std::string_view raw_query, DocumentStatus status) const;
+	std::vector<Document> FindTopDocuments(const std::string_view raw_query) const;
 
-	std::tuple<std::vector<std::string>, DocumentStatus> MatchDocument(const std::string& raw_query,
+	std::tuple<std::vector<std::string_view>, DocumentStatus> MatchDocument(const std::string_view raw_query,
 																	   int document_id) const;
 	template <typename ExecutionPolicy>
-	std::tuple<std::vector<std::string>, DocumentStatus> MatchDocument(ExecutionPolicy e_p,
-																	   const std::string& raw_query,
+	std::tuple<std::vector<std::string_view>, DocumentStatus> MatchDocument(ExecutionPolicy e_p,
+																	   const std::string_view raw_query,
 																	   int document_id) const;
 	const std::map<std::string, double>& GetWordFrequencies(int document_id) const;
 	int GetDocumentCount() const;
@@ -114,10 +114,10 @@ SearchServer::SearchServer(const StringContainer& stop_words)
 }
 
 template <typename DocumentPredicate>
-std::vector<Document> SearchServer::FindTopDocuments(const std::string& raw_query,
+std::vector<Document> SearchServer::FindTopDocuments(const std::string_view raw_query,
 													 DocumentPredicate document_predicate) const
 {
-	const auto query = ParseQuery(raw_query);
+	const auto query = ParseQuery(std::string(raw_query));
 
 	auto matched_documents = FindAllDocuments(query, document_predicate);
 
@@ -207,8 +207,8 @@ template <typename ExecutionPolicy> void SearchServer::RemoveDocument(ExecutionP
 	}
 }
 template <typename ExecutionPolicy>
-std::tuple<std::vector<std::string>, DocumentStatus> SearchServer::MatchDocument(ExecutionPolicy e_p,
-																				 const std::string& raw_query,
+std::tuple<std::vector<std::string_view>, DocumentStatus> SearchServer::MatchDocument(ExecutionPolicy e_p,
+																				 const std::string_view raw_query,
 																				 int document_id) const
 {
 	if (typeid(e_p) == typeid(std::execution::seq))
@@ -217,9 +217,9 @@ std::tuple<std::vector<std::string>, DocumentStatus> SearchServer::MatchDocument
 	}
 	else if (typeid(e_p) == typeid(std::execution::par))
 	{
-		const auto query = ParseQuery(raw_query);
+		const auto query = ParseQuery(std::string(raw_query));
 
-		std::vector<std::string> matched_words;
+		std::vector<std::string_view> matched_words;
 		std::for_each(std::execution::par, query.plus_words.begin(), query.plus_words.end(), [&](const std::string w) {
 			if (word_to_document_freqs_.count(w) == 0)
 			{

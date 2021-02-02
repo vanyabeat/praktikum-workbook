@@ -29,14 +29,14 @@ void SearchServer::AddDocument(int document_id, std::string_view document, Docum
 	document_ids_.insert(document_id);
 }
 
-vector<Document> SearchServer::FindTopDocuments(const string& raw_query, DocumentStatus status) const
+vector<Document> SearchServer::FindTopDocuments(const std::string_view raw_query, DocumentStatus status) const
 {
 	return FindTopDocuments(raw_query, [status](int document_id, DocumentStatus document_status, int rating) {
 		return document_status == status;
 	});
 }
 
-vector<Document> SearchServer::FindTopDocuments(const string& raw_query) const
+vector<Document> SearchServer::FindTopDocuments(const string_view raw_query) const
 {
 	return FindTopDocuments(raw_query, DocumentStatus::ACTUAL);
 }
@@ -79,11 +79,11 @@ const std::map<std::string, double>& SearchServer::GetWordFrequencies(int docume
 	}
 }
 
-tuple<vector<string>, DocumentStatus> SearchServer::MatchDocument(const string& raw_query, int document_id) const
+tuple<vector<string_view>, DocumentStatus> SearchServer::MatchDocument(const string_view raw_query, int document_id) const
 {
-	const auto query = ParseQuery(raw_query);
+	const auto query = ParseQuery(std::string(raw_query));
 
-	vector<string> matched_words;
+	vector<string_view> matched_words;
 	for (const string& word : query.plus_words)
 	{
 		if (word_to_document_freqs_.count(word) == 0)

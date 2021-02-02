@@ -302,11 +302,11 @@ void TestExceptions_Minuses()
 	{
 		std::vector<std::string> vec = {std::string("word1"), std::string("word2")};
 		SearchServer s(vec);
-		s.AddDocument(1, "Lorem ipsum -word", DocumentStatus::ACTUAL, {1, 2, 3});
-		s.AddDocument(2, "word word", DocumentStatus::ACTUAL, {1, 2, 3});
-		std::vector<std::string> documents;
+		s.AddDocument(1, "Lorem ipsum -word"s, DocumentStatus::ACTUAL, {1, 2, 3});
+		s.AddDocument(2, "word word"s, DocumentStatus::ACTUAL, {1, 2, 3});
+		std::vector<std::string_view> documents;
 		DocumentStatus status;
-		std::tie(documents, status) = s.MatchDocument("-Lorem word", 1);
+		std::tie(documents, status) = s.MatchDocument(std::string("-Lorem word"), 1);
 		ASSERT(documents.empty());
 	}
 }

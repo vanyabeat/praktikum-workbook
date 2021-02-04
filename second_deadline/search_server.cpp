@@ -48,67 +48,28 @@ int SearchServer::GetDocumentCount() const
 
 void SearchServer::RemoveDocument(int document_id)
 {
-
-	auto needle_doc_it_set = document_ids_.find(document_id);
-	if (needle_doc_it_set != document_ids_.end())
-	{
-		auto needle_doc_it_map = document_to_word_freqs_.find(document_id);
-		auto needle_it_map = documents_.find(document_id);
-		document_ids_.erase(needle_doc_it_set);
-		document_to_word_freqs_.erase(needle_doc_it_map);
-		documents_.erase(needle_it_map);
-	}
+	RemoveDocument(std::execution::seq, document_id);
 }
 
-const std::map<std::string, double>& SearchServer::GetWordFrequencies(int document_id) const
+const std::map<std::string_view, double>& SearchServer::GetWordFrequencies(int document_id) const
 {
-	static std::map<std::string, double> result;
-	if (std::find(document_ids_.cbegin(), document_ids_.cend(), document_id) != document_ids_.end())
+	static std::map<std::string_view, double> empty_map;
+	if (document_to_word_freqs_.count(document_id) == 0)
 	{
-		return result;
+		return empty_map;
 	}
-	else
+	static std::map<std::string_view, double> map_;
+	for (const auto& doc : document_to_word_freqs_.at(document_id))
 	{
-		result = {};
-		for (const auto& [word, freq_map] : word_to_document_freqs_)
-		{
-			auto freq = freq_map.at(document_id);
-			result[word] = freq;
-		}
-		return result;
+		map_[doc.first] = doc.second;
 	}
+	return map_;
 }
 
-tuple<vector<string_view>, DocumentStatus> SearchServer::MatchDocument(const string_view raw_query,
-																	   int document_id) const
+std::tuple<std::vector<std::string_view>, DocumentStatus> SearchServer::MatchDocument(std::string_view raw_query,
+																					  int document_id) const
 {
-	const auto query = ParseQuery(std::string(raw_query));
-
-	vector<string_view> matched_words;
-	for (const string& word : query.plus_words)
-	{
-		if (word_to_document_freqs_.count(word) == 0)
-		{
-			continue;
-		}
-		if (word_to_document_freqs_.at(word).count(document_id))
-		{
-			matched_words.push_back(word);
-		}
-	}
-	for (const string& word : query.minus_words)
-	{
-		if (word_to_document_freqs_.count(word) == 0)
-		{
-			continue;
-		}
-		if (word_to_document_freqs_.at(word).count(document_id))
-		{
-			matched_words.clear();
-			break;
-		}
-	}
-	return {matched_words, documents_.at(document_id).status};
+	return MatchDocument(std::execution::seq, raw_query, document_id);
 }
 
 int SearchServer::ComputeAverageRating(const vector<int>& ratings)

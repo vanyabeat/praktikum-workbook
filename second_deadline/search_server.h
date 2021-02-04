@@ -16,8 +16,18 @@ const int MAX_RESULT_DOCUMENT_COUNT = 5;
 class SearchServer
 {
   public:
-	template <typename StringContainer> explicit SearchServer(const StringContainer& stop_words);
+	template <typename StringContainer>
+	explicit SearchServer(const StringContainer& stop_words)
+		: stop_words_(MakeUniqueNonEmptyStrings<StringContainer>(stop_words))
+	{
+		if (!all_of(stop_words_.begin(), stop_words_.end(), IsValidWord))
+		{
+			throw std::invalid_argument("Some of stop words are invalid");
+		}
+	}
+
 	explicit SearchServer(const std::string& stop_words_text);
+
 	explicit SearchServer(std::string_view stop_words_text);
 
 	void AddDocument(int document_id, const std::string_view document, DocumentStatus status,
@@ -29,17 +39,30 @@ class SearchServer
 	std::vector<Document> FindTopDocuments(const std::string_view raw_query, DocumentStatus status) const;
 	std::vector<Document> FindTopDocuments(const std::string_view raw_query) const;
 
+	template <typename ExecutionPolicy>
+	std::tuple<std::vector<std::string_view>, DocumentStatus> MatchDocument(ExecutionPolicy&& policy,
+																			std::string_view raw_query,
+																			int document_id) const;
+
 	std::tuple<std::vector<std::string_view>, DocumentStatus> MatchDocument(const std::string_view raw_query,
 																			int document_id) const;
-	template <typename ExecutionPolicy>
-	std::tuple<std::vector<std::string_view>, DocumentStatus> MatchDocument(ExecutionPolicy e_p,
-																			const std::string_view raw_query,
-																			int document_id) const;
-	const std::map<std::string, double>& GetWordFrequencies(int document_id) const;
+
+	const std::map<std::string_view, double>& GetWordFrequencies(int document_id) const;
 	int GetDocumentCount() const;
 	void RemoveDocument(int document_id);
 
-	template <typename ExecutionPolicy> void RemoveDocument(ExecutionPolicy e_p, int document_id);
+	template <typename ExecutionPolicy> void RemoveDocument(ExecutionPolicy&& policy, int document_id)
+	{
+		if (document_to_word_freqs_.count(document_id) == 1)
+		{
+			auto find_id = find(policy, document_ids_.begin(), document_ids_.end(), document_id);
+			document_ids_.erase(find_id);
+			documents_.erase(document_id);
+			std::for_each(policy, word_to_document_freqs_.begin(), word_to_document_freqs_.end(),
+						  [document_id](auto& doc) { doc.second.erase(document_id); });
+			document_to_word_freqs_.erase(document_id);
+		}
+	}
 
 	/// не знаю, на сколько это корректно понять тип результата по условию задачи, оставим это на вашем понимании задачи
 	//
@@ -88,19 +111,6 @@ class SearchServer
 	template <typename DocumentPredicate>
 	std::vector<Document> FindAllDocuments(const Query& query, DocumentPredicate document_predicate) const;
 };
-
-template <typename StringContainer>
-SearchServer::SearchServer(const StringContainer& stop_words)
-	: stop_words_(MakeUniqueNonEmptyStrings(stop_words)) // Extract non-empty stop words
-{
-	if (!all_of(stop_words_.begin(), stop_words_.end(), IsValidWord))
-	{
-		// здесь для использования литерала s нам нужен namespace std
-		// мы можем использовать его здесь, так как он будет ограничен контекстом этого блока
-		using namespace std;
-		throw std::invalid_argument("Some of stop words are invalid"s);
-	}
-}
 
 template <typename DocumentPredicate>
 std::vector<Document> SearchServer::FindTopDocuments(const std::string_view raw_query,
@@ -169,72 +179,31 @@ std::vector<Document> SearchServer::FindAllDocuments(const Query& query, Documen
 	return matched_documents;
 }
 
-template <typename ExecutionPolicy> void SearchServer::RemoveDocument(ExecutionPolicy e_p, int document_id)
-{
-	if (typeid(e_p) == typeid(std::execution::seq))
-	{
-		RemoveDocument(document_id);
-		return;
-	} // НЕ ПОНИМАЮ ЧТО Я ТУТ УСКОРИЛ :D, главное правило! работает однопоточно за приемлимое время не трожь!!!!
-	else if (typeid(e_p) == typeid(std::execution::par))
-	{
-		auto needle_doc_it_set =
-			std::find(std::execution::par, document_ids_.begin(), document_ids_.end(), document_id);
-		if (needle_doc_it_set != document_ids_.end())
-		{
-			auto needle_doc_it_map = document_to_word_freqs_.find(document_id);
-			auto needle_it_map = documents_.find(document_id);
-			document_ids_.erase(needle_doc_it_set);
-			document_to_word_freqs_.erase(needle_doc_it_map);
-			documents_.erase(needle_it_map);
-		}
-		return;
-	}
-	else
-	{
-		throw std::runtime_error("Unknown ExecutionPolicy");
-	}
-}
 template <typename ExecutionPolicy>
-std::tuple<std::vector<std::string_view>, DocumentStatus> SearchServer::MatchDocument(ExecutionPolicy e_p,
-																					  const std::string_view raw_query,
+std::tuple<std::vector<std::string_view>, DocumentStatus> SearchServer::MatchDocument(ExecutionPolicy&& policy,
+																					  std::string_view raw_query,
 																					  int document_id) const
 {
-	if (typeid(e_p) == typeid(std::execution::seq))
+	static auto query = ParseQuery(raw_query);
+	std::vector<std::string_view> matched_words;
+	std::for_each(policy, query.plus_words.begin(), query.plus_words.end(),
+				  [document_id, &matched_words, this](const std::string& word) {
+					  if (document_to_word_freqs_.at(document_id).count(word))
+					  {
+						  matched_words.push_back(word);
+					  }
+				  });
+	for (const std::string& word : query.minus_words)
 	{
-		return MatchDocument(raw_query, document_id);
+		if (word_to_document_freqs_.count(word) == 0)
+		{
+			continue;
+		}
+		if (word_to_document_freqs_.at(word).count(document_id))
+		{
+			matched_words.clear();
+			break;
+		}
 	}
-	else if (typeid(e_p) == typeid(std::execution::par))
-	{
-		const auto query = ParseQuery(std::string(raw_query));
-
-		std::vector<std::string_view> matched_words;
-		std::for_each(std::execution::par, query.plus_words.begin(), query.plus_words.end(), [&](const std::string w) {
-			if (word_to_document_freqs_.count(w) == 0)
-			{
-				// continue;
-				return;
-			}
-			if (word_to_document_freqs_.at(w).count(document_id))
-			{
-				matched_words.push_back(w);
-			}
-		});
-		std::for_each(std::execution::par, query.minus_words.begin(), query.minus_words.end(),
-					  [&](const std::string w) {
-						  if (word_to_document_freqs_.count(w) == 0)
-						  {
-							  return;
-						  }
-						  if (word_to_document_freqs_.at(w).count(document_id))
-						  {
-							  matched_words.clear();
-						  }
-					  });
-		return {matched_words, documents_.at(document_id).status};
-	}
-	else
-	{
-		throw std::runtime_error("Unknown ExecutionPolicy");
-	}
+	return {matched_words, documents_.at(document_id).status};
 }

@@ -13,14 +13,6 @@
 
 const int MAX_RESULT_DOCUMENT_COUNT = 5;
 
-//Следующие методы теперь должны позволять принять string_view вместо строки:
-//конструктор;
-// AddDocument;
-// FindTopDocuments;
-// MatchDocument.
-//Эти методы должны возвращать string_view вместо строк:
-// MatchDocument;
-// GetWordFrequencies.
 class SearchServer
 {
   public:
@@ -32,16 +24,17 @@ class SearchServer
 					 const std::vector<int>& ratings);
 
 	template <typename DocumentPredicate>
-	std::vector<Document> FindTopDocuments(const std::string_view raw_query, DocumentPredicate document_predicate) const;
+	std::vector<Document> FindTopDocuments(const std::string_view raw_query,
+										   DocumentPredicate document_predicate) const;
 	std::vector<Document> FindTopDocuments(const std::string_view raw_query, DocumentStatus status) const;
 	std::vector<Document> FindTopDocuments(const std::string_view raw_query) const;
 
 	std::tuple<std::vector<std::string_view>, DocumentStatus> MatchDocument(const std::string_view raw_query,
-																	   int document_id) const;
+																			int document_id) const;
 	template <typename ExecutionPolicy>
 	std::tuple<std::vector<std::string_view>, DocumentStatus> MatchDocument(ExecutionPolicy e_p,
-																	   const std::string_view raw_query,
-																	   int document_id) const;
+																			const std::string_view raw_query,
+																			int document_id) const;
 	const std::map<std::string, double>& GetWordFrequencies(int document_id) const;
 	int GetDocumentCount() const;
 	void RemoveDocument(int document_id);
@@ -68,30 +61,26 @@ class SearchServer
 	std::map<int, DocumentData> documents_;
 	std::set<int> document_ids_;
 
-	bool IsStopWord(const std::string& word) const;
 	bool IsStopWord(const std::string_view word) const;
-//static bool IsValidWord(const std::string& word);
 	static bool IsValidWord(const std::string_view word);
-	std::vector<std::string> SplitIntoWordsNoStop(const std::string& text) const;
 	std::vector<std::string_view> SplitIntoWordsNoStop(std::string_view text) const;
 	static int ComputeAverageRating(const std::vector<int>& ratings);
 
 	struct QueryWord
 	{
-		std::string data;
+		std::string_view data;
 		bool is_minus;
 		bool is_stop;
 	};
 
-	QueryWord ParseQueryWord(const std::string& text) const;
+	QueryWord ParseQueryWord(std::string_view text) const;
 
 	struct Query
 	{
-		std::set<std::string> plus_words;
-		std::set<std::string> minus_words;
+		std::set<std::string, std::less<>> plus_words;
+		std::set<std::string, std::less<>> minus_words;
 	};
-
-	Query ParseQuery(const std::string& text) const;
+	Query ParseQuery(std::string_view text) const;
 
 	// Existence required
 	double ComputeWordInverseDocumentFreq(const std::string& word) const;
@@ -208,8 +197,8 @@ template <typename ExecutionPolicy> void SearchServer::RemoveDocument(ExecutionP
 }
 template <typename ExecutionPolicy>
 std::tuple<std::vector<std::string_view>, DocumentStatus> SearchServer::MatchDocument(ExecutionPolicy e_p,
-																				 const std::string_view raw_query,
-																				 int document_id) const
+																					  const std::string_view raw_query,
+																					  int document_id) const
 {
 	if (typeid(e_p) == typeid(std::execution::seq))
 	{

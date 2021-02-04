@@ -1,5 +1,4 @@
 #include "string_processing.h"
-#include "gtest/gtest.h"
 #include <string_view>
 
 //TEST(StringView, test)

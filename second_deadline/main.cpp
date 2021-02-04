@@ -6,7 +6,6 @@
 #include "request_queue.h"
 #include "search_server.h"
 
-#include <gtest/gtest.h>
 //Добавление документов.
 // Добавленный документ должен находиться по поисковому запросу,// который содержит слова из документа.
 void TestAddDocument()

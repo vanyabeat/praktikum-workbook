@@ -190,9 +190,3 @@ bool SearchServer::IsValidWord(std::string_view word)
 {
 	return std::none_of(word.begin(), word.end(), [](char c) { return c >= '\0' && c < ' '; });
 }
-
-// bool SearchServer::IsValidWord(const string& word) const
-//{
-//	// A valid word must not contain special characters
-//	return none_of(word.begin(), word.end(), [](char c) { return c >= '\0' && c < ' '; });
-//}

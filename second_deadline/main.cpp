@@ -632,6 +632,8 @@ void ParralelMatch()
 		// 0 words for document 3
 	}
 }
+
+
 // Функция TestSearchServer является точкой входа для запуска тестов
 void TestSearchServer()
 {

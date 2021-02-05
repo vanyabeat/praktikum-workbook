@@ -39,6 +39,8 @@ class SearchServer
 	std::vector<Document> FindTopDocuments(const std::string_view raw_query, DocumentStatus status) const;
 	std::vector<Document> FindTopDocuments(const std::string_view raw_query) const;
 
+
+
 	template <typename ExecutionPolicy>
 	std::tuple<std::vector<std::string_view>, DocumentStatus> MatchDocument(ExecutionPolicy&& policy,
 																			std::string_view raw_query,

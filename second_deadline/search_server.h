@@ -184,26 +184,62 @@ std::tuple<std::vector<std::string_view>, DocumentStatus> SearchServer::MatchDoc
 																					  std::string_view raw_query,
 																					  int document_id) const
 {
-	static auto query = ParseQuery(raw_query);
-	std::vector<std::string_view> matched_words;
-	std::for_each(policy, query.plus_words.begin(), query.plus_words.end(),
-				  [document_id, &matched_words, this](const std::string& word) {
-					  if (document_to_word_freqs_.at(document_id).count(word))
-					  {
-						  matched_words.push_back(word);
-					  }
-				  });
-	for (const std::string& word : query.minus_words)
+	constexpr bool is_par = std::is_same_v<ExecutionPolicy, std::execution::parallel_policy>;
+	if (is_par)
 	{
-		if (word_to_document_freqs_.count(word) == 0)
+		const auto query = ParseQuery(raw_query);
+
+		const auto status = documents_.at(document_id).status;
+
+		const auto word_checker = [this, document_id](std::string_view word) {
+			const auto it = word_to_document_freqs_.find(std::string(word));
+			return it != word_to_document_freqs_.end() && it->second.count(document_id);
+		};
+
+		if (any_of(std::execution::par, query.minus_words.begin(), query.minus_words.end(), word_checker))
 		{
-			continue;
+			return {{}, status};
 		}
-		if (word_to_document_freqs_.at(word).count(document_id))
-		{
-			matched_words.clear();
-			break;
-		}
+
+		std::vector<std::string_view> matched_words(query.plus_words.size());
+		auto words_end = copy_if(std::execution::par, query.plus_words.begin(), query.plus_words.end(),
+								 matched_words.begin(), word_checker);
+		sort(matched_words.begin(), words_end);
+		words_end = unique(matched_words.begin(), words_end);
+		matched_words.erase(words_end, matched_words.end());
+
+		return {matched_words, status};
 	}
-	return {matched_words, documents_.at(document_id).status};
+	else
+	{
+		const auto query = ParseQuery(raw_query);
+
+		const auto status = documents_.at(document_id).status;
+
+		for (const std::string_view word : query.minus_words)
+		{
+			if (word_to_document_freqs_.count(std::string(word)) == 0)
+			{
+				continue;
+			}
+			if (word_to_document_freqs_.at(std::string(word)).count(document_id))
+			{
+				return {{}, status};
+			}
+		}
+
+		std::vector<std::string_view> matched_words;
+		for (const std::string_view word : query.plus_words)
+		{
+			if (word_to_document_freqs_.count(std::string(word)) == 0)
+			{
+				continue;
+			}
+			if (word_to_document_freqs_.at(std::string(word)).count(document_id))
+			{
+				matched_words.push_back(word);
+			}
+		}
+		return {matched_words, status};
+	}
 }

@@ -1,9 +1,8 @@
 #pragma once
 #include <map>
 #include <mutex>
-#include <pair>
 #include <vector>
-
+using namespace std;
 template <typename Key, typename Value> class ConcurrentMap
 {
   public:
@@ -57,6 +56,18 @@ template <typename Key, typename Value> class ConcurrentMap
 		}
 
 		return result;
+	}
+
+	void erase(Key key)
+	{
+		size_t index = key % buckets_.size();
+		buckets_[index].first.lock();
+		if (buckets_[index].second.count(key) != 0)
+		{
+			auto it = buckets_[index].second.find(key);
+			buckets_[index].second.erase(it);
+		}
+		buckets_[index].first.unlock();
 	}
 
   private:

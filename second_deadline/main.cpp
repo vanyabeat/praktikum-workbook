@@ -720,8 +720,15 @@ void ParralelFind()
 
 	const auto queries = GenerateQueries(generator, dictionary, 100, 70);
 
-	Test("seq"s, search_server, queries, std::execution::seq);
-	Test("par"s, search_server, queries, std::execution::par);
+	{
+		LOG_DURATION("SEQ");
+		Test("seq"s, search_server, queries, std::execution::seq);
+	}
+	{
+		LOG_DURATION("PAR");
+		Test("par"s, search_server, queries, std::execution::par);
+	}
+
 }
 
 // Функция TestSearchServer является точкой входа для запуска тестов

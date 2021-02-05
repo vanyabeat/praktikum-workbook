@@ -22,8 +22,8 @@ void SearchServer::AddDocument(int document_id, std::string_view document, Docum
 	const double inv_word_count = 1.0 / words.size();
 	for (const auto& word : words)
 	{
-		word_to_document_freqs_[std::string(word)][document_id] += inv_word_count;
-		document_to_word_freqs_[document_id][std::string(word)] += inv_word_count;
+		word_to_document_freqs_[word][document_id] += inv_word_count;
+		document_to_word_freqs_[document_id][word] += inv_word_count;
 	}
 	documents_.emplace(document_id, DocumentData{ComputeAverageRating(ratings), status});
 	document_ids_.insert(document_id);
@@ -130,15 +130,15 @@ SearchServer::Query SearchServer::ParseQuery(std::string_view text) const
 }
 
 // Existence required
-double SearchServer::ComputeWordInverseDocumentFreq(const string& word) const
+double SearchServer::ComputeWordInverseDocumentFreq(const string_view word) const
 {
 	return log(GetDocumentCount() * 1.0 / word_to_document_freqs_.at(word).size());
 }
 
-std::set<std::string> SearchServer::GetAllWordsInDocument(const int document_id) const
+std::set<std::string_view> SearchServer::GetAllWordsInDocument(const int document_id) const
 {
-	std::set<std::string> result;
-	for (const std::pair<std::string, std::map<int, double>>& item : word_to_document_freqs_)
+	std::set<std::string_view> result;
+	for (const auto & item : word_to_document_freqs_)
 	{
 		if (item.second.find(document_id) != item.second.end())
 		{

@@ -734,58 +734,58 @@ void ParralelFind()
 // Функция TestSearchServer является точкой входа для запуска тестов
 void TestSearchServer()
 {
-	// 1
-	RUN_TEST(TestAddDocument);
-	// 2
-	RUN_TEST(TestExcludeStopWordsFromAddedDocumentContent);
-	// 3
-	RUN_TEST(TestMinusWords);
-	// 4
-	RUN_TEST(TestMatchDocument);
-	// 5
-	RUN_TEST(TestRelevanceSort);
-	// 6
-	RUN_TEST(TestRating);
-	// 7
-	RUN_TEST(TestDocumentPredicate);
-	// 8
-	RUN_TEST(TestDocumentWithStatus);
-	// 9
-	RUN_TEST(TestRelevance);
-	// 10
-	RUN_TEST(TestSearch);
-	// 11
-	RUN_TEST(TestCountDocuments);
-	// 12
-	//	RUN_TEST(TestConstructors);
-	// 13
-	//	RUN_TEST(TestExceptions_Minuses);
-	// 14
-	//	RUN_TEST(TestExceptions_ValidWord);
-	// 15
-	//	RUN_TEST(TestExceptions_VoidMinus);
-	//	// 16
-	//	RUN_TEST(TestExceptions_Ids);
-	// 17
-	// RUN_TEST(TestExceptions_DocumentIndexes);
-	// 18
-	//	RUN_TEST(TestExceptions_Empty);
-	//	// 19
-	//	RUN_TEST(TestExceptions_Undefined_Stop_Word);
-	//	// 20
-	RUN_TEST(Test_Queue);
-	//	// 21
-	RUN_TEST(Test_Pagination);
-	//	// 22
-	RUN_TEST(DuplicatesTest);
-	//	// 23
-	RUN_TEST(ReduceTest);
-	// 24
-	RUN_TEST(JoinAndReduce);
-	// 25
-	RUN_TEST(RemoveExecutionPolicy);
-	// 26
-	RUN_TEST(ParralelMatch);
+//	// 1
+//	RUN_TEST(TestAddDocument);
+//	// 2
+//	RUN_TEST(TestExcludeStopWordsFromAddedDocumentContent);
+//	// 3
+//	RUN_TEST(TestMinusWords);
+//	// 4
+//	RUN_TEST(TestMatchDocument);
+//	// 5
+//	RUN_TEST(TestRelevanceSort);
+//	// 6
+//	RUN_TEST(TestRating);
+//	// 7
+//	RUN_TEST(TestDocumentPredicate);
+//	// 8
+//	RUN_TEST(TestDocumentWithStatus);
+//	// 9
+//	RUN_TEST(TestRelevance);
+//	// 10
+//	RUN_TEST(TestSearch);
+//	// 11
+//	RUN_TEST(TestCountDocuments);
+//	// 12
+//	//	RUN_TEST(TestConstructors);
+//	// 13
+//	//	RUN_TEST(TestExceptions_Minuses);
+//	// 14
+//	//	RUN_TEST(TestExceptions_ValidWord);
+//	// 15
+//	//	RUN_TEST(TestExceptions_VoidMinus);
+//	//	// 16
+//	//	RUN_TEST(TestExceptions_Ids);
+//	// 17
+//	// RUN_TEST(TestExceptions_DocumentIndexes);
+//	// 18
+//	//	RUN_TEST(TestExceptions_Empty);
+//	//	// 19
+//	//	RUN_TEST(TestExceptions_Undefined_Stop_Word);
+//	//	// 20
+//	RUN_TEST(Test_Queue);
+//	//	// 21
+//	RUN_TEST(Test_Pagination);
+//	//	// 22
+//	RUN_TEST(DuplicatesTest);
+//	//	// 23
+//	RUN_TEST(ReduceTest);
+//	// 24
+//	RUN_TEST(JoinAndReduce);
+//	// 25
+//	RUN_TEST(RemoveExecutionPolicy);
+//	// 26
+//	RUN_TEST(ParralelMatch);
 	// 27
 	RUN_TEST(ParralelFind);
 }

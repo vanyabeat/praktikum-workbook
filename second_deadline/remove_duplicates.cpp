@@ -10,7 +10,7 @@
 
 void RemoveDuplicates(SearchServer &search_server) {
 
-	std::set<std::set<std::string>> all_docs;
+	std::set<std::set<std::string_view>> all_docs;
 
 	std::set<int> ids_to_remove;
 	for (const int document_id : search_server) {

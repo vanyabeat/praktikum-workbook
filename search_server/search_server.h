@@ -226,6 +226,7 @@ std::tuple<std::vector<std::string_view>, DocumentStatus> SearchServer::MatchDoc
 																					  std::string_view raw_query,
 																					  int document_id) const
 {
+/// постарайтесь все что можно (общее) вытащить из условия, хотя бы query и status
 	constexpr bool is_par = std::is_same_v<ExecutionPolicy, std::execution::parallel_policy>;
 	if (is_par)
 	{
@@ -291,6 +292,8 @@ std::vector<Document> SearchServer::FindTopDocuments(ExecutionPolicy execution_p
 {
 	constexpr bool is_par = std::is_same_v<ExecutionPolicy, std::execution::parallel_policy>;
 
+/// дублирование кода, лучше в условие оставить только сортировку, остальное можно все вытащить за учловие
+/// а лучше использовать единыйй вариант параллельной sort с передачей параметра execution_policy (не проверял)
 	if (is_par)
 	{
 		const auto query = ParseQuery(std::string(raw_query));

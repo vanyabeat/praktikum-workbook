@@ -37,7 +37,9 @@ class SearchServer
 	template <typename DocumentPredicate>
 	std::vector<Document> FindTopDocuments(const std::string_view raw_query,
 										   DocumentPredicate document_predicate) const;
+
 	std::vector<Document> FindTopDocuments(const std::string_view raw_query, DocumentStatus status) const;
+
 	std::vector<Document> FindTopDocuments(const std::string_view raw_query) const;
 
 	template <typename ExecutionPolicy, typename DocumentPredicate>
@@ -56,7 +58,9 @@ class SearchServer
 																			int document_id) const;
 
 	const std::map<std::string_view, double>& GetWordFrequencies(int document_id) const;
+
 	int GetDocumentCount() const;
+
 	void RemoveDocument(int document_id);
 
 	template <typename ExecutionPolicy> void RemoveDocument(ExecutionPolicy&& policy, int document_id)
@@ -72,8 +76,6 @@ class SearchServer
 		}
 	}
 
-	/// не знаю, на сколько это корректно понять тип результата по условию задачи, оставим это на вашем понимании задачи
-	//
 	std::set<std::string_view> GetAllWordsInDocument(const int document_id) const;
 
 	std::set<int>::const_iterator begin() const;
@@ -93,8 +95,11 @@ class SearchServer
 	std::set<int> document_ids_;
 
 	bool IsStopWord(const std::string_view word) const;
+
 	static bool IsValidWord(const std::string_view word);
+
 	std::vector<std::string_view> SplitIntoWordsNoStop(std::string_view text) const;
+
 	static int ComputeAverageRating(const std::vector<int>& ratings);
 
 	struct QueryWord
@@ -111,6 +116,7 @@ class SearchServer
 		std::set<std::string, std::less<>> plus_words;
 		std::set<std::string, std::less<>> minus_words;
 	};
+
 	Query ParseQuery(std::string_view text) const;
 
 	// Existence required
@@ -136,6 +142,7 @@ std::vector<Document> SearchServer::FindAllDocuments(const Query& query, Documen
 {
 	return FindAllDocuments(std::execution::seq, query, document_predicate);
 }
+
 template <typename ExecutionPolicy, typename DocumentPredicate>
 std::vector<Document> SearchServer::FindAllDocuments(ExecutionPolicy policy, const SearchServer::Query& query,
 													 DocumentPredicate document_predicate) const
@@ -156,7 +163,7 @@ std::vector<Document> SearchServer::FindAllDocuments(ExecutionPolicy policy, con
 						 const auto& document_data = documents_.at(document_id);
 						 if (document_predicate(document_id, document_data.status, document_data.rating))
 						 {
-							 document_to_relevance[document_id].ref_to_value += term_freq * inverse_document_freq;
+							 document_to_relevance[document_id].ref_to_value_ += term_freq * inverse_document_freq;
 						 }
 					 }
 				 });
@@ -226,13 +233,11 @@ std::tuple<std::vector<std::string_view>, DocumentStatus> SearchServer::MatchDoc
 																					  std::string_view raw_query,
 																					  int document_id) const
 {
-/// постарайтесь все что можно (общее) вытащить из условия, хотя бы query и status
 	constexpr bool is_par = std::is_same_v<ExecutionPolicy, std::execution::parallel_policy>;
+	const auto query = ParseQuery(raw_query);
+	const auto status = documents_.at(document_id).status;
 	if (is_par)
 	{
-		const auto query = ParseQuery(raw_query);
-
-		const auto status = documents_.at(document_id).status;
 
 		const auto word_checker = [this, document_id](std::string_view word) {
 			const auto it = word_to_document_freqs_.find(std::string(word));
@@ -247,17 +252,14 @@ std::tuple<std::vector<std::string_view>, DocumentStatus> SearchServer::MatchDoc
 		std::vector<std::string_view> matched_words(query.plus_words.size());
 		auto words_end = copy_if(std::execution::par, query.plus_words.begin(), query.plus_words.end(),
 								 matched_words.begin(), word_checker);
-		sort(matched_words.begin(), words_end);
-		words_end = unique(matched_words.begin(), words_end);
+		std::sort(matched_words.begin(), words_end);
+		words_end = std::unique(matched_words.begin(), words_end);
 		matched_words.erase(words_end, matched_words.end());
 
 		return {matched_words, status};
 	}
 	else
 	{
-		const auto query = ParseQuery(raw_query);
-
-		const auto status = documents_.at(document_id).status;
 
 		for (const std::string_view word : query.minus_words)
 		{
@@ -286,62 +288,35 @@ std::tuple<std::vector<std::string_view>, DocumentStatus> SearchServer::MatchDoc
 		return {matched_words, status};
 	}
 }
+
 template <typename ExecutionPolicy, typename DocumentPredicate>
 std::vector<Document> SearchServer::FindTopDocuments(ExecutionPolicy execution_policy, const std::string_view raw_query,
 													 DocumentPredicate document_predicate) const
 {
-	constexpr bool is_par = std::is_same_v<ExecutionPolicy, std::execution::parallel_policy>;
 
-/// дублирование кода, лучше в условие оставить только сортировку, остальное можно все вытащить за учловие
-/// а лучше использовать единыйй вариант параллельной sort с передачей параметра execution_policy (не проверял)
-	if (is_par)
+	const auto query = ParseQuery(std::string(raw_query));
+
+	auto matched_documents = FindAllDocuments(std::execution::par, query, document_predicate);
+
+	sort(execution_policy, matched_documents.begin(), matched_documents.end(),
+		 [](const Document& lhs, const Document& rhs) {
+			 if (std::abs(lhs.relevance - rhs.relevance) < 1e-6)
+			 {
+				 return lhs.rating > rhs.rating;
+			 }
+			 else
+			 {
+				 return lhs.relevance > rhs.relevance;
+			 }
+		 });
+	if (int(matched_documents.size()) > MAX_RESULT_DOCUMENT_COUNT)
 	{
-		const auto query = ParseQuery(std::string(raw_query));
-
-		auto matched_documents = FindAllDocuments(std::execution::par, query, document_predicate);
-
-		sort(std::execution::par, matched_documents.begin(), matched_documents.end(),
-			 [](const Document& lhs, const Document& rhs) {
-				 if (std::abs(lhs.relevance - rhs.relevance) < 1e-6)
-				 {
-					 return lhs.rating > rhs.rating;
-				 }
-				 else
-				 {
-					 return lhs.relevance > rhs.relevance;
-				 }
-			 });
-		if (int(matched_documents.size()) > MAX_RESULT_DOCUMENT_COUNT)
-		{
-			matched_documents.resize(MAX_RESULT_DOCUMENT_COUNT);
-		}
-
-		return matched_documents;
+		matched_documents.resize(MAX_RESULT_DOCUMENT_COUNT);
 	}
-	else
-	{
-		const auto query = ParseQuery(std::string(raw_query));
 
-		auto matched_documents = FindAllDocuments(query, document_predicate);
-
-		std::sort(matched_documents.begin(), matched_documents.end(), [](const Document& lhs, const Document& rhs) {
-			if (std::abs(lhs.relevance - rhs.relevance) < 1e-6)
-			{
-				return lhs.rating > rhs.rating;
-			}
-			else
-			{
-				return lhs.relevance > rhs.relevance;
-			}
-		});
-		if (matched_documents.size() > MAX_RESULT_DOCUMENT_COUNT)
-		{
-			matched_documents.resize(MAX_RESULT_DOCUMENT_COUNT);
-		}
-
-		return matched_documents;
-	}
+	return matched_documents;
 }
+
 template <typename ExecutionPolicy>
 std::vector<Document> SearchServer::FindTopDocuments(ExecutionPolicy execution_policy,
 													 const std::string_view raw_query) const

@@ -2,7 +2,7 @@
 #include <map>
 #include <mutex>
 #include <vector>
-using namespace std;
+using namespace std;	/// не допустимо в h-файле так подлючать пространство имен, уже делал такое заемчание
 template <typename Key, typename Value> class ConcurrentMap
 {
   public:
@@ -13,7 +13,7 @@ template <typename Key, typename Value> class ConcurrentMap
 
 	struct Access
 	{
-		Value& ref_to_value;
+		Value& ref_to_value;	/// соблюдайте правило именования полей либо а подчеркиванием либо нет
 		std::mutex& access_;
 
 		~Access()
@@ -34,6 +34,7 @@ template <typename Key, typename Value> class ConcurrentMap
 		size_t index = key % buckets_.size();
 		buckets_[index].first.lock();
 		// делаем такой трюк как в прошлых заданиях типо изи быстренько создаем по ключу дефолтный обхекст
+/// этот трюк несколько лишний, при доступе в мапу по оператору[], то объект создается самостоятельно
 		if (buckets_[index].second.count(key) == 0)
 		{
 			buckets_[index].second.insert({key, Value()});
@@ -46,8 +47,9 @@ template <typename Key, typename Value> class ConcurrentMap
 
 		std::map<Key, Value> result;
 
-		for (size_t i = 0; i < buckets_.size(); ++i)
+		for (size_t i = 0; i < buckets_.size(); ++i)	/// индекс не используется отдельно от доступа к элементам, лучше использовать вариант for(auto &backet:backes)
 		{
+/// посмотрите std::lock_guard, лучше его использовать, так как если между локировкаой и разлокировкаой будет исключение, то мьютекс останется заблокированным
 			buckets_[i].first.lock();
 
 			result.insert(buckets_[i].second.begin(), buckets_[i].second.end());
@@ -61,7 +63,7 @@ template <typename Key, typename Value> class ConcurrentMap
 	void erase(const Key& key)
 	{
 		LockBucket& bucket = GetBucket(key);
-		bucket.first.lock();
+		bucket.first.lock();		/// std::lock_guard
 		bucket.second.erase(key);
 		bucket.first.unlock();
 	}

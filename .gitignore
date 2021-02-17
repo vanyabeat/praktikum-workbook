@@ -45,3 +45,4 @@ cmake-build*
 build
 *second_deadline/cmake-build-debug/
 second_deadline/cmake-build-debug
+.DS_Store

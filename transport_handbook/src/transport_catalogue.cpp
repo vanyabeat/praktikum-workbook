@@ -7,12 +7,20 @@ void TransportCatalogue::AddRequest(Request* request)
 	case RequestType::IsBus: {
 		Bus* bus = static_cast<Bus*>(request);
 		bus_to_stops_[bus->getName()] = bus->getStops();
+		for (const auto& stop : bus->getStops())
+		{
+			stop_to_bus_[stop].insert(bus->getName());
+		}
 		break;
 	}
 	case RequestType::IsStop: {
 	}
 		Stop* stop = static_cast<Stop*>(request);
 		stops_[stop->getName()] = stop->coordinates;
+		if (stop_to_bus_.find(stop->getName()) == stop_to_bus_.end())
+		{
+			stop_to_bus_[stop->getName()] = {};
+		}
 		break;
 	}
 }
@@ -41,5 +49,18 @@ std::optional<std::tuple<size_t, size_t, double, std::vector<std::string>>> Tran
 
 		return std::make_tuple(stops.size(), std::set<std::string>(stops.begin(), stops.end()).size(),
 							   RoutePathSize(stops), stops);
+	}
+}
+
+std::optional<std::set<std::string>> TransportCatalogue::GetBusInfo(const std::string& stop) const
+{
+	auto it = stop_to_bus_.find(stop);
+	if (it == stop_to_bus_.end())
+	{
+		return {};
+	}
+	else
+	{
+		return stop_to_bus_.at(stop);
 	}
 }

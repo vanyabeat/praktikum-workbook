@@ -1,88 +1,103 @@
 #pragma once
 
 #include "geo.h"
-#include <string>
-#include <vector>
+#include <algorithm>
 #include <iostream>
 #include <iterator>
-#include <algorithm>
+#include <string>
+#include <vector>
 
-enum RequestType {
-    IsStop,
-    IsBus
+enum RequestType
+{
+	IsStop,
+	IsBus
 };
 
-class Request {
-public:
-    virtual RequestType getRequestType() const = 0;
+class Request
+{
+  public:
+	virtual RequestType getRequestType() const = 0;
 
-    virtual void setRequestType(RequestType requestType) = 0;
+	virtual void setRequestType(RequestType requestType) = 0;
 
-    virtual const std::string &getName() const = 0;
+	virtual const std::string& getName() const = 0;
 
-    virtual void setName(const std::string &name) = 0;
+	virtual void setName(const std::string& name) = 0;
 
-    virtual ~Request() = default;
+	virtual ~Request() = default;
 };
 
-class Bus : public Request {
-public:
-    Bus() {}
 
-    ~Bus() {}
 
-    RequestType getRequestType() const override;
+class Bus : public Request
+{
+  public:
+	Bus()
+	{
+	}
 
-    void setRequestType(RequestType requestType) override;
+	~Bus()
+	{
+	}
 
-    const std::string &getName() const override;
+	RequestType getRequestType() const override;
 
-    void setName(const std::string &name) override;
+	void setRequestType(RequestType requestType) override;
 
-    const std::vector<std::string> &getStops() const;
+	const std::string& getName() const override;
 
-    void setStops(const std::vector<std::string> &stops);
+	void setName(const std::string& name) override;
 
-private:
-    RequestType type_;
-    std::string name_;
-    std::vector<std::string> stops_;
+	const std::vector<std::string>& getStops() const;
+
+	void setStops(const std::vector<std::string>& stops);
+
+  private:
+	RequestType type_;
+	std::string name_;
+	std::vector<std::string> stops_;
 };
 
-class Stop : public Request {
-public:
-    Stop() {}
+class Stop : public Request
+{
+  public:
+	Stop()
+	{
+	}
 
-    ~Stop() {}
+	~Stop()
+	{
+	}
 
-    RequestType getRequestType() const override;
+	RequestType getRequestType() const override;
 
-    void setRequestType(RequestType requestType) override;
+	void setRequestType(RequestType requestType) override;
 
-    const std::string &getName() const override;
+	const std::string& getName() const override;
 
-    void setName(const std::string &name) override;
+	void setName(const std::string& name) override;
 
-    Coordinates coordinates;
-private:
+	Coordinates coordinates;
 
-    RequestType type_;
-    std::string name_;
+  private:
+	RequestType type_;
+	std::string name_;
 };
 
-Request *ParseRequestString(const std::string &r_str);
+Request* ParseRequestString(const std::string& r_str);
 
-class Requests {
-public:
-    explicit Requests(size_t size) {
-        requests.reserve(size);
-    }
+class Requests
+{
+  public:
+	explicit Requests(size_t size)
+	{
+		requests.reserve(size);
+	}
 
-    ~Requests();
+	~Requests();
 
-    std::vector<Request *> requests;
+	std::vector<Request*> requests;
 };
-
 
 std::string ReadLine();
 

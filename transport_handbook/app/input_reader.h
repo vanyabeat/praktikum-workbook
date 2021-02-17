@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <iterator>
+#include <algorithm>
 
 enum RequestType {
     IsStop,
@@ -37,10 +39,14 @@ public:
 
     void setName(const std::string &name) override;
 
+    const std::vector<std::string> &getStops() const;
+
+    void setStops(const std::vector<std::string> &stops);
+
 private:
     RequestType type_;
     std::string name_;
-    std::vector<std::string> stops;
+    std::vector<std::string> stops_;
 };
 
 class Stop : public Request {

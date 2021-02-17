@@ -1,5 +1,38 @@
 #include "input_reader.h"
 
+std::string &ltrim(std::string &str) {
+    auto it2 = std::find_if(str.begin(), str.end(),
+                            [](char ch) { return !std::isspace<char>(ch, std::locale::classic()); });
+    str.erase(str.begin(), it2);
+    return str;
+}
+
+std::string &rtrim(std::string &str) {
+    auto it1 = std::find_if(str.rbegin(), str.rend(),
+                            [](char ch) { return !std::isspace<char>(ch, std::locale::classic()); });
+    str.erase(it1.base(), str.end());
+    return str;
+}
+
+std::string &trim(std::string &str) {
+    return ltrim(rtrim(str));
+}
+
+std::vector<std::string> SplitIntoWords(const std::string &text) {
+    std::vector<std::string> words;
+    std::string word;
+    for (const char c : text) {
+        if (c == '>' || c == '-') {
+            words.push_back(trim(word));
+            word = "";
+        } else {
+            word += c;
+        }
+    }
+    words.push_back(trim(word));
+
+    return words;
+}
 
 Coordinates ParseCoordsSubstring(const std::string &r_str) {
     //latitude, longitude
@@ -12,7 +45,18 @@ Coordinates ParseCoordsSubstring(const std::string &r_str) {
 
 std::vector<std::string> FullPath(const std::string &r_str) {
     using namespace std;
-    size_t comma = r_str.find(">"s);
+    bool full_cycled = (r_str.find(">"s) != r_str.npos);
+    std::vector<std::string> result;
+    if (full_cycled) {
+        result = SplitIntoWords(r_str);
+    } else {
+        auto tmp = SplitIntoWords(r_str);
+        result.insert(result.end(), tmp.begin(), tmp.end());
+        tmp.pop_back();
+        std::reverse(tmp.begin(), tmp.end());
+        result.insert(result.end(), tmp.begin(), tmp.end());
+    }
+    return result;
 }
 
 Request *ParseRequestString(const std::string &r_str) {
@@ -36,8 +80,7 @@ Request *ParseRequestString(const std::string &r_str) {
         find_semicolon = r_str.find(":"s);
         name = std::string(r_str.begin() + "Bus "s.size(), r_str.begin() + find_semicolon);
         result->setRequestType(RequestType::IsBus);
-        std::string stops = std::string(r_str.begin() + find_semicolon + 2, r_str.end());
-        int a = 6;
+        static_cast<Bus *>(result)->setStops(FullPath(std::string(r_str.begin() + find_semicolon + 2, r_str.end())));
     }
     result->setName(std::move(name));
     return result;
@@ -57,6 +100,14 @@ const std::string &Bus::getName() const {
 
 void Bus::setName(const std::string &name) {
     name_ = name;
+}
+
+const std::vector<std::string> &Bus::getStops() const {
+    return stops_;
+}
+
+void Bus::setStops(const std::vector<std::string> &stops) {
+    Bus::stops_ = stops;
 }
 
 RequestType Stop::getRequestType() const {

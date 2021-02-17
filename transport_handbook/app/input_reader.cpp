@@ -125,3 +125,9 @@ const std::string &Stop::getName() const {
 void Stop::setName(const std::string &name) {
     name_ = name;
 }
+
+Requests::~Requests() {
+    for (auto r : requests) {
+        delete r;
+    }
+}

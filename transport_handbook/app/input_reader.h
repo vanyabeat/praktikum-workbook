@@ -72,3 +72,13 @@ private:
 
 Request *ParseRequestString(const std::string &r_str);
 
+class Requests {
+public:
+    explicit Requests(size_t size) : requests(size) {
+
+    }
+
+    ~Requests();
+
+    std::vector<Request *> requests;
+};

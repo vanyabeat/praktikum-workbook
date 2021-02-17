@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "../app/input_reader.h"
+#include "../src/input_reader.h"
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
@@ -47,4 +47,9 @@ TEST(Bus, Test2) {
                                              "Tolstopaltsevo"};
     ASSERT_EQ(stops, expected);
     delete a;
+}
+
+TEST(ReadLine, Test1){
+    auto count_requests = ReadLineWithNumber();
+
 }

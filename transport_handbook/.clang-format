@@ -4,6 +4,6 @@ Language: Cpp
 # Force pointers to the type for C++.
 DerivePointerAlignment: false
 PointerAlignment: Left
-Standard: Cpp17
+Standard: Cpp11
 TabWidth: 4
 UseTab: Always

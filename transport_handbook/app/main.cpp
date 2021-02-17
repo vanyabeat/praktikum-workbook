@@ -14,7 +14,6 @@ int main()
 		transport_catalogue.AddRequest(req);
 		--requests_count;
 	}
-
 	int stat_count = ReadLineWithNumber();
 	std::vector<std::string> out;
 	while (stat_count)

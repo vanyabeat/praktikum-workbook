@@ -74,11 +74,16 @@ Request *ParseRequestString(const std::string &r_str);
 
 class Requests {
 public:
-    explicit Requests(size_t size) : requests(size) {
-
+    explicit Requests(size_t size) {
+        requests.reserve(size);
     }
 
     ~Requests();
 
     std::vector<Request *> requests;
 };
+
+
+std::string ReadLine();
+
+int ReadLineWithNumber();

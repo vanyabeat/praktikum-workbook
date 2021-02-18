@@ -21,6 +21,10 @@ void TransportCatalogue::AddRequest(Request* request)
 		{
 			stop_to_bus_[stop->getName()] = {};
 		}
+		for (const auto& [name, distance] : stop->getDistanceToOtherStop())
+		{
+			distance_between_stops_[stop->getName()].insert({name, distance});
+		}
 		break;
 	}
 }

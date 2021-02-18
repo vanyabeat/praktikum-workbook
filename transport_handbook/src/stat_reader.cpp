@@ -1,12 +1,20 @@
 #include "stat_reader.h"
+#include <iomanip>
 #include <numeric>
 #include <sstream>
 
-std::string DoubleToString(double num)
+std::string DoubleToString(double num, bool fixed = false, size_t p = 6)
 {
 	std::ostringstream ss1;
-	ss1.precision(6);
-	ss1 << num;
+	if (!fixed)
+	{
+		ss1 << std::setprecision(p) << num;
+	}
+	else
+	{
+		ss1 << std::fixed << std::setprecision(p) << num;
+	}
+
 	return ss1.str();
 }
 std::string ReadStat(const std::string& stat, const TransportCatalogue& t_q)
@@ -23,7 +31,8 @@ std::string ReadStat(const std::string& stat, const TransportCatalogue& t_q)
 
 			return "Bus "s + bus + ": " + std::to_string(std::get<0>(info.value())) + " stops on route, "s +
 				   std::to_string(std::get<1>(info.value())) + " unique stops, " +
-				   DoubleToString(size_t(std::get<2>(info.value()))) + " route length, " + DoubleToString(std::get<4>(info.value())) + " curvature";
+				   std::to_string(std::get<2>(info.value())) + " route length, " +
+				   DoubleToString(std::get<4>(info.value()), true, 5) + " curvature";
 		}
 		else
 		{

@@ -94,12 +94,16 @@ TEST(Catalogue, Test1)
 		requests.requests.push_back(req);
 		transport_catalogue.AddRequest(req);
 	}
-		std::vector<std::string> stats = {"Bus 256"s,	  "Bus 750"s,		  "Bus 751"s,
-										  "Stop Samara"s, "Stop Prazhskaya"s, "Stop Biryulyovo Zapadnoye"s};
-//	std::vector<std::string> stats = {"Bus 750"s};
+	std::vector<std::string> stats = {"Bus 256"s,	  "Bus 750"s,		  "Bus 751"s,
+									  "Stop Samara"s, "Stop Prazhskaya"s, "Stop Biryulyovo Zapadnoye"s};
+	//	std::vector<std::string> stats = {"Bus 750"s};
 
-	for (const auto& s : stats)
-	{
-		std::cout << ReadStat(s, transport_catalogue) << std::endl;
-	}
+	ASSERT_EQ("Bus 256: 6 stops on route, 5 unique stops, 5950 route length, 1.36124 curvature",
+			  ReadStat(stats[0], transport_catalogue));
+	ASSERT_EQ("Bus 750: 7 stops on route, 3 unique stops, 27400 route length, 1.30853 curvature",
+			  ReadStat(stats[1], transport_catalogue));
+	ASSERT_EQ("Bus 751: not found", ReadStat(stats[2], transport_catalogue));
+	ASSERT_EQ("Stop Samara: not found", ReadStat(stats[3], transport_catalogue));
+	ASSERT_EQ("Stop Prazhskaya: no buses", ReadStat(stats[4], transport_catalogue));
+	ASSERT_EQ("Stop Biryulyovo Zapadnoye: buses 256 828", ReadStat(stats[5], transport_catalogue));
 }

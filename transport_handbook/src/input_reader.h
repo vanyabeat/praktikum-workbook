@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <iostream>
 #include <iterator>
+#include <regex>
 #include <string>
 #include <vector>
 
@@ -26,8 +27,6 @@ class Request
 
 	virtual ~Request() = default;
 };
-
-
 
 class Bus : public Request
 {
@@ -79,7 +78,12 @@ class Stop : public Request
 
 	Coordinates coordinates;
 
+	const std::vector<std::pair<std::string, double>>& getDistanceToOtherStop() const;
+
+	void setDistanceToOtherStop(const std::vector<std::pair<std::string, double>>& distanceToOtherStop);
+
   private:
+	std::vector<std::pair<std::string, double>> distance_to_other_stop;
 	RequestType type_;
 	std::string name_;
 };
@@ -102,3 +106,5 @@ class Requests
 std::string ReadLine();
 
 int ReadLineWithNumber();
+
+std::tuple<std::string, Coordinates, std::vector<std::pair<std::string, double>>> ParseStop(const std::string& r_str);

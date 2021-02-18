@@ -52,10 +52,10 @@ std::vector<std::string> SplitIntoWords(const std::string& text, std::vector<cha
 
 	return words;
 }
-std::vector<std::pair<std::string, double>> ParseDistances(const std::vector<std::string>& vec)
+std::vector<std::pair<std::string, size_t>> ParseDistances(const std::vector<std::string>& vec)
 {
 	using namespace std;
-	std::vector<std::pair<std::string, double>> result;
+	std::vector<std::pair<std::string, size_t>> result;
 	auto m = "m"s;
 	auto to = "to"s;
 	for (const auto& i : vec)
@@ -63,11 +63,11 @@ std::vector<std::pair<std::string, double>> ParseDistances(const std::vector<std
 		size_t m_pos = i.find(m);
 		size_t to_pos = i.find(to);
 		result.push_back({std::string(i.begin() + to_pos + to.size() + 1, i.end()),
-						  std::stod(std::string(i.begin(), i.begin() + m_pos))});
+						  std::stoi(std::string(i.begin(), i.begin() + m_pos))});
 	}
 	return result;
 }
-std::tuple<std::string, Coordinates, std::vector<std::pair<std::string, double>>> ParseStop(const std::string& r_str)
+std::tuple<std::string, Coordinates, std::vector<std::pair<std::string, size_t>>> ParseStop(const std::string& r_str)
 {
 	using namespace std;
 	if (r_str.find(" to "s) == r_str.npos)
@@ -78,7 +78,7 @@ std::tuple<std::string, Coordinates, std::vector<std::pair<std::string, double>>
 
 		return std::make_tuple(std::string(base_match[1]),
 							   Coordinates{std::stod(base_match[2]), std::stod(base_match[3])},
-							   std::vector<std::pair<std::string, double>>{});
+							   std::vector<std::pair<std::string, size_t>>{});
 	}
 	else
 	{
@@ -136,7 +136,7 @@ Request* ParseRequestString(const std::string& r_str)
 		result = new Stop();
 		result->setRequestType(RequestType::IsStop);
 
-		std::tuple<std::string, Coordinates, std::vector<std::pair<std::string, double>>> stop = ParseStop(r_str);
+		auto stop = ParseStop(r_str);
 
 		name = std::get<0>(stop);
 		static_cast<Stop*>(result)->coordinates = std::get<1>(stop);
@@ -218,11 +218,11 @@ void Stop::setName(const std::string& name)
 {
 	name_ = name;
 }
-const std::vector<std::pair<std::string, double>>& Stop::getDistanceToOtherStop() const
+const std::vector<std::pair<std::string, size_t>>& Stop::getDistanceToOtherStop() const
 {
 	return distance_to_other_stop;
 }
-void Stop::setDistanceToOtherStop(const std::vector<std::pair<std::string, double>>& distanceToOtherStop)
+void Stop::setDistanceToOtherStop(const std::vector<std::pair<std::string, size_t>>& distanceToOtherStop)
 {
 	distance_to_other_stop = distanceToOtherStop;
 }

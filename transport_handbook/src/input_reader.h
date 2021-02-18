@@ -78,12 +78,12 @@ class Stop : public Request
 
 	Coordinates coordinates;
 
-	const std::vector<std::pair<std::string, double>>& getDistanceToOtherStop() const;
+	const std::vector<std::pair<std::string, size_t>>& getDistanceToOtherStop() const;
 
-	void setDistanceToOtherStop(const std::vector<std::pair<std::string, double>>& distanceToOtherStop);
+	void setDistanceToOtherStop(const std::vector<std::pair<std::string, size_t>>& distanceToOtherStop);
 
   private:
-	std::vector<std::pair<std::string, double>> distance_to_other_stop;
+	std::vector<std::pair<std::string, size_t>> distance_to_other_stop;
 	RequestType type_;
 	std::string name_;
 };
@@ -107,4 +107,4 @@ std::string ReadLine();
 
 int ReadLineWithNumber();
 
-std::tuple<std::string, Coordinates, std::vector<std::pair<std::string, double>>> ParseStop(const std::string& r_str);
+std::tuple<std::string, Coordinates, std::vector<std::pair<std::string, size_t>>> ParseStop(const std::string& r_str);

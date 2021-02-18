@@ -50,10 +50,10 @@ std::optional<std::tuple<size_t, size_t, double, std::vector<std::string>, doubl
 	else
 	{
 		auto stops = bus_to_stops_.at(bus);
-		auto path_size = RoutePathSize(stops);
-		auto naive_size = RoutePathSizeNaive(stops);
+		double path_size = RoutePathSize(stops);
+		double naive_size = RoutePathSizeNaive(stops);
 		return std::make_tuple(stops.size(), std::set<std::string>(stops.begin(), stops.end()).size(), path_size, stops,
-							   path_size / naive_size);
+							   (path_size / naive_size));
 	}
 }
 

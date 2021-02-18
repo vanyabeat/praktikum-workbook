@@ -72,7 +72,7 @@ std::tuple<std::string, Coordinates, std::vector<std::pair<std::string, double>>
 	using namespace std;
 	if (r_str.find(" to "s) == r_str.npos)
 	{
-		std::regex str_expr("Stop (.*): ([0-9.]*), ([0-9.]*)");
+		std::regex str_expr("Stop (.*): ([0-9.-]*), ([0-9.-]*)");
 		std::smatch base_match;
 		std::regex_match(r_str, base_match, str_expr);
 
@@ -82,7 +82,7 @@ std::tuple<std::string, Coordinates, std::vector<std::pair<std::string, double>>
 	}
 	else
 	{
-		std::regex str_expr("Stop (.*): ([0-9.]*), ([0-9.]*), (.*)");
+		std::regex str_expr("Stop (.*): ([0-9.-]*), ([0-9.-]*), (.*)");
 		std::smatch base_match;
 		std::regex_match(r_str, base_match, str_expr);
 		std::vector<std::string> vec = SplitIntoWords(base_match[4], {','});

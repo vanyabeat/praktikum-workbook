@@ -24,6 +24,34 @@ TEST(Stop, Test)
 	delete a;
 }
 
+TEST(Stop, Test1)
+{
+	using namespace std;
+	std::string parsable_string = "Stop Tolstopaltsevo: -55.611087, 37.20829, 3900m to Marushkino"s;
+
+	Request* a = ParseRequestString(parsable_string);
+	ASSERT_EQ(a->getRequestType(), RequestType::IsStop);
+	ASSERT_EQ(a->getName(), "Tolstopaltsevo"s);
+
+	ASSERT_DOUBLE_EQ(static_cast<Stop*>(a)->coordinates.lat, -55.611087);
+	ASSERT_DOUBLE_EQ(static_cast<Stop*>(a)->coordinates.lng, 37.208290);
+	delete a;
+}
+
+TEST(Stop, Test3)
+{
+	using namespace std;
+	std::string parsable_string = "Stop Tolstopaltsevo: -55.611087, -37.20829, 3900m to Marushkino"s;
+
+	Request* a = ParseRequestString(parsable_string);
+	ASSERT_EQ(a->getRequestType(), RequestType::IsStop);
+	ASSERT_EQ(a->getName(), "Tolstopaltsevo"s);
+
+	ASSERT_DOUBLE_EQ(static_cast<Stop*>(a)->coordinates.lat, -55.611087);
+	ASSERT_DOUBLE_EQ(static_cast<Stop*>(a)->coordinates.lng, -37.208290);
+	delete a;
+}
+
 TEST(Stop, Test2)
 {
 	using namespace std;

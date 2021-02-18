@@ -1,5 +1,6 @@
 #include "input_reader.h"
 #include "regex"
+#include "stat_reader.h"
 #include <gtest/gtest.h>
 #include <iostream>
 #include <transport_catalogue.h>
@@ -93,5 +94,12 @@ TEST(Catalogue, Test1)
 		requests.requests.push_back(req);
 		transport_catalogue.AddRequest(req);
 	}
-	int a = 5;
+		std::vector<std::string> stats = {"Bus 256"s,	  "Bus 750"s,		  "Bus 751"s,
+										  "Stop Samara"s, "Stop Prazhskaya"s, "Stop Biryulyovo Zapadnoye"s};
+//	std::vector<std::string> stats = {"Bus 750"s};
+
+	for (const auto& s : stats)
+	{
+		std::cout << ReadStat(s, transport_catalogue) << std::endl;
+	}
 }

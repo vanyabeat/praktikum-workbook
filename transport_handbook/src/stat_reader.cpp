@@ -23,7 +23,7 @@ std::string ReadStat(const std::string& stat, const TransportCatalogue& t_q)
 
 			return "Bus "s + bus + ": " + std::to_string(std::get<0>(info.value())) + " stops on route, "s +
 				   std::to_string(std::get<1>(info.value())) + " unique stops, " +
-				   DoubleToString(std::get<2>(info.value())) + " route length";
+				   DoubleToString(std::get<2>(info.value())) + " route length, " + DoubleToString(std::get<4>(info.value())) + " curvature";
 		}
 		else
 		{

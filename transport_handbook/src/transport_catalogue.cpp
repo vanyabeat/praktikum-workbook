@@ -29,7 +29,7 @@ void TransportCatalogue::AddRequest(Request* request)
 	}
 }
 
-double TransportCatalogue::RoutePathSize(const std::vector<std::string>& stops) const
+double TransportCatalogue::RoutePathSizeNaive(const std::vector<std::string>& stops) const
 {
 	double result = 0.0;
 	for (auto i = 0; i < stops.size() - 1; ++i)
@@ -39,7 +39,7 @@ double TransportCatalogue::RoutePathSize(const std::vector<std::string>& stops) 
 	return result;
 }
 
-std::optional<std::tuple<size_t, size_t, double, std::vector<std::string>>> TransportCatalogue::GetRouteInfo(
+std::optional<std::tuple<size_t, size_t, double, std::vector<std::string>, double>> TransportCatalogue::GetRouteInfo(
 	const std::string& bus) const
 {
 	auto it = bus_to_stops_.find(bus);
@@ -50,9 +50,10 @@ std::optional<std::tuple<size_t, size_t, double, std::vector<std::string>>> Tran
 	else
 	{
 		auto stops = bus_to_stops_.at(bus);
-
-		return std::make_tuple(stops.size(), std::set<std::string>(stops.begin(), stops.end()).size(),
-							   RoutePathSize(stops), stops);
+		auto path_size = RoutePathSize(stops);
+		auto naive_size = RoutePathSizeNaive(stops);
+		return std::make_tuple(stops.size(), std::set<std::string>(stops.begin(), stops.end()).size(), path_size, stops,
+							   path_size / naive_size);
 	}
 }
 
@@ -67,4 +68,28 @@ std::optional<std::set<std::string>> TransportCatalogue::GetBusInfo(const std::s
 	{
 		return stop_to_bus_.at(stop);
 	}
+}
+double TransportCatalogue::GetDistanceBetweenStop(const std::string& stop_l, const std::string& stop_r) const
+{
+
+	if (distance_between_stops_.find(stop_l) != distance_between_stops_.end())
+	{
+		if (distance_between_stops_.at(stop_l).find(stop_r) != distance_between_stops_.at(stop_l).end())
+		{
+			return distance_between_stops_.at(stop_l).at(stop_r);
+		}
+		else
+		{
+			return GetDistanceBetweenStop(stop_r, stop_l);
+		}
+	}
+}
+double TransportCatalogue::RoutePathSize(const std::vector<std::string>& stops) const
+{
+	double result = 0.0;
+	for (auto i = 0; i < stops.size() - 1; ++i)
+	{
+		result += GetDistanceBetweenStop(stops[i], stops[i + 1]);
+	}
+	return result;
 }

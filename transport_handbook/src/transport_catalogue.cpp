@@ -83,7 +83,7 @@ size_t TransportCatalogue::GetDistanceBetweenStop(const std::string& stop_l, con
 			return GetDistanceBetweenStop(stop_r, stop_l);
 		}
 	}
-	return 0;
+	return GetDistanceBetweenStop(stop_r, stop_l);
 }
 size_t TransportCatalogue::RoutePathSize(const std::vector<std::string>& stops) const
 {

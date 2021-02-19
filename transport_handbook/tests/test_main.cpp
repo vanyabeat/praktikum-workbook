@@ -135,3 +135,47 @@ TEST(Catalogue, Test1)
 	ASSERT_EQ("Stop Prazhskaya: no buses", ReadStat(stats[4], transport_catalogue));
 	ASSERT_EQ("Stop Biryulyovo Zapadnoye: buses 256 828", ReadStat(stats[5], transport_catalogue));
 }
+
+TEST(Catalogue, Test2)
+{
+	using namespace std;
+	std::vector<std::string> reqs = {"Stop Tolstopaltsevo: 55.611087, 37.20829, 100m to Marushkino"s,
+									 "Stop Marushkino: 55.595884, 37.209755"s,
+									 "Bus 256: Marushkino > Tolstopaltsevo > Marushkino"s};
+	auto requests = Requests(reqs.size());
+	TransportCatalogue transport_catalogue;
+	for (const auto& r : reqs)
+	{
+		Request* req = ParseRequestString(r);
+		requests.requests.push_back(req);
+		transport_catalogue.AddRequest(req);
+	}
+	std::vector<std::string> stats = {"Bus 256"};
+	//	std::vector<std::string> stats = {"Bus 750"s};
+
+	ASSERT_EQ("Bus 256: 3 stops on route, 2 unique stops, 200 route length, 0.0590668 curvature",
+			  ReadStat(stats[0], transport_catalogue));
+
+}
+
+TEST(Catalogue, Test3)
+{
+	using namespace std;
+	std::vector<std::string> reqs = {"Stop Tolstopaltsevo: 55.611087, 37.20829, 100m to Marushkino"s,
+									 "Stop Marushkino: 55.595884, 37.209755"s,
+									 "Bus 256: Marushkino > Tolstopaltsevo > Marushkino"s};
+	auto requests = Requests(reqs.size());
+	TransportCatalogue transport_catalogue;
+	for (const auto& r : reqs)
+	{
+		Request* req = ParseRequestString(r);
+		requests.requests.push_back(req);
+		transport_catalogue.AddRequest(req);
+	}
+	std::vector<std::string> stats = {"Bus 256"};
+	//	std::vector<std::string> stats = {"Bus 750"s};
+
+	ASSERT_EQ("Bus 256: 3 stops on route, 2 unique stops, 200 route length, 0.0590668 curvature",
+			  ReadStat(stats[0], transport_catalogue));
+
+}

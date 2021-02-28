@@ -6,25 +6,13 @@ void TransportCatalogue::AddRequest(Request* request)
 	{
 	case RequestType::IsBus: {
 		Bus* bus = static_cast<Bus*>(request);
-		bus_to_stops_[bus->getName()] = bus->getStops();
-		for (const auto& stop : bus->getStops())
-		{
-			stop_to_bus_[stop].insert(bus->getName());
-		}
+		AddBus(bus->getName(), bus->getStops());
 		break;
 	}
 	case RequestType::IsStop: {
 	}
 		Stop* stop = static_cast<Stop*>(request);
-		stops_[stop->getName()] = stop->coordinates;
-		if (stop_to_bus_.find(stop->getName()) == stop_to_bus_.end())
-		{
-			stop_to_bus_[stop->getName()] = {};
-		}
-		for (const auto& [name, distance] : stop->getDistanceToOtherStop())
-		{
-			distance_between_stops_[stop->getName()].insert({name, distance});
-		}
+		AddStop(stop->getName(), stop->coordinates, stop->getDistanceToOtherStop());
 		break;
 	}
 }
@@ -98,16 +86,22 @@ size_t TransportCatalogue::RoutePathSize(const std::vector<std::string>& stops) 
 void TransportCatalogue::AddStop(std::string stop_name, Coordinates coordinates,
 								 std::vector<std::pair<std::string, size_t>> vector_distances_to_other_stop)
 {
-	std::string stop_name_ = std::move(stop_name);
-
-	stops_[stop_name_] = std::move(coordinates);
-
+	stops_[stop_name] = std::move(coordinates);
 	if (stop_to_bus_.find(stop_name) == stop_to_bus_.end())
 	{
 		stop_to_bus_[stop_name] = {};
 	}
 	for (const auto& [name, distance] : vector_distances_to_other_stop)
 	{
-		distance_between_stops_[stop_name_].insert({std::move(name), std::move(distance)});
+		distance_between_stops_[stop_name].insert({std::move(name), std::move(distance)});
+	}
+}
+
+void TransportCatalogue::AddBus(std::string bus_name, std::vector<std::string> stops)
+{
+	bus_to_stops_[bus_name] = std::move(stops);
+	for (const auto& stop : bus_to_stops_[bus_name])
+	{
+		stop_to_bus_[stop].insert(bus_name);
 	}
 }

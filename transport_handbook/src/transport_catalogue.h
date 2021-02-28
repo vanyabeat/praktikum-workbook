@@ -16,6 +16,8 @@ class TransportCatalogue
 	void AddStop(std::string stop_name, Coordinates coordinates,
 				 std::vector<std::pair<std::string, size_t>> vector_distances_to_other_stop = {});
 
+	void AddBus(std::string bus_name, std::vector<std::string> stops);
+
 	double RoutePathSizeNaive(const std::vector<std::string>& stops) const;
 
 	size_t RoutePathSize(const std::vector<std::string>& stops) const;

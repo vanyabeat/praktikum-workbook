@@ -11,6 +11,9 @@ class TransportCatalogue
   public:
 	void AddRequest(Request* request);
 
+	void AddStop(std::string stop_name, Coordinates coordinates,
+				 std::vector<std::pair<std::string, size_t>> vector_distances_to_other_stop = {});
+
 	double RoutePathSizeNaive(const std::vector<std::string>& stops) const;
 
 	size_t RoutePathSize(const std::vector<std::string>& stops) const;

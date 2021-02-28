@@ -2,10 +2,12 @@
 
 #include <cmath>
 
+/// структура разместите в пространстве имен
 struct Coordinates
 {
 	double lat;
 	double lng;
+/// нет смысла объявлять как friend, доступ к полям и так есть либо статик либо можно вынести за структуру
 	friend bool operator==(const Coordinates& l, const Coordinates& r)
 	{
 		return AreSame(l.lat, r.lat) && AreSame(r.lng, r.lng);

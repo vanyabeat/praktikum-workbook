@@ -1,7 +1,7 @@
 #include "input_reader.h"
 #include <regex>
 
-std::string& ltrim(std::string& str)
+static std::string& ltrim(std::string& str)
 {
 	auto it2 =
 		std::find_if(str.begin(), str.end(), [](char ch) { return !std::isspace<char>(ch, std::locale::classic()); });
@@ -9,7 +9,7 @@ std::string& ltrim(std::string& str)
 	return str;
 }
 
-std::string& rtrim(std::string& str)
+static std::string& rtrim(std::string& str)
 {
 	auto it1 =
 		std::find_if(str.rbegin(), str.rend(), [](char ch) { return !std::isspace<char>(ch, std::locale::classic()); });
@@ -17,12 +17,12 @@ std::string& rtrim(std::string& str)
 	return str;
 }
 
-std::string& trim(std::string& str)
+static std::string& trim(std::string& str)
 {
 	return ltrim(rtrim(str));
 }
 
-std::vector<std::string> SplitIntoWords(const std::string& text, std::vector<char> vec = {'>', '-'})
+static std::vector<std::string> SplitIntoWords(const std::string& text, std::vector<char> vec = {'>', '-'})
 {
 	std::vector<std::string> words;
 	std::string word;
@@ -54,7 +54,7 @@ std::vector<std::string> SplitIntoWords(const std::string& text, std::vector<cha
 	return words;
 }
 
-std::vector<std::pair<std::string, size_t>> ParseDistances(const std::vector<std::string>& vec)
+static std::vector<std::pair<std::string, size_t>> ParseDistances(const std::vector<std::string>& vec)
 {
 	using namespace std;
 	std::vector<std::pair<std::string, size_t>> result;
@@ -95,7 +95,7 @@ std::tuple<std::string, Coordinates, std::vector<std::pair<std::string, size_t>>
 	}
 }
 
-Coordinates ParseCoordsSubstring(const std::string& r_str)
+static Coordinates ParseCoordsSubstring(const std::string& r_str)
 {
 	// latitude, longitude
 	using namespace std;
@@ -105,7 +105,7 @@ Coordinates ParseCoordsSubstring(const std::string& r_str)
 	return result;
 }
 
-std::vector<std::string> FullPath(const std::string& r_str)
+static std::vector<std::string> FullPath(const std::string& r_str)
 {
 	using namespace std;
 	bool full_cycled = (r_str.find(">"s) != r_str.npos);

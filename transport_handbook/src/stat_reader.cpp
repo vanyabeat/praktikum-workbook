@@ -3,7 +3,7 @@
 #include <numeric>
 #include <sstream>
 
-std::string DoubleToString(double num, bool fixed = false, size_t p = 6)
+static std::string DoubleToString(double num, bool fixed = false, size_t p = 6)
 {
 	std::ostringstream ss1;
 	if (!fixed)
@@ -17,6 +17,7 @@ std::string DoubleToString(double num, bool fixed = false, size_t p = 6)
 
 	return ss1.str();
 }
+
 std::string ReadStat(const std::string& stat, const TransportCatalogue& t_q)
 {
 	using namespace std;

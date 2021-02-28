@@ -7,13 +7,18 @@ struct Coordinates
 {
 	double lat;
 	double lng;
-/// нет смысла объявлять как friend, доступ к полям и так есть либо статик либо можно вынести за структуру
-	friend bool operator==(const Coordinates& l, const Coordinates& r)
+
+	bool operator==(const Coordinates& r) const
 	{
-		return AreSame(l.lat, r.lat) && AreSame(r.lng, r.lng);
+		return AreSame(lat, r.lat) && AreSame(lng, r.lng);
 	}
 
-	static bool AreSame(double a, double b)
+	bool operator !=(const Coordinates& r) const
+	{
+		return !(*this == r);
+	}
+
+	bool AreSame(double a, double b) const
 	{
 		return std::fabs(a - b) < std::numeric_limits<double>::epsilon();
 	}

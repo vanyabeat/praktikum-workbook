@@ -7,6 +7,7 @@
 #include <regex>
 #include <string>
 #include <vector>
+#include "transport_catalogue.h"
 
 enum RequestType
 {
@@ -103,8 +104,10 @@ class Requests
 	std::vector<Request*> requests;
 };
 
-std::string ReadLine();
+std::string ReadLine(std::istream &istream = std::cin);
 
-int ReadLineWithNumber();
+int ReadLineWithNumber(std::istream &istream = std::cin);
 
 std::tuple<std::string, Coordinates, std::vector<std::pair<std::string, size_t>>> ParseStop(const std::string& r_str);
+
+void AddRequest(Request* request, TransportCatalogue& transport_catalogue);

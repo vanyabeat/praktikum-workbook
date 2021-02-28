@@ -1,8 +1,8 @@
 #pragma once
 #include "geo.h"
-#include "input_reader.h"
 #include <set>
 #include <string>
+#include <vector>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -11,8 +11,6 @@
 class TransportCatalogue
 {
   public:
-	void AddRequest(Request* request);
-
 	void AddStop(std::string stop_name, Coordinates coordinates,
 				 std::vector<std::pair<std::string, size_t>> vector_distances_to_other_stop = {});
 

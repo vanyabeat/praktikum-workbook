@@ -4,6 +4,7 @@
 #include <gtest/gtest.h>
 #include <iostream>
 #include <transport_catalogue.h>
+typedef Coordinates coordinates;
 int main(int argc, char** argv)
 {
 	::testing::InitGoogleTest(&argc, argv);
@@ -38,7 +39,7 @@ TEST(Stop, Test1)
 	delete a;
 }
 
-TEST(Stop, Test3)
+TEST(Stop, Test2)
 {
 	using namespace std;
 	std::string parsable_string = "Stop Tolstopaltsevo: -55.611087, -37.20829, 3900m to Marushkino"s;
@@ -52,7 +53,7 @@ TEST(Stop, Test3)
 	delete a;
 }
 
-TEST(Stop, Test2)
+TEST(Stop, Test3)
 {
 	using namespace std;
 	std::string parsable_string = "Stop Tolstopaltsevo: 55.611087, 37.20829"s;
@@ -66,7 +67,7 @@ TEST(Stop, Test2)
 	delete a;
 }
 
-TEST(Bus, Test)
+TEST(Bus, Test1)
 {
 	using namespace std;
 	std::string parsable_string =
@@ -120,7 +121,7 @@ TEST(Catalogue, Test1)
 	{
 		Request* req = ParseRequestString(r);
 		requests.requests.push_back(req);
-		transport_catalogue.AddRequest(req);
+		AddRequest(req, transport_catalogue);
 	}
 	std::vector<std::string> stats = {"Bus 256"s,	  "Bus 750"s,		  "Bus 751"s,
 									  "Stop Samara"s, "Stop Prazhskaya"s, "Stop Biryulyovo Zapadnoye"s};
@@ -148,7 +149,7 @@ TEST(Catalogue, Test2)
 	{
 		Request* req = ParseRequestString(r);
 		requests.requests.push_back(req);
-		transport_catalogue.AddRequest(req);
+		AddRequest(req, transport_catalogue);
 	}
 	std::vector<std::string> stats = {"Bus 256"};
 	//	std::vector<std::string> stats = {"Bus 750"s};
@@ -169,7 +170,7 @@ TEST(Catalogue, Test3)
 	{
 		Request* req = ParseRequestString(r);
 		requests.requests.push_back(req);
-		transport_catalogue.AddRequest(req);
+		AddRequest(req, transport_catalogue);
 	}
 	std::vector<std::string> stats = {"Bus 256"};
 	//	std::vector<std::string> stats = {"Bus 750"s};
@@ -182,16 +183,28 @@ TEST(Catalogue, Test4)
 {
 	using namespace std;
 
-
 	TransportCatalogue transport_catalogue;
 	transport_catalogue.AddStop("Tolstopaltsevo"s, Coordinates{55.611087, 37.20829}, {{"Marushkino"s, 100}});
 	transport_catalogue.AddStop("Marushkino"s, Coordinates{55.595884, 37.209755});
 	transport_catalogue.AddBus("256"s, {"Marushkino", "Tolstopaltsevo", "Marushkino"});
-
 
 	std::vector<std::string> stats = {"Bus 256"};
 	//	std::vector<std::string> stats = {"Bus 750"s};
 
 	ASSERT_EQ("Bus 256: 3 stops on route, 2 unique stops, 200 route length, 0.0590668 curvature",
 			  ReadStat(stats[0], transport_catalogue));
+}
+
+TEST(Coordinates, Test1)
+{
+	using namespace std;
+
+	Coordinates one{55.611087, 37.20829};
+
+	Coordinates two{55.611087, 37.20829};
+
+	ASSERT_EQ(one, two);
+	two.lat = 0.0;
+	ASSERT_NE(one, two);
+
 }

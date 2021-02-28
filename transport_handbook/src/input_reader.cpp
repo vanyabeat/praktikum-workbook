@@ -157,18 +157,18 @@ Request* ParseRequestString(const std::string& r_str)
 	return result;
 }
 
-std::string ReadLine()
+std::string ReadLine(std::istream& istream)
 {
 	std::string s;
 	getline(std::cin, s);
 	return s;
 }
 
-int ReadLineWithNumber()
+int ReadLineWithNumber(std::istream& istream)
 {
 	int result;
-	std::cin >> result;
-	ReadLine();
+	istream >> result;
+	ReadLine(istream);
 	return result;
 }
 
@@ -237,5 +237,22 @@ Requests::~Requests()
 	for (auto r : requests)
 	{
 		delete r;
+	}
+}
+
+void AddRequest(Request* request, TransportCatalogue& transport_catalogue)
+{
+	switch (request->getRequestType())
+	{
+	case RequestType::IsBus: {
+		Bus* bus = static_cast<Bus*>(request);
+		transport_catalogue.AddBus(bus->getName(), bus->getStops());
+		break;
+	}
+	case RequestType::IsStop: {
+	}
+		Stop* stop = static_cast<Stop*>(request);
+		transport_catalogue.AddStop(stop->getName(), stop->coordinates, stop->getDistanceToOtherStop());
+		break;
 	}
 }

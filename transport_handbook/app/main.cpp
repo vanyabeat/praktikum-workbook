@@ -11,7 +11,7 @@ int main()
 		std::string str = ReadLine();
 		Request* req = ParseRequestString(str);
 		requests.requests.push_back(req);
-		transport_catalogue.AddRequest(req);
+		AddRequest(req, transport_catalogue);
 		--requests_count;
 	}
 	int stat_count = ReadLineWithNumber();

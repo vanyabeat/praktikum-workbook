@@ -1,22 +1,5 @@
 #include "transport_catalogue.h"
 
-void TransportCatalogue::AddRequest(Request* request)
-{
-	switch (request->getRequestType())
-	{
-	case RequestType::IsBus: {
-		Bus* bus = static_cast<Bus*>(request);
-		AddBus(bus->getName(), bus->getStops());
-		break;
-	}
-	case RequestType::IsStop: {
-	}
-		Stop* stop = static_cast<Stop*>(request);
-		AddStop(stop->getName(), stop->coordinates, stop->getDistanceToOtherStop());
-		break;
-	}
-}
-
 double TransportCatalogue::RoutePathSizeNaive(const std::vector<std::string>& stops) const
 {
 	double result = 0.0;
@@ -73,6 +56,7 @@ size_t TransportCatalogue::GetDistanceBetweenStop(const std::string& stop_l, con
 	}
 	return GetDistanceBetweenStop(stop_r, stop_l);
 }
+
 size_t TransportCatalogue::RoutePathSize(const std::vector<std::string>& stops) const
 {
 	double result = 0.0;

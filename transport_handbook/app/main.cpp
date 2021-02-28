@@ -1,25 +1,24 @@
-#include "input_reader.h"
-#include "stat_reader.h"
+#include "control_reader.h"
 #include "transport_catalogue.h"
+#include "view_data.h"
 int main()
 {
-	int requests_count = ReadLineWithNumber();
-	auto requests = Requests(requests_count);
-	TransportCatalogue transport_catalogue;
+	int requests_count = Handbook::Control::ReadLineWithNumber();
+
+	Handbook::Data::TransportCatalogue transport_catalogue;
 	while (requests_count)
 	{
-		std::string str = ReadLine();
-		Request* req = ParseRequestString(str);
-		requests.requests.push_back(req);
-		AddRequest(req, transport_catalogue);
+		std::string str = Handbook::Control::ReadLine();
+		auto req = Handbook::Control::ParseRequestString(str);
+		AddRequestToCatalogue(req.get(), transport_catalogue);
 		--requests_count;
 	}
-	int stat_count = ReadLineWithNumber();
+	int stat_count = Handbook::Control::ReadLineWithNumber();
 	std::vector<std::string> out;
 	while (stat_count)
 	{
-		std::string str = ReadLine();
-		out.push_back(ReadStat(str, transport_catalogue));
+		std::string str = Handbook::Control::ReadLine();
+		out.push_back(Handbook::Views::GetData(str, transport_catalogue));
 		--stat_count;
 	}
 	for (const auto& s : out)

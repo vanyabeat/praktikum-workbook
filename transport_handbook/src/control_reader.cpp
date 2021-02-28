@@ -1,4 +1,4 @@
-#include "input_reader.h"
+#include "control_reader.h"
 #include <regex>
 
 static std::string& ltrim(std::string& str)
@@ -70,7 +70,8 @@ static std::vector<std::pair<std::string, size_t>> ParseDistances(const std::vec
 	return result;
 }
 
-std::tuple<std::string, Coordinates, std::vector<std::pair<std::string, size_t>>> ParseStop(const std::string& r_str)
+static std::tuple<std::string, Handbook::Utilities::Coordinates, std::vector<std::pair<std::string, size_t>>> ParseStop(
+	const std::string& r_str)
 {
 	using namespace std;
 	if (r_str.find(" to "s) == r_str.npos)
@@ -80,7 +81,7 @@ std::tuple<std::string, Coordinates, std::vector<std::pair<std::string, size_t>>
 		std::regex_match(r_str, base_match, str_expr);
 
 		return std::make_tuple(std::string(base_match[1]),
-							   Coordinates{std::stod(base_match[2]), std::stod(base_match[3])},
+							   Handbook::Utilities::Coordinates{std::stod(base_match[2]), std::stod(base_match[3])},
 							   std::vector<std::pair<std::string, size_t>>{});
 	}
 	else
@@ -91,16 +92,16 @@ std::tuple<std::string, Coordinates, std::vector<std::pair<std::string, size_t>>
 		std::vector<std::string> vec = SplitIntoWords(base_match[4], {','});
 
 		return std::make_tuple(std::string(base_match[1]),
-							   Coordinates{std::stod(base_match[2]), std::stod(base_match[3])}, ParseDistances(vec));
+							   Handbook::Utilities::Coordinates{std::stod(base_match[2]), std::stod(base_match[3])}, ParseDistances(vec));
 	}
 }
 
-static Coordinates ParseCoordsSubstring(const std::string& r_str)
+static Handbook::Utilities::Coordinates ParseCoordsSubstring(const std::string& r_str)
 {
 	// latitude, longitude
 	using namespace std;
 	size_t comma = r_str.find(","s);
-	Coordinates result{std::stod(std::string(r_str.begin(), r_str.begin() + comma)),
+	Handbook::Utilities::Coordinates result{std::stod(std::string(r_str.begin(), r_str.begin() + comma)),
 					   std::stod(std::string(r_str.begin() + comma + 2, r_str.end()))};
 	return result;
 }
@@ -125,46 +126,47 @@ static std::vector<std::string> FullPath(const std::string& r_str)
 	return result;
 }
 
-Request* ParseRequestString(const std::string& r_str)
+std::shared_ptr<Handbook::Control::Request> Handbook::Control::ParseRequestString(const std::string& r_str)
 {
 	using namespace std;
 	// я пока не осилил смарт поинтеры и наверное паттерн абстрактная фабрика ?
-	Request* result;
+	std::shared_ptr<Handbook::Control::Request> result = nullptr;
 	// если это не Stop, то это Bus )
 	size_t found_stop = r_str.find("Stop "s);
 	size_t find_semicolon;
 	std::string name;
 	if (found_stop != r_str.npos)
 	{
-		result = new Stop();
-		result->setRequestType(RequestType::IsStop);
+		result = std::shared_ptr<Handbook::Control::Request>(new Handbook::Control::Stop());
+		result->setRequestType(Handbook::Control::RequestType::IsStop);
 
 		auto stop = ParseStop(r_str);
 
 		name = std::get<0>(stop);
-		static_cast<Stop*>(result)->coordinates = std::get<1>(stop);
-		static_cast<Stop*>(result)->setDistanceToOtherStop(std::get<2>(stop));
+		static_cast<Handbook::Control::Stop*>(result.get())->coordinates = std::get<1>(stop);
+		static_cast<Handbook::Control::Stop*>(result.get())->setDistanceToOtherStop(std::get<2>(stop));
 	}
 	else
 	{
-		result = new Bus();
+		result = std::shared_ptr<Handbook::Control::Request>(new Handbook::Control::Bus());
 		find_semicolon = r_str.find(":"s);
 		name = std::string(r_str.begin() + "Bus "s.size(), r_str.begin() + find_semicolon);
-		result->setRequestType(RequestType::IsBus);
-		static_cast<Bus*>(result)->setStops(FullPath(std::string(r_str.begin() + find_semicolon + 2, r_str.end())));
+		result->setRequestType(Handbook::Control::RequestType::IsBus);
+		static_cast<Handbook::Control::Bus*>(result.get())
+			->setStops(FullPath(std::string(r_str.begin() + find_semicolon + 2, r_str.end())));
 	}
 	result->setName(std::move(name));
 	return result;
 }
 
-std::string ReadLine(std::istream& istream)
+std::string Handbook::Control::ReadLine(std::istream& istream)
 {
 	std::string s;
 	getline(std::cin, s);
 	return s;
 }
 
-int ReadLineWithNumber(std::istream& istream)
+int Handbook::Control::ReadLineWithNumber(std::istream& istream)
 {
 	int result;
 	istream >> result;
@@ -172,86 +174,80 @@ int ReadLineWithNumber(std::istream& istream)
 	return result;
 }
 
-RequestType Bus::getRequestType() const
+Handbook::Control::RequestType Handbook::Control::Bus::getRequestType() const
 {
 	return type_;
 }
 
-void Bus::setRequestType(RequestType requestType)
+void Handbook::Control::Bus::setRequestType(RequestType requestType)
 {
 	type_ = requestType;
 }
 
-const std::string& Bus::getName() const
+const std::string& Handbook::Control::Bus::getName() const
 {
 	return name_;
 }
 
-void Bus::setName(const std::string& name)
+void Handbook::Control::Bus::setName(const std::string& name)
 {
 	name_ = name;
 }
 
-const std::vector<std::string>& Bus::getStops() const
+const std::vector<std::string>& Handbook::Control::Bus::getStops() const
 {
 	return stops_;
 }
 
-void Bus::setStops(const std::vector<std::string>& stops)
+void Handbook::Control::Bus::setStops(const std::vector<std::string>& stops)
 {
 	Bus::stops_ = stops;
 }
 
-RequestType Stop::getRequestType() const
+Handbook::Control::RequestType Handbook::Control::Stop::getRequestType() const
 {
 	return type_;
 }
 
-void Stop::setRequestType(RequestType requestType)
+void Handbook::Control::Stop::setRequestType(RequestType requestType)
 {
 	type_ = requestType;
 }
 
-const std::string& Stop::getName() const
+const std::string& Handbook::Control::Stop::getName() const
 {
 	return name_;
 }
 
-void Stop::setName(const std::string& name)
+void Handbook::Control::Stop::setName(const std::string& name)
 {
 	name_ = name;
 }
 
-const std::vector<std::pair<std::string, size_t>>& Stop::getDistanceToOtherStop() const
+const std::vector<std::pair<std::string, size_t>>& Handbook::Control::Stop::getDistanceToOtherStop() const
 {
 	return distance_to_other_stop;
 }
 
-void Stop::setDistanceToOtherStop(const std::vector<std::pair<std::string, size_t>>& distanceToOtherStop)
+void Handbook::Control::Stop::setDistanceToOtherStop(
+	const std::vector<std::pair<std::string, size_t>>& distanceToOtherStop)
 {
 	distance_to_other_stop = distanceToOtherStop;
 }
 
-Requests::~Requests()
-{
-	for (auto r : requests)
-	{
-		delete r;
-	}
-}
-
-void AddRequest(Request* request, TransportCatalogue& transport_catalogue)
+void Handbook::Control::AddRequestToCatalogue(Handbook::Control::Request* request,
+											  Handbook::Data::TransportCatalogue& transport_catalogue)
 {
 	switch (request->getRequestType())
 	{
-	case RequestType::IsBus: {
-		Bus* bus = static_cast<Bus*>(request);
+	case Handbook::Control::RequestType::IsBus: {
+		Handbook::Control::Bus* bus = static_cast<Handbook::Control::Bus*>(request);
 		transport_catalogue.AddBus(bus->getName(), bus->getStops());
 		break;
 	}
-	case RequestType::IsStop: {
+	case Handbook::Control::RequestType::IsStop: {
 	}
-		Stop* stop = static_cast<Stop*>(request);
+		Handbook::Control::Stop* stop = static_cast<Handbook::Control::Stop*>(request);
 		transport_catalogue.AddStop(stop->getName(), stop->coordinates, stop->getDistanceToOtherStop());
 		break;
 	}

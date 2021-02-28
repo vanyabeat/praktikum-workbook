@@ -7,3 +7,4 @@ PointerAlignment: Left
 Standard: Cpp11
 TabWidth: 4
 UseTab: Always
+NamespaceIndentation: All

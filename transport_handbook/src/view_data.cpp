@@ -1,4 +1,4 @@
-#include "stat_reader.h"
+#include "view_data.h"
 #include <iomanip>
 #include <numeric>
 #include <sstream>
@@ -18,7 +18,7 @@ static std::string DoubleToString(double num, bool fixed = false, size_t p = 6)
 	return ss1.str();
 }
 
-std::string ReadStat(const std::string& stat, const TransportCatalogue& t_q)
+std::string Handbook::Views::GetData(const std::string& stat, const Handbook::Data::TransportCatalogue& t_q)
 {
 	using namespace std;
 	auto bus_substr = "Bus "s;

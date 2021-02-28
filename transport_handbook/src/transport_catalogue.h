@@ -6,6 +6,8 @@
 #include <unordered_map>
 #include <unordered_set>
 
+///класс разместите в пространстве именн
+
 class TransportCatalogue
 {
   public:

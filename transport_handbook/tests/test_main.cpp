@@ -181,20 +181,14 @@ TEST(Catalogue, Test3)
 TEST(Catalogue, Test4)
 {
 	using namespace std;
-	std::vector<std::string> reqs = {
 
-		"Bus 256: Marushkino > Tolstopaltsevo > Marushkino"s};
-	auto requests = Requests(reqs.size());
+
 	TransportCatalogue transport_catalogue;
-	transport_catalogue.AddStop("Tolstopaltsevo", Coordinates{55.611087, 37.20829}, {{"Marushkino", 100}});
-	transport_catalogue.AddStop("Marushkino", Coordinates{55.595884, 37.209755});
+	transport_catalogue.AddStop("Tolstopaltsevo"s, Coordinates{55.611087, 37.20829}, {{"Marushkino"s, 100}});
+	transport_catalogue.AddStop("Marushkino"s, Coordinates{55.595884, 37.209755});
+	transport_catalogue.AddBus("256"s, {"Marushkino", "Tolstopaltsevo", "Marushkino"});
 
-	for (const auto& r : reqs)
-	{
-		Request* req = ParseRequestString(r);
-		requests.requests.push_back(req);
-		transport_catalogue.AddRequest(req);
-	}
+
 	std::vector<std::string> stats = {"Bus 256"};
 	//	std::vector<std::string> stats = {"Bus 750"s};
 

@@ -94,3 +94,20 @@ size_t TransportCatalogue::RoutePathSize(const std::vector<std::string>& stops) 
 	}
 	return result;
 }
+
+void TransportCatalogue::AddStop(std::string stop_name, Coordinates coordinates,
+								 std::vector<std::pair<std::string, size_t>> vector_distances_to_other_stop)
+{
+	std::string stop_name_ = std::move(stop_name);
+
+	stops_[stop_name_] = std::move(coordinates);
+
+	if (stop_to_bus_.find(stop_name) == stop_to_bus_.end())
+	{
+		stop_to_bus_[stop_name] = {};
+	}
+	for (const auto& [name, distance] : vector_distances_to_other_stop)
+	{
+		distance_between_stops_[stop_name_].insert({std::move(name), std::move(distance)});
+	}
+}

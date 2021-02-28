@@ -1,5 +1,6 @@
 #include "input_reader.h"
 #include <regex>
+
 std::string& ltrim(std::string& str)
 {
 	auto it2 =
@@ -52,6 +53,7 @@ std::vector<std::string> SplitIntoWords(const std::string& text, std::vector<cha
 
 	return words;
 }
+
 std::vector<std::pair<std::string, size_t>> ParseDistances(const std::vector<std::string>& vec)
 {
 	using namespace std;
@@ -67,6 +69,7 @@ std::vector<std::pair<std::string, size_t>> ParseDistances(const std::vector<std
 	}
 	return result;
 }
+
 std::tuple<std::string, Coordinates, std::vector<std::pair<std::string, size_t>>> ParseStop(const std::string& r_str)
 {
 	using namespace std;
@@ -218,10 +221,12 @@ void Stop::setName(const std::string& name)
 {
 	name_ = name;
 }
+
 const std::vector<std::pair<std::string, size_t>>& Stop::getDistanceToOtherStop() const
 {
 	return distance_to_other_stop;
 }
+
 void Stop::setDistanceToOtherStop(const std::vector<std::pair<std::string, size_t>>& distanceToOtherStop)
 {
 	distance_to_other_stop = distanceToOtherStop;

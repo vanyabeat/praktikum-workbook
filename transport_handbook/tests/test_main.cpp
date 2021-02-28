@@ -155,7 +155,6 @@ TEST(Catalogue, Test2)
 
 	ASSERT_EQ("Bus 256: 3 stops on route, 2 unique stops, 200 route length, 0.0590668 curvature",
 			  ReadStat(stats[0], transport_catalogue));
-
 }
 
 TEST(Catalogue, Test3)
@@ -177,5 +176,28 @@ TEST(Catalogue, Test3)
 
 	ASSERT_EQ("Bus 256: 3 stops on route, 2 unique stops, 200 route length, 0.0590668 curvature",
 			  ReadStat(stats[0], transport_catalogue));
+}
 
+TEST(Catalogue, Test4)
+{
+	using namespace std;
+	std::vector<std::string> reqs = {
+
+		"Bus 256: Marushkino > Tolstopaltsevo > Marushkino"s};
+	auto requests = Requests(reqs.size());
+	TransportCatalogue transport_catalogue;
+	transport_catalogue.AddStop("Tolstopaltsevo", Coordinates{55.611087, 37.20829}, {{"Marushkino", 100}});
+	transport_catalogue.AddStop("Marushkino", Coordinates{55.595884, 37.209755});
+
+	for (const auto& r : reqs)
+	{
+		Request* req = ParseRequestString(r);
+		requests.requests.push_back(req);
+		transport_catalogue.AddRequest(req);
+	}
+	std::vector<std::string> stats = {"Bus 256"};
+	//	std::vector<std::string> stats = {"Bus 750"s};
+
+	ASSERT_EQ("Bus 256: 3 stops on route, 2 unique stops, 200 route length, 0.0590668 curvature",
+			  ReadStat(stats[0], transport_catalogue));
 }

@@ -1,6 +1,6 @@
 #include "transport_catalogue.h"
 
-double TransportCatalogue::RoutePathSizeNaive(const std::vector<std::string>& stops) const
+double Handbook::Data::TransportCatalogue::RoutePathSizeNaive(const std::vector<std::string>& stops) const
 {
 	double result = 0.0;
 	for (auto i = 0; i < stops.size() - 1; ++i)
@@ -10,8 +10,8 @@ double TransportCatalogue::RoutePathSizeNaive(const std::vector<std::string>& st
 	return result;
 }
 
-std::optional<std::tuple<size_t, size_t, size_t, std::vector<std::string>, double>> TransportCatalogue::GetRouteInfo(
-	const std::string& bus) const
+std::optional<std::tuple<size_t, size_t, size_t, std::vector<std::string>, double>> Handbook::Data::TransportCatalogue::
+	GetRouteInfo(const std::string& bus) const
 {
 	auto it = bus_to_stops_.find(bus);
 	if (it == bus_to_stops_.end())
@@ -28,7 +28,7 @@ std::optional<std::tuple<size_t, size_t, size_t, std::vector<std::string>, doubl
 	}
 }
 
-std::optional<std::set<std::string>> TransportCatalogue::GetBusInfo(const std::string& stop) const
+std::optional<std::set<std::string>> Handbook::Data::TransportCatalogue::GetBusInfo(const std::string& stop) const
 {
 	auto it = stop_to_bus_.find(stop);
 	if (it == stop_to_bus_.end())
@@ -40,7 +40,8 @@ std::optional<std::set<std::string>> TransportCatalogue::GetBusInfo(const std::s
 		return stop_to_bus_.at(stop);
 	}
 }
-size_t TransportCatalogue::GetDistanceBetweenStop(const std::string& stop_l, const std::string& stop_r) const
+size_t Handbook::Data::TransportCatalogue::GetDistanceBetweenStop(const std::string& stop_l,
+																  const std::string& stop_r) const
 {
 
 	if (distance_between_stops_.find(stop_l) != distance_between_stops_.end())
@@ -57,7 +58,7 @@ size_t TransportCatalogue::GetDistanceBetweenStop(const std::string& stop_l, con
 	return GetDistanceBetweenStop(stop_r, stop_l);
 }
 
-size_t TransportCatalogue::RoutePathSize(const std::vector<std::string>& stops) const
+size_t Handbook::Data::TransportCatalogue::RoutePathSize(const std::vector<std::string>& stops) const
 {
 	double result = 0.0;
 	for (auto i = 0; i < stops.size() - 1; ++i)
@@ -67,8 +68,9 @@ size_t TransportCatalogue::RoutePathSize(const std::vector<std::string>& stops) 
 	return result;
 }
 
-void TransportCatalogue::AddStop(std::string stop_name, Coordinates coordinates,
-								 std::vector<std::pair<std::string, size_t>> vector_distances_to_other_stop)
+void Handbook::Data::TransportCatalogue::AddStop(
+	std::string stop_name, Utilities::Coordinates coordinates,
+	std::vector<std::pair<std::string, size_t>> vector_distances_to_other_stop)
 {
 	stops_[stop_name] = std::move(coordinates);
 	if (stop_to_bus_.find(stop_name) == stop_to_bus_.end())
@@ -81,7 +83,7 @@ void TransportCatalogue::AddStop(std::string stop_name, Coordinates coordinates,
 	}
 }
 
-void TransportCatalogue::AddBus(std::string bus_name, std::vector<std::string> stops)
+void Handbook::Data::TransportCatalogue::AddBus(std::string bus_name, std::vector<std::string> stops)
 {
 	bus_to_stops_[bus_name] = std::move(stops);
 	for (const auto& stop : bus_to_stops_[bus_name])

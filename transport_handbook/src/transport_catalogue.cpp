@@ -40,6 +40,8 @@ std::optional<std::set<std::string>> Handbook::Data::TransportCatalogue::GetBusI
 		return stop_to_bus_.at(stop);
 	}
 }
+
+/// мне кажется, что тут есть вероятность зацикливания, в случае если дистанция не найдется в от r к l  и от l к r
 size_t Handbook::Data::TransportCatalogue::GetDistanceBetweenStop(const std::string& stop_l,
 																  const std::string& stop_r) const
 {

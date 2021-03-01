@@ -29,7 +29,6 @@ std::string Handbook::Views::GetData(const std::string& stat, const Handbook::Da
 		auto info = t_q.GetRouteInfo(bus);
 		if (info.has_value())
 		{
-
 			return "Bus "s + bus + ": " + std::to_string(std::get<0>(info.value())) + " stops on route, "s +
 				   std::to_string(std::get<1>(info.value())) + " unique stops, " +
 				   DoubleToString(double(std::get<2>(info.value())), false) + " route length, " +
@@ -56,7 +55,6 @@ std::string Handbook::Views::GetData(const std::string& stat, const Handbook::Da
 				return "Stop "s + stop + ": buses " +
 					   std::accumulate(buses.begin(), buses.end(), std::string(),
 									   [](std::string& ss, std::string& s) { return ss.empty() ? s : ss + " " + s; });
-				;
 			}
 		}
 		else

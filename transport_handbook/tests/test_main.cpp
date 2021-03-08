@@ -1,10 +1,11 @@
 #include "control_reader.h"
 #include "regex"
+#include "svg.h"
 #include "view_data.h"
 #include <gtest/gtest.h>
 #include <iostream>
+#include <string_view>
 #include <transport_catalogue.h>
-
 int main(int argc, char** argv)
 {
 	::testing::InitGoogleTest(&argc, argv);
@@ -175,7 +176,8 @@ TEST(Catalogue, Test4)
 	using namespace std;
 
 	Handbook::Data::TransportCatalogue transport_catalogue;
-	transport_catalogue.AddStop("Tolstopaltsevo"s, Handbook::Utilities::Coordinates{55.611087, 37.20829}, {{"Marushkino"s, 100}});
+	transport_catalogue.AddStop("Tolstopaltsevo"s, Handbook::Utilities::Coordinates{55.611087, 37.20829},
+								{{"Marushkino"s, 100}});
 	transport_catalogue.AddStop("Marushkino"s, Handbook::Utilities::Coordinates{55.595884, 37.209755});
 	transport_catalogue.AddBus("256"s, {"Marushkino", "Tolstopaltsevo", "Marushkino"});
 
@@ -197,4 +199,120 @@ TEST(Coordinates, Test1)
 	ASSERT_EQ(one, two);
 	two.lat = 0.0;
 	ASSERT_NE(one, two);
+}
+
+TEST(SVG, Circle)
+{
+	using namespace std;
+	std::stringstream ss;
+
+	ss << "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>"sv << std::endl;
+	ss << "<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\">"sv << std::endl;
+
+	svg::Circle c;
+	c.SetCenter({20, 20}).SetRadius(10);
+	svg::RenderContext ctx(ss, 2, 2);
+	c.Render(ctx);
+
+	ss << "</svg>"sv;
+	std::string result = R"(<?xml version="1.0" encoding="UTF-8" ?>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1">
+  <circle cx="20" cy="20" r="10" />
+</svg>)";
+	ASSERT_EQ(ss.str(), result);
+}
+
+TEST(SVG, Polyline)
+{
+	using namespace std;
+	std::stringstream ss;
+
+	ss << "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>"sv << std::endl;
+	ss << "<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\">"sv << std::endl;
+
+	svg::Polyline c;
+	c.AddPoint({20, 10}).AddPoint({10, 10});
+	svg::RenderContext ctx(ss, 2, 2);
+	c.Render(ctx);
+
+	ss << "</svg>"sv;
+	std::string result = R"(<?xml version="1.0" encoding="UTF-8" ?>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1">
+  <polyline points="20,10, 10,10" />
+</svg>)";
+
+	ASSERT_EQ(ss.str(), result);
+}
+
+TEST(SVG, Text)
+{
+	using namespace std;
+	std::stringstream ss;
+
+	ss << "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>"sv << std::endl;
+	ss << "<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\">"sv << std::endl;
+
+	svg::Text c;
+	c.SetPosition({1, 2}).SetFontSize(212);
+	svg::RenderContext ctx(ss, 2, 2);
+	c.Render(ctx);
+
+	ss << "</svg>"sv;
+
+	std::cout << ss.str();
+}
+
+svg::Polyline CreateStar(svg::Point center, double outer_rad, double inner_rad, int num_rays)
+{
+	svg::Polyline polyline;
+	for (int i = 0; i <= num_rays; ++i)
+	{
+		double angle = 2 * M_PI * (i % num_rays) / num_rays;
+		polyline.AddPoint({center.x + outer_rad * sin(angle), center.y - outer_rad * cos(angle)});
+		if (i == num_rays)
+		{
+			break;
+		}
+		angle += M_PI / num_rays;
+		polyline.AddPoint({center.x + inner_rad * sin(angle), center.y - inner_rad * cos(angle)});
+	}
+	return polyline;
+}
+
+// Выводит приветствие, круг и звезду
+void DrawPicture()
+{
+	using namespace std;
+	svg::Document doc;
+	doc.Add(svg::Circle().SetCenter({20, 20}).SetRadius(10));
+	doc.Add(svg::Text()
+				.SetFontFamily("Verdana"s)
+				.SetPosition({35, 20})
+				.SetOffset({0, 6})
+				.SetFontSize(12)
+				.SetFontWeight("bold"s)
+				.SetData("Hello C++"s));
+	doc.Add(CreateStar({20, 50}, 10, 5, 5));
+	doc.Render(std::cout);
+}
+
+
+
+TEST(SVG, Document2) {
+	svg::Document doc;
+	doc.Add(svg::Circle().SetCenter({20, 20}).SetRadius(10));
+	doc.Add(svg::Text()
+				.SetFontFamily("Verdana")
+				.SetPosition({35, 20})
+				.SetOffset({0, 6})
+				.SetFontSize(12)
+				.SetFontWeight("bold")
+				.SetData("Hello C++"));
+	doc.Add(CreateStar({20, 50}, 10, 5, 5));
+	doc.Render(std::cout);
+}
+
+TEST(SVG, Document)
+{
+	DrawPicture();
 }

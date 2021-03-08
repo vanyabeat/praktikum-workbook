@@ -4,6 +4,7 @@
 #include <iomanip>
 #include <iostream>
 #include <map>
+#include <math.h>
 #include <memory>
 #include <optional>
 #include <ostream>
@@ -81,6 +82,26 @@ namespace svg
 		virtual void RenderObject(const RenderContext& context) const = 0;
 	};
 
+	class ObjectContainer
+	{
+	  public:
+		template <typename T> void Add(T obj)
+		{
+
+			AddPtr(std::make_unique<T>(std::move(obj)));
+		}
+
+		virtual void AddPtr(std::unique_ptr<Object>&& object) = 0;
+
+		virtual ~ObjectContainer() = default;
+	};
+
+	class Drawable
+	{
+	  public:
+		virtual void Draw(ObjectContainer& container) const = 0;
+		virtual ~Drawable() = default;
+	};
 	/*
 	 * Класс Circle моделирует элемент <circle> для отображения круга
 	 * https://developer.mozilla.org/en-US/docs/Web/SVG/Element/circle
@@ -88,6 +109,10 @@ namespace svg
 	class Circle final : public Object
 	{
 	  public:
+		Circle() = default;
+		Circle(double x, double y, double r) : center_({x, y}), radius_(r)
+		{
+		}
 		Circle& SetCenter(Point center);
 		Circle& SetRadius(double radius);
 
@@ -177,10 +202,9 @@ namespace svg
 			}
 			return str;
 		}
-
 	};
 
-	class Document
+	class Document : public ObjectContainer
 	{
 	  public:
 		/*
@@ -190,13 +214,8 @@ namespace svg
 		 doc.Add(Circle().SetCenter({20, 30}).SetRadius(15));
 		*/
 
-		template <typename Obj> void Add(Obj obj)
-		{
-			objects_.emplace_back(std::make_unique<Obj>(std::move(obj)));
-		}
-
 		// Добавляет в svg-документ объект-наследник svg::Object
-		void AddPtr(std::unique_ptr<Object>&& obj)
+		void AddPtr(std::unique_ptr<Object>&& obj) override
 		{
 			objects_.push_back(std::move(obj));
 		}
@@ -222,3 +241,74 @@ namespace svg
 	};
 
 } // namespace svg
+
+namespace shapes
+{
+	class Star : public svg::Drawable
+	{
+	  public:
+		Star(svg::Point center, double outer_radius, double inner_radius, int num_rays)
+			: center_(center), outer_radius_(outer_radius), inner_radius_(inner_radius), num_rays_(num_rays)
+		{
+		}
+
+		void Draw(svg::ObjectContainer& container) const override
+		{
+			svg::Polyline polyline;
+			for (int i = 0; i <= num_rays_; ++i)
+			{
+				double angle = 2 * M_PI * (i % num_rays_) / num_rays_;
+				polyline.AddPoint({center_.x + outer_radius_ * sin(angle), center_.y - outer_radius_ * cos(angle)});
+				if (i == num_rays_)
+				{
+					break;
+				}
+				angle += M_PI / num_rays_;
+				polyline.AddPoint({center_.x + inner_radius_ * sin(angle), center_.y - inner_radius_ * cos(angle)});
+			}
+			container.Add(polyline);
+		}
+
+	  private:
+		svg::Point center_;
+		double outer_radius_;
+		double inner_radius_;
+		int num_rays_;
+	};
+
+	class Snowman : public svg::Drawable
+	{
+	  public:
+		Snowman(svg::Point center, double head_radius) : center_(center), head_radius_(head_radius)
+		{
+		}
+
+		void Draw(svg::ObjectContainer& container) const override
+		{
+			container.Add(svg::Circle(center_.x, (center_.y + (head_radius_ * 5)), head_radius_ * 2));
+			container.Add(svg::Circle(center_.x, (center_.y + (head_radius_ * 2)), head_radius_ * 1.5));
+			container.Add(svg::Circle(center_.x, center_.y, head_radius_));
+		}
+
+	  private:
+		svg::Point center_;
+		double head_radius_;
+	};
+
+	class Triangle : public svg::Drawable
+	{
+	  public:
+		Triangle(svg::Point p1, svg::Point p2, svg::Point p3) : p1_(p1), p2_(p2), p3_(p3)
+		{
+		}
+
+		// Реализует метод Draw интерфейса svg::Drawable
+		void Draw(svg::ObjectContainer& container) const override
+		{
+			container.Add(svg::Polyline().AddPoint(p1_).AddPoint(p2_).AddPoint(p3_).AddPoint(p1_));
+		}
+
+	  private:
+		svg::Point p1_, p2_, p3_;
+	};
+} // namespace shapes

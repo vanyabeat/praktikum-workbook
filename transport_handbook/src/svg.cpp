@@ -232,27 +232,28 @@ namespace svg
 		return *this;
 	}
 
-	void PathProps::SetFillColor(const std::optional<Color>& fillColor)
+	template <typename C> void PathProps<C>::SetFillColor(const std::optional<Color>& fillColor)
 	{
 		fill_color_ = fillColor;
 	}
-	void PathProps::SetStrokeColor(const std::optional<Color>& strokeColor)
+	template <typename C> void PathProps<C>::SetStrokeColor(const std::optional<Color>& strokeColor)
 	{
 		stroke_color_ = strokeColor;
 	}
-	void PathProps::SetStrokeWidth(const std::optional<double>& strokeWidth)
+	template <typename C> void PathProps<C>::SetStrokeWidth(const std::optional<double>& strokeWidth)
 	{
 		stroke_width_ = strokeWidth;
 	}
-	void PathProps::SetStrokeLineCap(const std::optional<StrokeLineCap>& strokeLineCap)
+	template <typename C> void PathProps<C>::SetStrokeLineCap(const std::optional<StrokeLineCap>& strokeLineCap)
 	{
 		stroke_line_cap_ = strokeLineCap;
 	}
-	void PathProps::SetStrokeLineJoin(const std::optional<StrokeLineJoin>& strokeLineJoin)
+	template <typename C> void PathProps<C>::SetStrokeLineJoin(const std::optional<StrokeLineJoin>& strokeLineJoin)
 	{
 		stroke_line_join = strokeLineJoin;
 	}
-	void PathProps::FillOutputParameters(std::ostream& out) const
+
+	template <typename C> void PathProps<C>::FillOutputParameters(std::ostream& out) const
 	{
 		out << " ";
 		if (fill_color_.has_value())
@@ -281,7 +282,7 @@ namespace svg
 			out << " "sv;
 		}
 	}
-	bool PathProps::PathPropsIsEmpty() const
+	template <typename C> bool PathProps<C>::PathPropsIsEmpty() const
 	{
 		return !(fill_color_.has_value() || stroke_color_.has_value() || stroke_width_.has_value() ||
 				 stroke_line_join.has_value() || stroke_line_cap_.has_value());

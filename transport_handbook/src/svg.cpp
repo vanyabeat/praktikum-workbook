@@ -60,61 +60,10 @@ namespace svg
 		out << "r="sv << _q_(radius_);
 		if (!PathPropsIsEmpty())
 		{
-			FillOutputParameters(out);
+			RenderAttrs(out);
 		}
 
 		out << "/>"sv;
-	}
-	Circle& Circle::SetFillColor(const std::optional<Color>& fillColor)
-	{
-		PathProps::SetFillColor(fillColor);
-		return *this;
-	}
-	Circle& Circle::SetStrokeColor(const std::optional<Color>& strokeColor)
-	{
-		PathProps::SetStrokeColor(strokeColor);
-		return *this;
-	}
-	Circle& Circle::SetStrokeWidth(const std::optional<double>& strokeWidth)
-	{
-		PathProps::SetStrokeWidth(strokeWidth);
-		return *this;
-	}
-	Circle& Circle::SetStrokeLineCap(const std::optional<StrokeLineCap>& strokeLineCap)
-	{
-		PathProps::SetStrokeLineCap(strokeLineCap);
-		return *this;
-	}
-	Circle& Circle::SetStrokeLineJoin(const std::optional<StrokeLineJoin>& strokeLineJoin)
-	{
-		PathProps::SetStrokeLineJoin(strokeLineJoin);
-		return *this;
-	}
-
-	Polyline& Polyline::SetFillColor(const std::optional<Color>& fillColor)
-	{
-		PathProps::SetFillColor(fillColor);
-		return *this;
-	}
-	Polyline& Polyline::SetStrokeColor(const std::optional<Color>& strokeColor)
-	{
-		PathProps::SetStrokeColor(strokeColor);
-		return *this;
-	}
-	Polyline& Polyline::SetStrokeWidth(const std::optional<double>& strokeWidth)
-	{
-		PathProps::SetStrokeWidth(strokeWidth);
-		return *this;
-	}
-	Polyline& Polyline::SetStrokeLineCap(const std::optional<StrokeLineCap>& strokeLineCap)
-	{
-		PathProps::SetStrokeLineCap(strokeLineCap);
-		return *this;
-	}
-	Polyline& Polyline::SetStrokeLineJoin(const std::optional<StrokeLineJoin>& strokeLineJoin)
-	{
-		PathProps::SetStrokeLineJoin(strokeLineJoin);
-		return *this;
 	}
 
 	Polyline& Polyline::AddPoint(Point point)
@@ -130,7 +79,7 @@ namespace svg
 		out << R"(<polyline points=)"sv << _q_(join_coords(points_));
 		if (!PathPropsIsEmpty())
 		{
-			FillOutputParameters(out);
+			RenderAttrs(out);
 			out << R"(/>)"sv;
 			return;
 		}
@@ -153,7 +102,7 @@ namespace svg
 		}
 		if (!PathPropsIsEmpty())
 		{
-			FillOutputParameters(out);
+			RenderAttrs(out);
 			out << R"(>)"sv;
 		}
 		else
@@ -206,87 +155,6 @@ namespace svg
 		return *this;
 	}
 
-	Text& Text::SetFillColor(const std::optional<Color>& fillColor)
-	{
-		PathProps::SetFillColor(fillColor);
-		return *this;
-	}
-	Text& Text::SetStrokeColor(const std::optional<Color>& strokeColor)
-	{
-		PathProps::SetStrokeColor(strokeColor);
-		return *this;
-	}
-	Text& Text::SetStrokeWidth(const std::optional<double>& strokeWidth)
-	{
-		PathProps::SetStrokeWidth(strokeWidth);
-		return *this;
-	}
-	Text& Text::SetStrokeLineCap(const std::optional<StrokeLineCap>& strokeLineCap)
-	{
-		PathProps::SetStrokeLineCap(strokeLineCap);
-		return *this;
-	}
-	Text& Text::SetStrokeLineJoin(const std::optional<StrokeLineJoin>& strokeLineJoin)
-	{
-		PathProps::SetStrokeLineJoin(strokeLineJoin);
-		return *this;
-	}
-
-	template <typename C> void PathProps<C>::SetFillColor(const std::optional<Color>& fillColor)
-	{
-		fill_color_ = fillColor;
-	}
-	template <typename C> void PathProps<C>::SetStrokeColor(const std::optional<Color>& strokeColor)
-	{
-		stroke_color_ = strokeColor;
-	}
-	template <typename C> void PathProps<C>::SetStrokeWidth(const std::optional<double>& strokeWidth)
-	{
-		stroke_width_ = strokeWidth;
-	}
-	template <typename C> void PathProps<C>::SetStrokeLineCap(const std::optional<StrokeLineCap>& strokeLineCap)
-	{
-		stroke_line_cap_ = strokeLineCap;
-	}
-	template <typename C> void PathProps<C>::SetStrokeLineJoin(const std::optional<StrokeLineJoin>& strokeLineJoin)
-	{
-		stroke_line_join = strokeLineJoin;
-	}
-
-	template <typename C> void PathProps<C>::FillOutputParameters(std::ostream& out) const
-	{
-		out << " ";
-		if (fill_color_.has_value())
-		{
-			out << "fill=\""sv << fill_color_.value() << "\" "sv;
-		}
-		if (stroke_color_.has_value())
-		{
-			out << "stroke=\""sv << stroke_color_.value() << "\" "sv;
-		}
-		if (stroke_width_.has_value())
-		{
-			out << "stroke-width=\""sv << stroke_width_.value() << "\" "sv;
-		}
-		if (stroke_line_cap_.has_value())
-		{
-			out << "stroke-linecap="sv;
-			out << "\"" << stroke_line_cap_.value() << "\"";
-			out << " "sv;
-		}
-		if (stroke_line_join.has_value())
-		{
-			//  | miter-clip |  |  |
-			out << "stroke-linejoin="sv;
-			out << "\"" << stroke_line_join.value() << "\"";
-			out << " "sv;
-		}
-	}
-	template <typename C> bool PathProps<C>::PathPropsIsEmpty() const
-	{
-		return !(fill_color_.has_value() || stroke_color_.has_value() || stroke_width_.has_value() ||
-				 stroke_line_join.has_value() || stroke_line_cap_.has_value());
-	}
 	std::ostream& operator<<(std::ostream& out, StrokeLineCap cap)
 	{
 		using namespace std;
@@ -337,6 +205,7 @@ namespace svg
 		return out;
 	}
 } // namespace svg
+
 void shapes::Snowman::Draw(svg::ObjectContainer& container) const
 {
 	container.Add(svg::Circle(center_.x, (center_.y + (head_radius_ * 5)), head_radius_ * 2)

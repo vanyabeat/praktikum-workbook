@@ -105,7 +105,7 @@ namespace svg
 		virtual void RenderObject(const RenderContext& context) const = 0;
 	};
 
-	class PathProps
+	template <typename C> class PathProps
 	{
 	  public:
 		PathProps() = default;
@@ -159,7 +159,7 @@ namespace svg
 		}
 	};
 
-	class Circle final : public Object, private PathProps, private Quotable
+	class Circle final : public Object, private PathProps<Circle>, private Quotable
 	{
 	  public:
 		Circle() = default;
@@ -180,7 +180,7 @@ namespace svg
 		double radius_{1.0};
 	};
 
-	class Polyline : public Object, private PathProps, private Quotable
+	class Polyline : public Object, private PathProps<Polyline>, private Quotable
 	{
 	  public:
 		// Добавляет очередную вершину к ломаной линии
@@ -201,7 +201,7 @@ namespace svg
 		std::vector<Point> points_{};
 	};
 
-	class Text : public Object, private PathProps, private Quotable
+	class Text : public Object, private PathProps<Text>, private Quotable
 	{
 	  public:
 		// Задаёт координаты опорной точки (атрибуты x и y)
@@ -297,7 +297,7 @@ namespace svg
 
 namespace shapes
 {
-	class Star : public svg::Drawable, public svg::PathProps
+	class Star : public svg::Drawable, public svg::PathProps<Star>
 	{
 	  public:
 		Star(svg::Point center, double outer_radius, double inner_radius, int num_rays)
@@ -316,7 +316,7 @@ namespace shapes
 		int num_rays_;
 	};
 
-	class Snowman : public svg::Drawable, public svg::PathProps
+	class Snowman : public svg::Drawable, public svg::PathProps<Star>
 	{
 	  public:
 		Snowman(svg::Point center, double head_radius) : center_(center), head_radius_(head_radius)
@@ -332,7 +332,7 @@ namespace shapes
 		double head_radius_;
 	};
 
-	class Triangle : public svg::Drawable, public svg::PathProps
+	class Triangle : public svg::Drawable, public svg::PathProps<Triangle>
 	{
 	  public:
 		Triangle(svg::Point p1, svg::Point p2, svg::Point p3) : p1_(p1), p2_(p2), p3_(p3)

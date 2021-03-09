@@ -111,13 +111,66 @@ namespace svg
 		PathProps() = default;
 		virtual ~PathProps() = default;
 
-		void SetFillColor(const std::optional<Color>& fillColor);
-		void SetStrokeColor(const std::optional<Color>& strokeColor);
-		void SetStrokeWidth(const std::optional<double>& strokeWidth);
-		void SetStrokeLineCap(const std::optional<StrokeLineCap>& strokeLineCap);
-		void SetStrokeLineJoin(const std::optional<StrokeLineJoin>& strokeLineJoin);
-		void FillOutputParameters(std::ostream& out) const;
-		bool PathPropsIsEmpty() const;
+		C& SetFillColor(const std::optional<Color>& fillColor)
+		{
+			fill_color_ = fillColor;
+			return static_cast<C&>(*this);
+		}
+		C& SetStrokeColor(const std::optional<Color>& strokeColor)
+		{
+			stroke_color_ = strokeColor;
+			return static_cast<C&>(*this);
+		}
+		C& SetStrokeWidth(const std::optional<double>& strokeWidth)
+		{
+			stroke_width_ = strokeWidth;
+			return static_cast<C&>(*this);
+		}
+		C& SetStrokeLineCap(const std::optional<StrokeLineCap>& strokeLineCap)
+		{
+			stroke_line_cap_ = strokeLineCap;
+			return static_cast<C&>(*this);
+		}
+		C& SetStrokeLineJoin(const std::optional<StrokeLineJoin>& strokeLineJoin)
+		{
+			stroke_line_join = strokeLineJoin;
+			return static_cast<C&>(*this);
+		}
+		void RenderAttrs(std::ostream& out) const
+		{
+			out << " ";
+			if (fill_color_.has_value())
+			{
+				out << "fill=\"" << fill_color_.value() << "\" ";
+			}
+			if (stroke_color_.has_value())
+			{
+				out << "stroke=\"" << stroke_color_.value() << "\" ";
+			}
+			if (stroke_width_.has_value())
+			{
+				out << "stroke-width=\"" << stroke_width_.value() << "\" ";
+			}
+			if (stroke_line_cap_.has_value())
+			{
+				out << "stroke-linecap=";
+				out << "\"" << stroke_line_cap_.value() << "\"";
+				out << " ";
+			}
+			if (stroke_line_join.has_value())
+			{
+				//  | miter-clip |  |  |
+				out << "stroke-linejoin=";
+				out << "\"" << stroke_line_join.value() << "\"";
+				out << " ";
+			}
+		}
+
+		bool PathPropsIsEmpty() const
+		{
+			return !(fill_color_.has_value() || stroke_color_.has_value() || stroke_width_.has_value() ||
+					 stroke_line_join.has_value() || stroke_line_cap_.has_value());
+		}
 
 	  protected:
 		std::optional<Color> fill_color_;
@@ -159,7 +212,7 @@ namespace svg
 		}
 	};
 
-	class Circle final : public Object, private PathProps<Circle>, private Quotable
+	class Circle final : public Object, public PathProps<Circle>, private Quotable
 	{
 	  public:
 		Circle() = default;
@@ -170,26 +223,15 @@ namespace svg
 		Circle& SetRadius(double radius);
 		void RenderObject(const RenderContext& context) const override;
 
-		Circle& SetFillColor(const std::optional<Color>& fillColor);
-		Circle& SetStrokeColor(const std::optional<Color>& strokeColor);
-		Circle& SetStrokeWidth(const std::optional<double>& strokeWidth);
-		Circle& SetStrokeLineCap(const std::optional<StrokeLineCap>& strokeLineCap);
-		Circle& SetStrokeLineJoin(const std::optional<StrokeLineJoin>& strokeLineJoin);
-
 		Point center_{0.0, 0.0};
 		double radius_{1.0};
 	};
 
-	class Polyline : public Object, private PathProps<Polyline>, private Quotable
+	class Polyline : public Object, public PathProps<Polyline>, private Quotable
 	{
 	  public:
 		// Добавляет очередную вершину к ломаной линии
 		Polyline& AddPoint(Point point);
-		Polyline& SetFillColor(const std::optional<Color>& fillColor);
-		Polyline& SetStrokeColor(const std::optional<Color>& strokeColor);
-		Polyline& SetStrokeWidth(const std::optional<double>& strokeWidth);
-		Polyline& SetStrokeLineCap(const std::optional<StrokeLineCap>& strokeLineCap);
-		Polyline& SetStrokeLineJoin(const std::optional<StrokeLineJoin>& strokeLineJoin);
 
 	  private:
 		void RenderObject(const RenderContext& context) const override;
@@ -201,7 +243,7 @@ namespace svg
 		std::vector<Point> points_{};
 	};
 
-	class Text : public Object, private PathProps<Text>, private Quotable
+	class Text : public Object, public PathProps<Text>, private Quotable
 	{
 	  public:
 		// Задаёт координаты опорной точки (атрибуты x и y)
@@ -221,12 +263,6 @@ namespace svg
 
 		// Задаёт текстовое содержимое объекта (отображается внутри тега text)
 		Text& SetData(std::string data);
-
-		Text& SetFillColor(const std::optional<Color>& fillColor);
-		Text& SetStrokeColor(const std::optional<Color>& strokeColor);
-		Text& SetStrokeWidth(const std::optional<double>& strokeWidth);
-		Text& SetStrokeLineCap(const std::optional<StrokeLineCap>& strokeLineCap);
-		Text& SetStrokeLineJoin(const std::optional<StrokeLineJoin>& strokeLineJoin);
 
 	  private:
 		void RenderObject(const RenderContext& context) const override;

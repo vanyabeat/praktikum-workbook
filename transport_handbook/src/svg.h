@@ -10,10 +10,14 @@
 #include <ostream>
 #include <sstream>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace svg
 {
+	using Color = std::string;
+
+	inline const Color NoneColor{"none"};
 
 	class Point
 	{
@@ -65,6 +69,25 @@ namespace svg
 		int indent_step = 0;
 		int indent = 0;
 	};
+	enum class StrokeLineCap
+	{
+		BUTT,
+		ROUND,
+		SQUARE
+	};
+
+	std::ostream& operator<<(std::ostream& out, StrokeLineCap cap);
+
+	enum class StrokeLineJoin
+	{
+		ARCS,
+		BEVEL,
+		MITER,
+		MITER_CLIP,
+		ROUND,
+	};
+
+	std::ostream& operator<<(std::ostream& out, StrokeLineJoin cap);
 
 	/*
 	 * Абстрактный базовый класс Object служит для унифицированного хранения
@@ -82,12 +105,32 @@ namespace svg
 		virtual void RenderObject(const RenderContext& context) const = 0;
 	};
 
+	class PathProps
+	{
+	  public:
+		PathProps() = default;
+		virtual ~PathProps() = default;
+
+		void SetFillColor(const std::optional<Color>& fillColor);
+		void SetStrokeColor(const std::optional<Color>& strokeColor);
+		void SetStrokeWidth(const std::optional<double>& strokeWidth);
+		void SetStrokeLineCap(const std::optional<StrokeLineCap>& strokeLineCap);
+		void SetStrokeLineJoin(const std::optional<StrokeLineJoin>& strokeLineJoin);
+		void FillOutputParameters(std::ostream& out) const;
+		bool PathPropsIsEmpty() const;
+
+	  protected:
+		std::optional<Color> fill_color_;
+		std::optional<Color> stroke_color_;
+		std::optional<double> stroke_width_;
+		std::optional<StrokeLineCap> stroke_line_cap_;
+		std::optional<StrokeLineJoin> stroke_line_join;
+	};
 	class ObjectContainer
 	{
 	  public:
 		template <typename T> void Add(T obj)
 		{
-
 			AddPtr(std::make_unique<T>(std::move(obj)));
 		}
 
@@ -102,11 +145,21 @@ namespace svg
 		virtual void Draw(ObjectContainer& container) const = 0;
 		virtual ~Drawable() = default;
 	};
-	/*
-	 * Класс Circle моделирует элемент <circle> для отображения круга
-	 * https://developer.mozilla.org/en-US/docs/Web/SVG/Element/circle
-	 */
-	class Circle final : public Object
+
+	class Quotable
+	{
+	  public:
+		const std::string_view _Q_{R"(")"};
+
+		template <typename T> std::string _q_(T o) const
+		{
+			std::stringstream ss;
+			ss << _Q_ << o << _Q_;
+			return ss.str();
+		}
+	};
+
+	class Circle final : public Object, private PathProps, private Quotable
 	{
 	  public:
 		Circle() = default;
@@ -115,23 +168,28 @@ namespace svg
 		}
 		Circle& SetCenter(Point center);
 		Circle& SetRadius(double radius);
-
-	  private:
 		void RenderObject(const RenderContext& context) const override;
+
+		Circle& SetFillColor(const std::optional<Color>& fillColor);
+		Circle& SetStrokeColor(const std::optional<Color>& strokeColor);
+		Circle& SetStrokeWidth(const std::optional<double>& strokeWidth);
+		Circle& SetStrokeLineCap(const std::optional<StrokeLineCap>& strokeLineCap);
+		Circle& SetStrokeLineJoin(const std::optional<StrokeLineJoin>& strokeLineJoin);
 
 		Point center_{0.0, 0.0};
 		double radius_{1.0};
 	};
 
-	/*
-	 * Класс Polyline моделирует элемент <polyline> для отображения ломаных линий
-	 * https://developer.mozilla.org/en-US/docs/Web/SVG/Element/polyline
-	 */
-	class Polyline : public Object
+	class Polyline : public Object, private PathProps, private Quotable
 	{
 	  public:
 		// Добавляет очередную вершину к ломаной линии
 		Polyline& AddPoint(Point point);
+		Polyline& SetFillColor(const std::optional<Color>& fillColor);
+		Polyline& SetStrokeColor(const std::optional<Color>& strokeColor);
+		Polyline& SetStrokeWidth(const std::optional<double>& strokeWidth);
+		Polyline& SetStrokeLineCap(const std::optional<StrokeLineCap>& strokeLineCap);
+		Polyline& SetStrokeLineJoin(const std::optional<StrokeLineJoin>& strokeLineJoin);
 
 	  private:
 		void RenderObject(const RenderContext& context) const override;
@@ -143,11 +201,7 @@ namespace svg
 		std::vector<Point> points_{};
 	};
 
-	/*
-	 * Класс Text моделирует элемент <text> для отображения текста
-	 * https://developer.mozilla.org/en-US/docs/Web/SVG/Element/text
-	 */
-	class Text : public Object
+	class Text : public Object, private PathProps, private Quotable
 	{
 	  public:
 		// Задаёт координаты опорной точки (атрибуты x и y)
@@ -168,6 +222,12 @@ namespace svg
 		// Задаёт текстовое содержимое объекта (отображается внутри тега text)
 		Text& SetData(std::string data);
 
+		Text& SetFillColor(const std::optional<Color>& fillColor);
+		Text& SetStrokeColor(const std::optional<Color>& strokeColor);
+		Text& SetStrokeWidth(const std::optional<double>& strokeWidth);
+		Text& SetStrokeLineCap(const std::optional<StrokeLineCap>& strokeLineCap);
+		Text& SetStrokeLineJoin(const std::optional<StrokeLineJoin>& strokeLineJoin);
+
 	  private:
 		void RenderObject(const RenderContext& context) const override;
 
@@ -179,14 +239,7 @@ namespace svg
 		std::string font_family_;
 		std::string font_weight_;
 		std::string data_;
-		const std::string_view _Q_{R"(")"};
 
-		template <typename T> std::string _q_(T o) const
-		{
-			std::stringstream ss;
-			ss << _Q_ << o << _Q_;
-			return ss.str();
-		}
 		const std::map<std::string, std::string> defs_ = {
 			{R"(")", R"(&quot;)"}, {R"(')", R"(&apos;)"}, {R"(<)", R"(&lt;)"},
 			{R"(>)", R"(&gt;)"},   {R"(&)", R"(&amp;)"},
@@ -244,30 +297,17 @@ namespace svg
 
 namespace shapes
 {
-	class Star : public svg::Drawable
+	class Star : public svg::Drawable, public svg::PathProps
 	{
 	  public:
 		Star(svg::Point center, double outer_radius, double inner_radius, int num_rays)
 			: center_(center), outer_radius_(outer_radius), inner_radius_(inner_radius), num_rays_(num_rays)
 		{
+			fill_color_ = "red";
+			stroke_color_ = "black";
 		}
 
-		void Draw(svg::ObjectContainer& container) const override
-		{
-			svg::Polyline polyline;
-			for (int i = 0; i <= num_rays_; ++i)
-			{
-				double angle = 2 * M_PI * (i % num_rays_) / num_rays_;
-				polyline.AddPoint({center_.x + outer_radius_ * sin(angle), center_.y - outer_radius_ * cos(angle)});
-				if (i == num_rays_)
-				{
-					break;
-				}
-				angle += M_PI / num_rays_;
-				polyline.AddPoint({center_.x + inner_radius_ * sin(angle), center_.y - inner_radius_ * cos(angle)});
-			}
-			container.Add(polyline);
-		}
+		void Draw(svg::ObjectContainer& container) const override;
 
 	  private:
 		svg::Point center_;
@@ -276,26 +316,23 @@ namespace shapes
 		int num_rays_;
 	};
 
-	class Snowman : public svg::Drawable
+	class Snowman : public svg::Drawable, public svg::PathProps
 	{
 	  public:
 		Snowman(svg::Point center, double head_radius) : center_(center), head_radius_(head_radius)
 		{
+			fill_color_ = "rgb(240,240,240)";
+			stroke_color_ = "black";
 		}
 
-		void Draw(svg::ObjectContainer& container) const override
-		{
-			container.Add(svg::Circle(center_.x, (center_.y + (head_radius_ * 5)), head_radius_ * 2));
-			container.Add(svg::Circle(center_.x, (center_.y + (head_radius_ * 2)), head_radius_ * 1.5));
-			container.Add(svg::Circle(center_.x, center_.y, head_radius_));
-		}
+		void Draw(svg::ObjectContainer& container) const override;
 
 	  private:
 		svg::Point center_;
 		double head_radius_;
 	};
 
-	class Triangle : public svg::Drawable
+	class Triangle : public svg::Drawable, public svg::PathProps
 	{
 	  public:
 		Triangle(svg::Point p1, svg::Point p2, svg::Point p3) : p1_(p1), p2_(p2), p3_(p3)

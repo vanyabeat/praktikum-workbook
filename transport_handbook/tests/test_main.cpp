@@ -204,62 +204,124 @@ TEST(Coordinates, Test1)
 TEST(SVG, Circle)
 {
 	using namespace std;
-	std::stringstream ss;
+	{
+		std::stringstream ss;
 
-	ss << "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>"sv << std::endl;
-	ss << "<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\">"sv << std::endl;
+		ss << "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>"sv << std::endl;
+		ss << "<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\">"sv << std::endl;
 
-	svg::Circle c;
-	c.SetCenter({20, 20}).SetRadius(10);
-	svg::RenderContext ctx(ss, 2, 2);
-	c.Render(ctx);
+		svg::Circle c;
+		c.SetCenter({20, 20}).SetRadius(10);
+		svg::RenderContext ctx(ss, 2, 2);
+		c.Render(ctx);
 
-	ss << "</svg>"sv;
-	std::string result = R"(<?xml version="1.0" encoding="UTF-8" ?>
+		ss << "</svg>"sv;
+		std::string result = R"(<?xml version="1.0" encoding="UTF-8" ?>
 <svg xmlns="http://www.w3.org/2000/svg" version="1.1">
-  <circle cx="20" cy="20" r="10" />
+  <circle cx="20" cy="20" r="10"/>
 </svg>)";
-	ASSERT_EQ(ss.str(), result);
+		ASSERT_EQ(ss.str(), result);
+	}
+	{
+		std::stringstream ss;
+
+		ss << "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>"sv << std::endl;
+		ss << "<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\">"sv << std::endl;
+
+		svg::Circle c;
+		c.SetCenter({20, 20}).SetRadius(10).SetFillColor("red");
+		svg::RenderContext ctx(ss, 2, 2);
+		c.Render(ctx);
+
+		ss << "</svg>"sv;
+		std::string result = R"(<?xml version="1.0" encoding="UTF-8" ?>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1">
+  <circle cx="20" cy="20" r="10" fill="red" />
+</svg>)";
+		ASSERT_EQ(ss.str(), result);
+	}
 }
 
 TEST(SVG, Polyline)
 {
-	using namespace std;
-	std::stringstream ss;
+	{
+		using namespace std;
+		std::stringstream ss;
 
-	ss << "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>"sv << std::endl;
-	ss << "<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\">"sv << std::endl;
+		ss << "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>"sv << std::endl;
+		ss << "<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\">"sv << std::endl;
 
-	svg::Polyline c;
-	c.AddPoint({20, 10}).AddPoint({10, 10});
-	svg::RenderContext ctx(ss, 2, 2);
-	c.Render(ctx);
+		svg::Polyline c;
+		c.AddPoint({20, 10}).AddPoint({10, 10});
+		svg::RenderContext ctx(ss, 2, 2);
+		c.Render(ctx);
 
-	ss << "</svg>"sv;
-	std::string result = R"(<?xml version="1.0" encoding="UTF-8" ?>
+		ss << "</svg>"sv;
+		std::string result = R"(<?xml version="1.0" encoding="UTF-8" ?>
 <svg xmlns="http://www.w3.org/2000/svg" version="1.1">
-  <polyline points="20,10, 10,10" />
+  <polyline points="20,10 10,10" />
 </svg>)";
+		ASSERT_EQ(ss.str(), result);
+	}
+	{
+		using namespace std;
+		std::stringstream ss;
 
-	ASSERT_EQ(ss.str(), result);
+		ss << "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>"sv << std::endl;
+		ss << "<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\">"sv << std::endl;
+
+		svg::Polyline c;
+		c.AddPoint({20, 10}).AddPoint({10, 10}).SetStrokeLineJoin(svg::StrokeLineJoin::BEVEL);
+		svg::RenderContext ctx(ss, 2, 2);
+		c.Render(ctx);
+
+		ss << "</svg>"sv;
+		std::string result = R"(<?xml version="1.0" encoding="UTF-8" ?>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1">
+  <polyline points="20,10 10,10" stroke-linejoin="bevel" />
+</svg>)";
+		ASSERT_EQ(ss.str(), result);
+	}
 }
 
 TEST(SVG, Text)
 {
 	using namespace std;
-	std::stringstream ss;
 
-	ss << "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>"sv << std::endl;
-	ss << "<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\">"sv << std::endl;
+	{
+		std::stringstream ss;
+		ss << "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>"sv << std::endl;
+		ss << "<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\">"sv << std::endl;
 
-	svg::Text c;
-	c.SetPosition({1, 2}).SetFontSize(212);
-	svg::RenderContext ctx(ss, 2, 2);
-	c.Render(ctx);
+		svg::Text c;
+		c.SetPosition({1, 2}).SetFontSize(212);
+		svg::RenderContext ctx(ss, 2, 2);
+		c.Render(ctx);
 
-	ss << "</svg>"sv;
+		ss << "</svg>"sv;
+		std::string expected = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
+							   "<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\">\n"
+							   "  <text x=\"1\" y=\"2\" dx=\"0\" dy=\"0\" font-size=\"212\" ></text>\n"
+							   "</svg>";
+		ASSERT_EQ(expected, ss.str());
+	}
+	{
+		std::stringstream ss;
+		ss << "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>"sv << std::endl;
+		ss << "<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\">"sv << std::endl;
 
-	std::cout << ss.str();
+		svg::Text c;
+		c.SetPosition({1, 2}).SetFontSize(212);
+		svg::RenderContext ctx(ss, 2, 2);
+		c.Render(ctx);
+
+		ss << "</svg>"sv;
+		std::string expected = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
+							   "<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\">\n"
+							   "  <text x=\"1\" y=\"2\" dx=\"0\" dy=\"0\" font-size=\"212\" ></text>\n"
+							   "</svg>";
+		ASSERT_EQ(expected, ss.str());
+	}
 }
 
 svg::Polyline CreateStar(svg::Point center, double outer_rad, double inner_rad, int num_rays)
@@ -350,5 +412,32 @@ TEST(SVG, Shapes)
 	DrawPicture(picture, doc);
 
 	// Выводим полученный документ в stdout
+	doc.Render(cout);
+}
+
+TEST(SVG, Seters)
+{
+	using namespace svg;
+	using namespace shapes;
+	using namespace std;
+
+	vector<unique_ptr<svg::Drawable>> picture;
+	picture.emplace_back(make_unique<Triangle>(Point{100, 20}, Point{120, 50}, Point{80, 40}));
+	picture.emplace_back(make_unique<Star>(Point{50.0, 20.0}, 10.0, 4.0, 5));
+	picture.emplace_back(make_unique<Snowman>(Point{30, 20}, 10.0));
+
+	svg::Document doc;
+	DrawPicture(picture, doc);
+
+	const Text base_text = //
+		Text().SetFontFamily("Verdana"s).SetFontSize(12).SetPosition({10, 100}).SetData("Happy New Year!"s);
+	doc.Add(Text{base_text}
+				.SetStrokeColor("yellow"s)
+				.SetFillColor("yellow"s)
+				.SetStrokeLineJoin(StrokeLineJoin::ROUND)
+				.SetStrokeLineCap(StrokeLineCap::ROUND)
+				.SetStrokeWidth(3));
+	doc.Add(Text{base_text}.SetFillColor("red"s));
+
 	doc.Render(cout);
 }

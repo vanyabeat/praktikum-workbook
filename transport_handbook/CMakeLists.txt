@@ -8,7 +8,6 @@ if (EXISTS ${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 else ()
     message(WARNING "The file conanbuildinfo.cmake doesn't exist, you have to run conan install first")
 endif ()
-
 ucm_add_dirs(src TO SOURCES)
 ucm_add_dirs(tests TO TESTS)
 ucm_add_dirs(app TO APP)

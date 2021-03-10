@@ -1,5 +1,5 @@
 #include "json.h"
-
+#include <cmath>
 using namespace std;
 
 namespace json
@@ -26,22 +26,90 @@ namespace json
 			return Node(move(result));
 		}
 
-		Node LoadInt(istream& input)
-		{
-			int result = 0;
-			while (isdigit(input.peek()))
-			{
-				result *= 10;
-				result += input.get() - '0';
-			}
-			return Node(result);
-		}
+		//		Node LoadInt(istream& input)
+		//		{
+		//			int result = 0;
+		//			while (isdigit(input.peek()))
+		//			{
+		//				result *= 10;
+		//				result += input.get() - '0';
+		//			}
+		//			return Node(result);
+		//		}
 
 		Node LoadString(istream& input)
 		{
-			string line;
-			getline(input, line, '"');
-			return Node(move(line));
+			string res;
+			int quot_count = 0;
+			char c;
+			while (input.get(c))
+			{
+				if (c == '\\' && input.peek() == '\\')
+				{
+					res.push_back('\\');
+					input.ignore(1);
+				}
+				else if (c == '\\' && input.peek() == '"')
+				{
+					res.push_back('\"');
+					input.ignore(1);
+				}
+				else if (c == '\\' && input.peek() == 'n')
+				{
+					res.push_back('\n');
+					input.ignore(1);
+				}
+				else if (c == '\\' && input.peek() == 'r')
+				{
+					res.push_back('\r');
+					input.ignore(1);
+				}
+				else if (c == '\\' && input.peek() == 't')
+				{
+					res.push_back('\t');
+					input.ignore(1);
+				}
+				else if ((c == '"' && input.peek() == ',') || (c == '"' && input.peek() == '}') ||
+						 (c == '"' && input.peek() == ']'))
+				{
+					if (c == '"')
+					{
+						++quot_count;
+					}
+					break;
+				}
+				else if (c == '"')
+				{
+					++quot_count;
+				}
+				else if (c == '\\' || c == '\"' || c == '\n' || c == '\r' || c == '\t')
+				{
+				}
+				else if ((c == ' ' && input.peek() == ']') || (c == ' ' && input.peek() == '}'))
+				{
+					break;
+				}
+				else if (c == ']' || c == '}')
+				{
+					input.putback(c);
+					break;
+				}
+				else if (c == ':')
+				{
+
+					input.putback(c);
+					break;
+				}
+				else
+				{
+					res.push_back(c);
+				}
+			}
+			if (quot_count % 2 != 0)
+			{
+				throw ParsingError("quotation marks are open"s);
+			}
+			return Node(move(res));
 		}
 
 		Node LoadDict(istream& input)
@@ -54,9 +122,8 @@ namespace json
 				{
 					input >> c;
 				}
-
-				string key = std::string(LoadString(input));
-				input >> c;
+				input.putback(c);
+				string key = LoadString(input).AsString();
 				result.insert({move(key), LoadNode(input)});
 			}
 
@@ -175,16 +242,33 @@ namespace json
 		{
 			char c;
 			input >> c;
+
+			if (c == ':')
+			{
+				input >> c;
+			}
+
 			if (c == '[')
 			{
-				return LoadArray(input);
+				if (input >> c)
+				{
+					input.putback(c);
+					return LoadArray(input);
+				}
+				throw ParsingError("invalid array"s);
 			}
 			else if (c == '{')
 			{
-				return LoadDict(input);
+				if (input >> c)
+				{
+					input.putback(c);
+					return LoadDict(input);
+				}
+				throw ParsingError("invalid dictionary"s);
 			}
 			else if (c == '"')
 			{
+				input.putback(c);
 				return LoadString(input);
 			}
 			else if (isdigit(c) || c == '-' || c == '+')
@@ -235,7 +319,7 @@ namespace json
 	Node::Node(double value) : node_item_(value)
 	{
 	}
-	Node::Node(std::nullptr_t nullv) : node_item_()
+	Node::Node(std::nullptr_t nullv) : node_item_(nullv)
 	{
 	}
 	bool Node::IsNull() const
@@ -246,7 +330,7 @@ namespace json
 	{
 		return node_item_.index() == 1;
 	}
-	bool Node::IsDict() const
+	bool Node::IsMap() const
 	{
 		return node_item_.index() == 2;
 	}
@@ -280,20 +364,23 @@ namespace json
 		{
 			return std::get<double>(node_item_);
 		}
-		return {};
+		throw logic_error("expected int or double"s);
 	}
+
 	bool Node::IsString() const
 	{
 		return node_item_.index() == 6;
 	}
+
 	int Node::AsInt() const
 	{
 		if (IsInt())
 		{
 			return std::get<int>(node_item_);
 		}
-		return {};
+		throw logic_error("expected int or double"s);
 	}
+
 	std::ostream& operator<<(ostream& out, const Node& node)
 	{
 		if (node.IsString())
@@ -302,16 +389,60 @@ namespace json
 		}
 		return out;
 	}
+	bool double_equals(double a, double b, double epsilon = std::numeric_limits<double>::epsilon())
+	{
+		return std::abs(a - b) < epsilon;
+	}
 	bool operator==(const Node& l, const Node& r)
 	{
+		if (l.IsDouble() && r.IsDouble())
+		{
+			return double_equals(l.AsDouble(), r.AsDouble());
+		}
 		return l.node_item_ == r.node_item_;
 	}
+	bool operator!=(const Node& l, const Node& r)
+	{
+		return !(l == r);
+	}
+
 	Node::operator std::string() const
 	{
 		using namespace std;
 		if (IsString())
 		{
-			return std::get<std::string>(node_item_);
+			string res;
+			res += "\""s;
+			for (const char& c : std::get<std::string>(node_item_))
+			{
+				if (c == '\\')
+				{
+					res += R"(\\)";
+				}
+				else if (c == '\"')
+				{
+					res += R"(\")";
+				}
+				else if (c == '\n')
+				{
+					res += R"(\n)";
+				}
+				else if (c == '\r')
+				{
+					res += R"(\r)";
+				}
+				else if (c == '\t')
+				{
+					res += R"(\t)";
+				}
+				else
+				{
+					res += c;
+				}
+			}
+			res += "\""s;
+
+			return res;
 		}
 		else if (IsNull())
 		{
@@ -334,15 +465,82 @@ namespace json
 		else if (IsArray())
 		{
 			std::string result = "[";
-			size_t array_length = std::get<Array>(node_item_).size() - 1;
+			size_t item_pos = std::get<Array>(node_item_).size() - 1;
 			size_t counter = 0;
-			for (auto t = 0; t < array_length - 1; ++t)
+
+			for (const auto i : std::get<Array>(node_item_))
 			{
-				result += std::string(std::get<Array>(node_item_)[t]) + ", ";
+				if (counter != item_pos)
+				{
+					result += std::string(i) + ", ";
+				}
+				else
+				{
+					result += std::string(i);
+				}
+				++counter;
 			}
-			result += std::string(std::get<Array>(node_item_)[array_length]) + "]";
+
+			result += "]";
+			return result;
+		}
+		else if (IsMap())
+		{
+			std::string result = "{";
+			auto map = std::get<Dict>(node_item_);
+			for (const auto& [key, value] : map)
+			{
+				if (map.find(key) == map.begin())
+				{
+					result += std::string(Node(key));
+					result += ": "s;
+					result += std::string(Node(value));
+				}
+				else
+				{
+					result += ", ";
+					result += std::string(Node(key));
+					result += ": "s;
+					result += std::string(Node(value));
+				}
+			}
+			result += "}";
+			return result;
 		}
 		return {};
+	}
+
+	const std::string& Node::AsString() const
+	{
+		if (IsString())
+		{
+			return std::get<string>(node_item_);
+		}
+		throw logic_error("expected string"s);
+	}
+	const Array& Node::AsArray() const
+	{
+		if (IsArray())
+		{
+			return std::get<Array>(node_item_);
+		}
+		throw logic_error("expected array"s);
+	}
+	bool Node::AsBool() const
+	{
+		if (IsBool())
+		{
+			return std::get<bool>(node_item_);
+		}
+		throw logic_error("expected bool"s);
+	}
+	const Dict& Node::AsMap() const
+	{
+		if (IsMap())
+		{
+			return std::get<Dict>(node_item_);
+		}
+		throw logic_error("expected dictionary"s);
 	}
 
 	Document::Document(Node root) : root_(move(root))
@@ -373,10 +571,30 @@ namespace json
 		{
 			out << std::string(doc.GetRoot());
 		}
+		else if (doc.GetRoot().IsBool())
+		{
+			if (doc.GetRoot().AsBool())
+			{
+				out << "true";
+			}
+			else
+			{
+				out << "false";
+			}
+		}
 		else if (doc.GetRoot().IsPureDouble())
 		{
 			out << std::string(doc.GetRoot());
 		}
+		else if (doc.GetRoot().IsString())
+		{
+			out << std::string(doc.GetRoot());
+		}
+		else if (doc.GetRoot().IsMap())
+		{
+			out << std::string(doc.GetRoot());
+		}
+
 		//		return out;
 		// Реализуйте функцию самостоятельно
 	}

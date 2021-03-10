@@ -1,11 +1,14 @@
 #include "control_reader.h"
+#include "json.h"
 #include "regex"
 #include "svg.h"
 #include "view_data.h"
 #include <gtest/gtest.h>
 #include <iostream>
+#include <sstream>
 #include <string_view>
 #include <transport_catalogue.h>
+
 int main(int argc, char** argv)
 {
 	::testing::InitGoogleTest(&argc, argv);
@@ -440,4 +443,96 @@ TEST(SVG, Seters)
 	doc.Add(Text{base_text}.SetFillColor("red"s));
 
 	doc.Render(cout);
+}
+
+TEST(JSON, test1)
+{
+	using namespace json;
+	using namespace std;
+
+	istringstream strm{"[]"s};
+	json::Node node = json::Load(strm).GetRoot();
+
+	//	// Как узнать, какой тип хранит node в данный момент?
+	//	assert(node.AsInt() == 0);
+	//	assert(node.AsArray().empty());
+	//	assert(node.AsMap().empty());
+	//	assert(node.AsString().empty());
+	std::variant<int, double, std::string> v = 1;
+	std::cout << v.index() << std::endl;
+	v = "asdasd"s;
+	std::cout << v.index() << std::endl;
+}
+
+TEST(JSON, test2)
+{
+	using namespace std;
+	std::istringstream iss(R"({"key":"value","key2":45,"key3":[null,15.5]})"s);
+	json::Node node = json::Load(iss).GetRoot();
+
+	auto a = 6;
+}
+
+json::Document LoadJSON(const std::string& s)
+{
+	std::istringstream strm(s);
+	return json::Load(strm);
+}
+
+//// Раскомментируйте эти функции по мере того, как реализуете недостающий функционал
+///*
+std::string Print(const json::Node& node)
+{
+	std::ostringstream out;
+	Print(json::Document{node}, out);
+	return out.str();
+}
+
+TEST(JSON, test3)
+{
+	using namespace std;
+	json::Node null_node;
+	ASSERT_TRUE(null_node.IsNull());
+
+	json::Node null_node1{nullptr};
+	ASSERT_TRUE(null_node1.IsNull());
+
+	ASSERT_EQ(Print(null_node), "null"s);
+
+	const json::Node node = LoadJSON("null"s).GetRoot();
+
+	ASSERT_TRUE(node.IsNull());
+
+	ASSERT_EQ(node, null_node);
+}
+
+TEST(JSON, numbers)
+{
+	using namespace json;
+	using namespace std;
+	Node int_node{42};
+	ASSERT_TRUE(int_node.IsInt());
+	ASSERT_TRUE(int_node.AsInt() == 42);
+	// целые числа являются подмножеством чисел с плавающей запятой
+	ASSERT_TRUE(int_node.IsDouble());
+	// Когда узел хранит int, можно получить соответствующее ему double-значение
+	ASSERT_EQ(int_node.AsDouble(), 42.0);
+	ASSERT_TRUE(!int_node.IsPureDouble());
+
+	Node dbl_node{123.45};
+	ASSERT_TRUE(dbl_node.IsDouble());
+	ASSERT_EQ(dbl_node.AsDouble(), 123.45);
+	ASSERT_TRUE(dbl_node.IsPureDouble()); // Значение содержит число с плавающей запятой
+	ASSERT_TRUE(!dbl_node.IsInt());
+
+	ASSERT_EQ(Print(int_node), "42"s);
+	ASSERT_EQ(Print(dbl_node), "123.45"s);
+
+	ASSERT_EQ(LoadJSON("42"s).GetRoot(), int_node);
+	ASSERT_EQ(LoadJSON("123.45"s).GetRoot(), dbl_node);
+	ASSERT_EQ(LoadJSON("0.25"s).GetRoot().AsDouble(), 0.25);
+	ASSERT_EQ(LoadJSON("3e5"s).GetRoot().AsDouble(), 3e5);
+	ASSERT_EQ(LoadJSON("1.2e-5"s).GetRoot().AsDouble(), 1.2e-5);
+	ASSERT_EQ(LoadJSON("1.2e+5"s).GetRoot().AsDouble(), 1.2e5);
+	ASSERT_EQ(LoadJSON("-123456"s).GetRoot().AsInt(), -123456);
 }

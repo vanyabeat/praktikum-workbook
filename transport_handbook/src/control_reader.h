@@ -2,6 +2,7 @@
 
 #include "geo.h"
 #include "transport_catalogue.h"
+#include "json.h"
 #include <algorithm>
 #include <iostream>
 #include <iterator>
@@ -94,7 +95,7 @@ namespace Handbook
 		};
 
 		std::shared_ptr<Request> ParseRequestString(const std::string& r_str);
-
+		std::shared_ptr<Request> ParseRequestDocument(const json::Document &doc);
 		std::string ReadLine(std::istream& istream = std::cin);
 
 		int ReadLineWithNumber(std::istream& istream = std::cin);

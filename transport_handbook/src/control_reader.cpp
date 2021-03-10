@@ -92,19 +92,20 @@ static std::tuple<std::string, Handbook::Utilities::Coordinates, std::vector<std
 		std::vector<std::string> vec = SplitIntoWords(base_match[4], {','});
 
 		return std::make_tuple(std::string(base_match[1]),
-							   Handbook::Utilities::Coordinates{std::stod(base_match[2]), std::stod(base_match[3])}, ParseDistances(vec));
+							   Handbook::Utilities::Coordinates{std::stod(base_match[2]), std::stod(base_match[3])},
+							   ParseDistances(vec));
 	}
 }
 
-static Handbook::Utilities::Coordinates ParseCoordsSubstring(const std::string& r_str)
-{
-	// latitude, longitude
-	using namespace std;
-	size_t comma = r_str.find(","s);
-	Handbook::Utilities::Coordinates result{std::stod(std::string(r_str.begin(), r_str.begin() + comma)),
-					   std::stod(std::string(r_str.begin() + comma + 2, r_str.end()))};
-	return result;
-}
+//static Handbook::Utilities::Coordinates ParseCoordsSubstring(const std::string& r_str)
+//{
+//	// latitude, longitude
+//	using namespace std;
+//	size_t comma = r_str.find(","s);
+//	Handbook::Utilities::Coordinates result{std::stod(std::string(r_str.begin(), r_str.begin() + comma)),
+//											std::stod(std::string(r_str.begin() + comma + 2, r_str.end()))};
+//	return result;
+//}
 
 static std::vector<std::string> FullPath(const std::string& r_str)
 {
@@ -251,4 +252,61 @@ void Handbook::Control::AddRequestToCatalogue(Handbook::Control::Request* reques
 		transport_catalogue.AddStop(stop->getName(), stop->coordinates, stop->getDistanceToOtherStop());
 		break;
 	}
+}
+std::shared_ptr<Handbook::Control::Request> Handbook::Control::ParseRequestDocument(const json::Document& doc)
+{
+	using namespace std;
+	if (!doc.GetRoot().IsMap())
+	{
+		throw std::logic_error("Doc must be a dict (map)");
+	}
+
+	std::shared_ptr<Handbook::Control::Request> result = nullptr;
+
+	auto item = doc.GetRoot().AsMap();
+
+	if (item.at("type").AsString() == "Stop"s)
+	{
+		result = std::shared_ptr<Handbook::Control::Request>(new Handbook::Control::Stop());
+		result->setName(item.at("name").AsString());
+		result->setRequestType(Handbook::Control::RequestType::IsStop);
+		static_cast<Handbook::Control::Stop*>(result.get())->coordinates = Handbook::Utilities::Coordinates{
+			static_cast<double>(item.at("latitude").AsDouble()), static_cast<double>(item.at("longitude").AsDouble())};
+		std::vector<std::pair<std::string, size_t>> vector_to_other_stops;
+		for (const auto& [road, dist] : item.at("road_distances").AsMap())
+		{
+			vector_to_other_stops.push_back({road, static_cast<size_t>(dist.AsInt())});
+		}
+		static_cast<Handbook::Control::Stop*>(result.get())->setDistanceToOtherStop(std::move(vector_to_other_stops));
+		return result;
+	}
+	if (item.at("type").AsString() == "Bus"s)
+	{
+		result = std::shared_ptr<Handbook::Control::Request>(new Handbook::Control::Bus());
+		result->setName(item.at("name").AsString());
+		result->setRequestType(Handbook::Control::RequestType::IsBus);
+		bool round_trip = item.at("is_roundtrip").AsBool();
+		std::vector<std::string> stops;
+		for (const auto& stop : item.at("stops").AsArray())
+		{
+			stops.push_back(stop.AsString());
+		}
+		if (round_trip)
+		{
+			static_cast<Handbook::Control::Bus*>(result.get())->setStops(std::move(stops));
+		}
+		else
+		{
+			auto tmp = stops;
+			std::vector<std::string> res;
+			res.insert(res.end(), tmp.begin(), tmp.end());
+			tmp.pop_back();
+			std::reverse(tmp.begin(), tmp.end());
+			res.insert(res.end(), tmp.begin(), tmp.end());
+			static_cast<Handbook::Control::Bus*>(result.get())->setStops(std::move(res));
+		}
+		return result;
+	}
+
+	throw std::invalid_argument("Invalid JSON-object");
 }

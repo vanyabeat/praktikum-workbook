@@ -1,5 +1,6 @@
 #include "control_reader.h"
 #include "json.h"
+#include "json_reader.h"
 #include "regex"
 #include "svg.h"
 #include "view_data.h"
@@ -537,7 +538,39 @@ TEST(JSON, numbers)
 	ASSERT_EQ(LoadJSON("1.2e+5"s).GetRoot().AsDouble(), 1.2e5);
 	ASSERT_EQ(LoadJSON("-123456"s).GetRoot().AsInt(), -123456);
 }
-
+TEST(JSON, TESTWTF)
+{
+	std::string str = "{\n"
+					  "  \"base_requests\": [\n"
+					  "    {\n"
+					  "      \"type\": \"Bus\",\n"
+					  "      \"name\": \"114\",\n"
+					  "      \"stops\": [\"Морской вокзал\", \"Ривьерский мост\"],\n"
+					  "      \"is_roundtrip\": false\n"
+					  "    },\n"
+					  "    {\n"
+					  "      \"type\": \"Stop\",\n"
+					  "      \"name\": \"Ривьерский мост\",\n"
+					  "      \"latitude\": 43.587795,\n"
+					  "      \"longitude\": 39.716901,\n"
+					  "      \"road_distances\": {\"Морской вокзал\": 850}\n"
+					  "    },\n"
+					  "    {\n"
+					  "      \"type\": \"Stop\",\n"
+					  "      \"name\": \"Морской вокзал\",\n"
+					  "      \"latitude\": 43.581969,\n"
+					  "      \"longitude\": 39.719848,\n"
+					  "      \"road_distances\": {\"Ривьерский мост\": 850}\n"
+					  "    }\n"
+					  "  ],\n"
+					  "  \"stat_requests\": [\n"
+					  "    { \"id\": 1, \"type\": \"Stop\", \"name\": \"Ривьерский мост\" },\n"
+					  "    { \"id\": 2, \"type\": \"Bus\", \"name\": \"114\" }\n"
+					  "  ]\n"
+					  "} )\");";
+	auto a = LoadJSON(str);
+	auto b = 5;
+}
 TEST(JSON, strings)
 {
 	using namespace json;
@@ -716,8 +749,305 @@ TEST(JSON, benchmark)
 	std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(duration).count() << "ms"sv << std::endl;
 }
 
-TEST(JSON, ADDITIONAL){
+TEST(JSON, ADDITIONAL)
+{
 	using namespace json;
 	using namespace std;
-	ASSERT_EQ(Node(42) , Node(42.));
+	//	ASSERT_EQ(Node(42), Node(42.));
+	Node dict_node{Dict{
+		{"int"s, 42},
+		{"double"s, 42.1},
+		{"null"s, nullptr},
+		{"string"s, "hello"s},
+		{"array"s, Array{1, 2, 3}},
+		{"bool"s, true},
+		{"map"s, Dict{{"key"s, "value"s}}},
+	}};
+
+	std::cout << Print(dict_node);
+}
+
+TEST(JSON, Catalogue_Stop)
+{
+	auto json_document = LoadJSON("{\n"
+								  "  \"type\": \"Stop\",\n"
+								  "  \"name\": \"Электросети\",\n"
+								  "  \"latitude\": -1.2,\n"
+								  "  \"longitude\": -2,\n"
+								  "  \"road_distances\": {\n"
+								  "    \"Улица Докучаева\": 3000,\n"
+								  "    \"Улица Лизы Чайкиной\": 4300\n"
+								  "  }\n"
+
+								  "}");
+	std::shared_ptr<Handbook::Control::Request> a = Handbook::Control::ParseRequestDocument(json_document);
+	json::Print(json_document, std::cout);
+	ASSERT_EQ(static_cast<Handbook::Control::Stop*>(a.get())->getName(), "Электросети");
+}
+
+TEST(JSON, Catalogue_Bus)
+{
+	using namespace std;
+	auto json_document = LoadJSON("{\n"
+								  "  \"type\": \"Bus\",\n"
+								  "  \"name\": \"14\",\n"
+								  "  \"stops\": [\n"
+								  "    \"Улица Лизы Чайкиной\",\n"
+								  "    \"Электросети\",\n"
+								  "    \"Улица Докучаева\"\n"
+								  "  ],\n"
+								  "  \"is_roundtrip\": false\n"
+								  "} ");
+	std::shared_ptr<Handbook::Control::Request> a = Handbook::Control::ParseRequestDocument(json_document);
+	ASSERT_EQ(static_cast<Handbook::Control::Bus*>(a.get())->getName(), "14"s);
+	for (const auto& stop : static_cast<Handbook::Control::Bus*>(a.get())->getStops())
+	{
+		std::cout << stop << "|";
+	}
+}
+
+TEST(JSON, Catalogue_Requests)
+{
+	using namespace std;
+	Handbook::Data::TransportCatalogue transport_catalogue;
+	transport_catalogue.AddStop("Tolstopaltsevo"s, Handbook::Utilities::Coordinates{55.611087, 37.20829},
+								{{"Marushkino"s, 100}});
+	transport_catalogue.AddStop("Marushkino"s, Handbook::Utilities::Coordinates{55.595884, 37.209755});
+	transport_catalogue.AddBus("256"s, {"Marushkino", "Tolstopaltsevo", "Marushkino"});
+
+	auto json_document = LoadJSON("{ \"id\": 1, \"type\": \"Bus\", \"name\": \"256\" }");
+
+	auto result = Handbook::Views::GetData(json_document, transport_catalogue);
+	std::cout << Print(result.GetRoot());
+}
+
+TEST(JSON, Test_main)
+{
+	using namespace std;
+	std::string data = "{\n"
+					   "  \"base_requests\": [\n"
+					   "    {\n"
+					   "      \"type\": \"Bus\",\n"
+					   "      \"name\": \"114\",\n"
+					   "      \"stops\": [\"Морской вокзал\", \"Ривьерский мост\"],\n"
+					   "      \"is_roundtrip\": false\n"
+					   "    },\n"
+					   "    {\n"
+					   "      \"type\": \"Stop\",\n"
+					   "      \"name\": \"Ривьерский мост\",\n"
+					   "      \"latitude\": 1,\n"
+					   "      \"longitude\": 2,\n"
+					   "      \"road_distances\": {\"Морской вокзал\": 850}\n"
+					   "    },\n"
+					   "    {\n"
+					   "      \"type\": \"Stop\",\n"
+					   "      \"name\": \"Морской вокзал\",\n"
+					   "      \"latitude\": 3,\n"
+					   "      \"longitude\": 4,\n"
+					   "      \"road_distances\": {\"Ривьерский мост\": 850}\n"
+					   "    }\n"
+					   "  ],\n"
+					   "  \"stat_requests\": [\n"
+					   "    { \"id\": 1, \"type\": \"Stop\", \"name\": \"Ривьерский мост\" },\n"
+					   "    { \"id\": 2, \"type\": \"Bus\", \"name\": \"114\" }\n"
+					   "  ]\n"
+					   "} ";
+
+	auto test = LoadJSON(data);
+	std::istringstream is(data);
+
+	Handbook::Data::TransportCatalogue transport_catalogue;
+
+	Handbook::Control::JsonReader reader(is, transport_catalogue);
+
+	auto res = reader.GenerateReport();
+
+	json::Print(res, std::cout);
+}
+
+TEST(JSON, real_data)
+{
+	std::string real_json_data =
+		"{\n"
+		"  \"base_requests\": [\n"
+		"    {\n"
+		"      \"type\": \"Stop\",\n"
+		"      \"name\": \"Tolstopaltsevo\",\n"
+		"      \"latitude\": 55.611087,\n"
+		"      \"longitude\": 37.20829,\n"
+		"      \"road_distances\": {\"Marushkino\": 3900}\n"
+		"    },\n"
+		"    {\n"
+		"      \"type\": \"Stop\",\n"
+		"      \"name\": \"Marushkino\",\n"
+		"      \"latitude\": 55.595884,\n"
+		"      \"longitude\": 37.209755,\n"
+		"      \"road_distances\": {\"Rasskazovka\": 9900, \"Marushkino\": 100}\n"
+		"    },\n"
+		"    {\n"
+		"      \"type\": \"Bus\",\n"
+		"      \"name\": \"256\",\n"
+		"      \"stops\": [\"Biryulyovo Zapadnoye\", \"Biryusinka\", \"Universam\", \"Biryulyovo Tovarnaya\", "
+		"\"Biryulyovo Passazhirskaya\", \"Biryulyovo Zapadnoye\"],\n"
+		"      \"is_roundtrip\": true\n"
+		"    },\n"
+		"    {\n"
+		"      \"type\": \"Bus\",\n"
+		"      \"name\": \"750\",\n"
+		"      \"stops\": [\"Tolstopaltsevo\", \"Marushkino\", \"Marushkino\", \"Rasskazovka\"],\n"
+		"      \"is_roundtrip\": false\n"
+		"    },\n"
+		"    {\n"
+		"      \"type\": \"Stop\",\n"
+		"      \"name\": \"Rasskazovka\",\n"
+		"      \"latitude\": 55.632761,\n"
+		"      \"longitude\": 37.333324,\n"
+		"      \"road_distances\": {\"Marushkino\": 9500}\n"
+		"    },\n"
+		"    {\n"
+		"      \"type\": \"Stop\",\n"
+		"      \"name\": \"Biryulyovo Zapadnoye\",\n"
+		"      \"latitude\": 55.574371,\n"
+		"      \"longitude\": 37.6517,\n"
+		"      \"road_distances\": {\"Rossoshanskaya ulitsa\": 7500, \"Biryusinka\": 1800, \"Universam\": 2400}\n"
+		"    },\n"
+		"    {\n"
+		"      \"type\": \"Stop\",\n"
+		"      \"name\": \"Biryusinka\",\n"
+		"      \"latitude\": 55.581065,\n"
+		"      \"longitude\": 37.64839,\n"
+		"      \"road_distances\": {\"Universam\": 750}\n"
+		"    },\n"
+		"    {\n"
+		"      \"type\": \"Stop\",\n"
+		"      \"name\": \"Universam\",\n"
+		"      \"latitude\": 55.587655,\n"
+		"      \"longitude\": 37.645687,\n"
+		"      \"road_distances\": {\"Rossoshanskaya ulitsa\": 5600, \"Biryulyovo Tovarnaya\": 900}\n"
+		"    },\n"
+		"    {\n"
+		"      \"type\": \"Stop\",\n"
+		"      \"name\": \"Biryulyovo Tovarnaya\",\n"
+		"      \"latitude\": 55.592028,\n"
+		"      \"longitude\": 37.653656,\n"
+		"      \"road_distances\": {\"Biryulyovo Passazhirskaya\": 1300}\n"
+		"    },\n"
+		"    {\n"
+		"      \"type\": \"Stop\",\n"
+		"      \"name\": \"Biryulyovo Passazhirskaya\",\n"
+		"      \"latitude\": 55.580999,\n"
+		"      \"longitude\": 37.659164,\n"
+		"      \"road_distances\": {\"Biryulyovo Zapadnoye\": 1200}\n"
+		"    },\n"
+		"    {\n"
+		"      \"type\": \"Bus\",\n"
+		"      \"name\": \"828\",\n"
+		"      \"stops\": [\"Biryulyovo Zapadnoye\", \"Universam\", \"Rossoshanskaya ulitsa\", \"Biryulyovo "
+		"Zapadnoye\"],\n"
+		"      \"is_roundtrip\": true\n"
+		"    },\n"
+		"    {\n"
+		"      \"type\": \"Stop\",\n"
+		"      \"name\": \"Rossoshanskaya ulitsa\",\n"
+		"      \"latitude\": 55.595579,\n"
+		"      \"longitude\": 37.605757,\n"
+		"      \"road_distances\": {}\n"
+		"    },\n"
+		"    {\n"
+		"      \"type\": \"Stop\",\n"
+		"      \"name\": \"Prazhskaya\",\n"
+		"      \"latitude\": 55.611678,\n"
+		"      \"longitude\": 37.603831,\n"
+		"      \"road_distances\": {}\n"
+		"    }\n"
+		"  ],\n"
+		"  \"stat_requests\": [\n"
+		"    { \"id\": 1, \"type\": \"Bus\", \"name\": \"256\" },\n"
+		"    { \"id\": 2, \"type\": \"Bus\", \"name\": \"750\" },\n"
+		"    { \"id\": 3, \"type\": \"Bus\", \"name\": \"751\" },\n"
+		"    { \"id\": 4, \"type\": \"Stop\", \"name\": \"Samara\" },\n"
+		"    { \"id\": 5, \"type\": \"Stop\", \"name\": \"Prazhskaya\" },\n"
+		"    { \"id\": 6, \"type\": \"Stop\", \"name\": \"Biryulyovo Zapadnoye\" }\n"
+		"  ]\n"
+		"}";
+
+	std::istringstream is(real_json_data);
+
+	Handbook::Data::TransportCatalogue transport_catalogue;
+
+	Handbook::Control::JsonReader reader(is, transport_catalogue);
+
+	auto res = reader.GenerateReport();
+	std::cout << Print(res.GetRoot()) << std::endl;
+	auto actual = LoadJSON(Print(res.GetRoot()));
+	auto real = LoadJSON("[ \n"
+						 "    { \n"
+						 "      \"curvature\" : 1.36124, \n"
+						 "      \"request_id\" : 1, \n"
+						 "      \"route_length\" : 5950, \n"
+						 "      \"stop_count\" : 6, \n"
+						 "      \"unique_stop_count\" : 5 \n"
+						 "    }, \n"
+						 "    { \n"
+						 "      \"curvature\" : 1.30853, \n"
+						 "      \"request_id\" : 2, \n"
+						 "      \"route_length\" : 27400, \n"
+						 "      \"stop_count\" : 7, \n"
+						 "      \"unique_stop_count\" : 3 \n"
+						 "    }, \n"
+						 "    { \n"
+						 "      \"error_message\" : \"not found\", \n"
+						 "      \"request_id\" : 3 \n"
+						 "    }, \n"
+						 "    { \n"
+						 "      \"error_message\" : \"not found\", \n"
+						 "      \"request_id\" : 4 \n"
+						 "    }, \n"
+						 "    { \n"
+						 "      \"buses\" : [  ], \n"
+						 "      \"request_id\" : 5 \n"
+						 "    }, \n"
+						 "    { \n"
+						 "      \"buses\" : [ \"256\", \"828\" ], \n"
+						 "      \"request_id\" : 6 \n"
+						 "    } \n"
+						 "]");
+	std::cout << std::endl << Print(real.GetRoot()) << std::endl;
+	ASSERT_EQ(actual, real);
+}
+
+TEST(WOW, test){
+	auto real = LoadJSON("[ \n"
+						 "    { \n"
+						 "      \"curvature\" : 1.36124, \n"
+						 "      \"request_id\" : 1, \n"
+						 "      \"route_length\" : 5950, \n"
+						 "      \"stop_count\" : 6, \n"
+						 "      \"unique_stop_count\" : 5 \n"
+						 "    }, \n"
+						 "    { \n"
+						 "      \"curvature\" : 1.30853, \n"
+						 "      \"request_id\" : 2, \n"
+						 "      \"route_length\" : 27400, \n"
+						 "      \"stop_count\" : 7, \n"
+						 "      \"unique_stop_count\" : 3 \n"
+						 "    }, \n"
+						 "    { \n"
+						 "      \"error_message\" : \"not found\", \n"
+						 "      \"request_id\" : 3 \n"
+						 "    }, \n"
+						 "    { \n"
+						 "      \"error_message\" : \"not found\", \n"
+						 "      \"request_id\" : 4 \n"
+						 "    }, \n"
+						 "    { \n"
+						 "      \"buses\" : [  ], \n"
+						 "      \"request_id\" : 5 \n"
+						 "    }, \n"
+						 "    { \n"
+						 "      \"buses\" : [ \"256\", \"828\" ], \n"
+						 "      \"request_id\" : 6 \n"
+						 "    } \n"
+						 "]");
+	auto  a =0;
 }

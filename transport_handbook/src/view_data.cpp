@@ -64,3 +64,37 @@ std::string Handbook::Views::GetData(const std::string& stat, const Handbook::Da
 	}
 	return {};
 }
+json::Document Handbook::Views::GetData(const json::Document& stat, const Handbook::Data::TransportCatalogue& t_q)
+{
+	using namespace std;
+	json::Node result;
+	int id = stat.GetRoot().AsMap().at("id"s).AsInt();
+	std::string type = stat.GetRoot().AsMap().at("type"s).AsString();
+	std::string name = stat.GetRoot().AsMap().at("name"s).AsString();
+	if (type == "Bus"s)
+	{
+		auto info = t_q.GetRouteInfo(name);
+		if (info.has_value())
+		{
+			result = json::Dict{{"curvature"s, std::get<4>(info.value())},
+								{"request_id"s, id},
+								{"route_length"s, static_cast<int>(std::get<2>(info.value()))},
+								{"stop_count"s, static_cast<int>(std::get<0>(info.value()))},
+								{"unique_stop_count"s, static_cast<int>(std::get<1>(info.value()))}};
+			return json::Document(result);
+		}
+	}
+	if (type == "Stop"s)
+	{
+		auto info = t_q.GetBusInfo(name);
+		if (info.has_value())
+		{
+			std::vector<json::Node> buses(info.value().begin(), info.value().end());
+			result = json::Dict{{"request_id"s, id}, {"buses"s, buses}};
+			return json::Document(result);
+		}
+
+	}
+	result = json::Dict{{"request_id"s, id}, {"error_message"s, "not found"s}};
+	return json::Document(result);
+}

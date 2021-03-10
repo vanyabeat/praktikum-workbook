@@ -70,7 +70,7 @@ size_t Handbook::Data::TransportCatalogue::GetDistanceBetweenStop(const std::str
 
 size_t Handbook::Data::TransportCatalogue::RoutePathSize(const std::vector<std::string>& stops) const
 {
-	double result = 0.0;
+	size_t result = 0.0;
 	for (auto i = 0; i < stops.size() - 1; ++i)
 	{
 		result += GetDistanceBetweenStop(stops[i], stops[i + 1]);

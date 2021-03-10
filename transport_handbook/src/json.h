@@ -1,11 +1,13 @@
 #pragma once
 
+#include <iomanip>
 #include <iostream>
 #include <map>
 #include <sstream>
 #include <string>
 #include <variant>
 #include <vector>
+
 namespace json
 {
 
@@ -25,26 +27,31 @@ namespace json
 	{
 	  public:
 		Node() : node_item_(){};
-		explicit Node(Array array);
-		explicit Node(Dict map);
-		explicit Node(bool value);
-		explicit Node(int value);
-		explicit Node(double value);
-		explicit Node(Number value);
-		explicit Node(std::string value);
-		explicit Node(std::nullptr_t nullv);
+		Node(Array array);
+		Node(Dict map);
+		Node(bool value);
+		Node(int value);
+		Node(double value);
+		Node(Number value);
+		Node(std::string value);
+		Node(std::nullptr_t nullv);
 
 		bool IsNull() const;
 		bool IsArray() const;
-		bool IsDict() const;
+
+		bool IsMap() const;
 		bool IsBool() const;
 		bool IsInt() const;
 		bool IsDouble() const;
 		bool IsPureDouble() const;
-		double AsDouble() const;
 		bool IsString() const;
 
+		const std::string& AsString() const;
+		double AsDouble() const;
 		int AsInt() const;
+		bool AsBool() const;
+		const Dict& AsMap() const;
+		const Array& AsArray() const;
 
 		explicit operator std::string() const;
 
@@ -55,6 +62,7 @@ namespace json
 		//		int AsInt() const;
 		//		const std::string& AsString() const;
 		friend bool operator==(const Node& l, const Node& r);
+		friend bool operator!=(const Node& l, const Node& r);
 
 	  private:
 		//                  0          1      2     3    4     5          6
@@ -67,6 +75,14 @@ namespace json
 		explicit Document(Node root);
 
 		const Node& GetRoot() const;
+		friend bool operator==(const Document& l, const Document& r)
+		{
+			return l.GetRoot() == r.GetRoot();
+		}
+		friend bool operator!=(const Document& l, const Document& r)
+		{
+			return !(l == r);
+		}
 
 	  private:
 		Node root_;

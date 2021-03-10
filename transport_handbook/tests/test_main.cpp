@@ -476,6 +476,7 @@ TEST(JSON, test2)
 json::Document LoadJSON(const std::string& s)
 {
 	std::istringstream strm(s);
+
 	return json::Load(strm);
 }
 
@@ -535,4 +536,188 @@ TEST(JSON, numbers)
 	ASSERT_EQ(LoadJSON("1.2e-5"s).GetRoot().AsDouble(), 1.2e-5);
 	ASSERT_EQ(LoadJSON("1.2e+5"s).GetRoot().AsDouble(), 1.2e5);
 	ASSERT_EQ(LoadJSON("-123456"s).GetRoot().AsInt(), -123456);
+}
+
+TEST(JSON, strings)
+{
+	using namespace json;
+	using namespace std;
+
+	Node str_node{"Hello, \"\"everybody\""s};
+	//
+	ASSERT_TRUE(str_node.IsString());
+	ASSERT_EQ(str_node.AsString(), "Hello, \"\"everybody\""s);
+
+	ASSERT_TRUE(!str_node.IsInt());
+	ASSERT_TRUE(!str_node.IsDouble());
+
+	//	std::cout << "\"Hello, \\\"everybody\\\"\""s << std::endl;
+	//	std::cout << Print(str_node) << std::endl;
+
+	ASSERT_EQ(Print(str_node), "\"Hello, \\\"\\\"everybody\\\"\""s);
+
+	ASSERT_EQ(LoadJSON(Print(str_node)).GetRoot(), str_node);
+}
+
+TEST(JSON, bools)
+{
+	using namespace json;
+	using namespace std;
+	Node true_node{true};
+	ASSERT_TRUE(true_node.IsBool());
+	ASSERT_TRUE(true_node.AsBool());
+
+	Node false_node{false};
+	ASSERT_TRUE(false_node.IsBool());
+	ASSERT_TRUE(!false_node.AsBool());
+
+	ASSERT_EQ(Print(true_node), "true"s);
+	ASSERT_EQ(Print(false_node), "false"s);
+
+	ASSERT_EQ(LoadJSON("true"s).GetRoot(), true_node);
+	ASSERT_EQ(LoadJSON("false"s).GetRoot(), false_node);
+}
+
+TEST(JSON, array)
+{
+	using namespace json;
+	using namespace std;
+	Node arr_node{Array{1, 1.23, "Hello"s}};
+	ASSERT_TRUE(arr_node.IsArray());
+	const Array& arr = arr_node.AsArray();
+	ASSERT_EQ(arr.size(), 3);
+	ASSERT_EQ(arr.at(0).AsInt(), 1);
+
+	auto b = LoadJSON("[1, 1.23, \"Hello\"]"s);
+	auto c = 3;
+	std::cout << Print(arr_node);
+	ASSERT_EQ(LoadJSON("[1, 1.23, \"Hello\"]"s).GetRoot(), arr_node);
+	ASSERT_EQ(LoadJSON(Print(arr_node)).GetRoot(), arr_node);
+}
+
+TEST(JSON, map)
+{
+	using namespace json;
+	using namespace std;
+	Node dict_node{Dict{{"key1"s, "value1"s}, {"key2"s, 42}}};
+	ASSERT_TRUE(dict_node.IsMap());
+	const Dict& dict = dict_node.AsMap();
+	ASSERT_EQ(dict.size(), 2);
+	ASSERT_EQ(dict.at("key1"s).AsString(), "value1"s);
+	ASSERT_EQ(dict.at("key2"s).AsInt(), 42);
+
+	auto b = LoadJSON("{ \"key1\": \"value1\", \"key2\": 42 }"s);
+	ASSERT_EQ(LoadJSON("{ \"key1\": \"value1\", \"key2\": 42 }"s).GetRoot(), dict_node);
+	std::cout << Print(dict_node);
+	ASSERT_EQ(LoadJSON(Print(dict_node)).GetRoot(), dict_node);
+}
+
+void MustFailToLoad(const std::string& s)
+{
+	using namespace std;
+	try
+	{
+		LoadJSON(s);
+		std::cerr << "ParsingError exception is expected on '"sv << s << "'"sv << std::endl;
+		assert(false);
+	}
+	catch (const json::ParsingError&)
+	{
+		// ok
+	}
+	catch (const std::exception& e)
+	{
+		std::cerr << "exception thrown: "sv << e.what() << std::endl;
+		assert(false);
+	}
+	catch (...)
+	{
+		std::cerr << "Unexpected error"sv << std::endl;
+		assert(false);
+	}
+}
+
+template <typename Fn> void MustThrowLogicError(Fn fn)
+{
+	using namespace std;
+	try
+	{
+		fn();
+		std::cerr << "logic_error is expected"sv << std::endl;
+		assert(false);
+	}
+	catch (const std::logic_error&)
+	{
+		// ok
+	}
+	catch (const std::exception& e)
+	{
+		std::cerr << "exception thrown: "sv << e.what() << std::endl;
+		assert(false);
+	}
+	catch (...)
+	{
+		std::cerr << "Unexpected error"sv << std::endl;
+		assert(false);
+	}
+}
+
+TEST(JSON, inserts)
+{
+	using namespace json;
+	using namespace std;
+	MustFailToLoad("["s);
+	MustFailToLoad("]"s);
+
+	MustFailToLoad("{"s);
+	MustFailToLoad("}"s);
+
+	MustFailToLoad("\"hello"s); // незакрытая кавычка
+
+	MustFailToLoad("tru"s);
+	MustFailToLoad("fals"s);
+	MustFailToLoad("nul"s);
+
+	Node dbl_node{3.5};
+	MustThrowLogicError([&dbl_node] { dbl_node.AsInt(); });
+	MustThrowLogicError([&dbl_node] { dbl_node.AsString(); });
+	MustThrowLogicError([&dbl_node] { dbl_node.AsArray(); });
+
+	Node array_node{Array{}};
+	MustThrowLogicError([&array_node] { array_node.AsMap(); });
+	MustThrowLogicError([&array_node] { array_node.AsDouble(); });
+	MustThrowLogicError([&array_node] { array_node.AsBool(); });
+}
+
+TEST(JSON, benchmark)
+{
+	using namespace json;
+	using namespace std;
+	const auto start = std::chrono::steady_clock::now();
+	Array arr;
+	arr.reserve(1'000);
+	for (int i = 0; i < 1'000; ++i)
+	{
+		arr.emplace_back(Dict{
+			{"int"s, 42},
+			{"double"s, 42.1},
+			{"null"s, nullptr},
+			{"string"s, "hello"s},
+			{"array"s, Array{1, 2, 3}},
+			{"bool"s, true},
+			{"map"s, Dict{{"key"s, "value"s}}},
+		});
+	}
+	std::stringstream strm;
+	json::Print(Document{arr}, strm);
+	const auto doc = json::Load(strm);
+	assert(doc.GetRoot() == arr);
+	const auto duration = std::chrono::steady_clock::now() - start;
+	std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(duration).count() << "ms"sv << std::endl;
+}
+
+TEST(JSON, ADDITIONAL){
+	using namespace json;
+	using namespace std;
+	ASSERT_EQ(Node(42) , Node(42.));
 }

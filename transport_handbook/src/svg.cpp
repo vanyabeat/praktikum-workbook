@@ -204,6 +204,7 @@ namespace svg
 		}
 		return out;
 	}
+
 } // namespace svg
 
 void shapes::Snowman::Draw(svg::ObjectContainer& container) const

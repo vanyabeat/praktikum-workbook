@@ -11,12 +11,88 @@
 #include <sstream>
 #include <string>
 #include <string_view>
+#include <variant>
 #include <vector>
 
 namespace svg
 {
-	using Color = std::string;
+	class Rgb
+	{
+	  public:
+		Rgb() : red(0), green(0), blue(0)
+		{
+		}
+		Rgb(uint8_t r, uint8_t g, uint8_t b) : red(r), green(g), blue(b)
+		{
+		}
 
+		virtual operator std::string() const
+		{
+			using namespace std;
+			std::stringstream ss;
+			ss << "rgb("sv << static_cast<int>(red) << ","sv << static_cast<int>(green) << ","sv
+			   << static_cast<int>(blue) << ")"sv;
+			return ss.str();
+		}
+
+		friend std::ostream& operator<<(std::ostream& out, const Rgb& r)
+		{
+			out << std::string(r);
+			return out;
+		}
+
+		uint8_t red;
+		uint8_t green;
+		uint8_t blue;
+	};
+
+	class Rgba final : public Rgb
+	{
+	  public:
+		Rgba() : Rgb(), opacity(1)
+		{
+		}
+		Rgba(uint8_t r, uint8_t g, uint8_t b, double o) : Rgb(r, g, b), opacity(o)
+		{
+		}
+		operator std::string() const override
+		{
+			using namespace std;
+			std::stringstream ss;
+			ss << "rgba("sv << static_cast<int>(red) << ","sv << static_cast<int>(green) << ","sv
+			   << static_cast<int>(blue) << "," << opacity << ")"sv;
+			return ss.str();
+		}
+
+		double opacity;
+	};
+
+	using Color = std::variant<std::monostate, std::string, Rgb, Rgba>;
+	struct ColorString
+	{
+		std::string& out;
+
+		void operator()(std::monostate) const
+		{
+			using namespace std;
+			out = "none"s;
+		}
+		void operator()(std::string r) const
+		{
+			using namespace std;
+			out = r;
+		}
+		void operator()(Rgb rgb) const
+		{
+			using namespace std;
+			out = std::string(rgb);
+		}
+		void operator()(Rgba rgba) const
+		{
+			using namespace std;
+			out = std::string(rgba);
+		}
+	};
 	inline const Color NoneColor{"none"};
 
 	class Point
@@ -141,11 +217,15 @@ namespace svg
 			out << " ";
 			if (fill_color_.has_value())
 			{
-				out << "fill=\"" << fill_color_.value() << "\" ";
+				std::string c = "";
+				std::visit(ColorString{c}, fill_color_.value());
+				out << "fill=\"" << c << "\" ";
 			}
 			if (stroke_color_.has_value())
 			{
-				out << "stroke=\"" << stroke_color_.value() << "\" ";
+				std::string c = "";
+				std::visit(ColorString{c}, stroke_color_.value());
+				out << "stroke=\"" << c << "\" ";
 			}
 			if (stroke_width_.has_value())
 			{

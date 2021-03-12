@@ -1,8 +1,9 @@
 #pragma once
-#include "control_reader.h"
+#include "domain.h"
 #include "json.h"
+#include "map_renderer.h"
+#include "request_handler.h"
 #include "transport_catalogue.h"
-#include "view_data.h"
 
 namespace Handbook
 {
@@ -24,6 +25,7 @@ namespace Handbook
 
 		  private:
 			void FillDataBase_();
+
 
 			std::istream& out_;
 			Handbook::Data::TransportCatalogue& t_c_;

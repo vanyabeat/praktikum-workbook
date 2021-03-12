@@ -1,4 +1,5 @@
-#include "view_data.h"
+#include "request_handler.h"
+#include "map_renderer.h"
 #include <iomanip>
 #include <numeric>
 #include <sstream>
@@ -64,15 +65,56 @@ std::string Handbook::Views::GetData(const std::string& stat, const Handbook::Da
 	}
 	return {};
 }
+static svg::Color ParsingColor(json::Node& color)
+{
+	svg::Color out;
+	if (color.IsString())
+	{
+		return color.AsString();
+	}
+
+	if (color.AsArray().size() == 3)
+	{
+		return svg::Rgb(color.AsArray()[0].AsInt(), color.AsArray()[1].AsInt(), color.AsArray()[2].AsInt());
+	}
+
+	return svg::Rgba(color.AsArray()[0].AsInt(), color.AsArray()[1].AsInt(), color.AsArray()[2].AsInt(),
+					 color.AsArray()[3].AsDouble());
+}
+
+static RenderSettings ReadRenderSettings(json::Dict data)
+{
+	using namespace std;
+	RenderSettings settings;
+	settings.width = data["width"s].AsDouble();
+	settings.height = data["height"s].AsDouble();
+	settings.padding = data["padding"s].AsDouble();
+	settings.line_width = data["line_width"s].AsDouble();
+	settings.stop_radius = data["stop_radius"s].AsDouble();
+	settings.bus_label_font_size = data["bus_label_font_size"s].AsDouble();
+	settings.bus_label_offset =
+		svg::Point(data["bus_label_offset"s].AsArray()[0].AsDouble(), data["bus_label_offset"s].AsArray()[1].AsDouble());
+	settings.stop_label_font_size = data["stop_label_font_size"s].AsInt();
+	settings.stop_label_offset = svg::Point(data["stop_label_offset"s].AsArray()[0].AsDouble(),
+											data["stop_label_offset"s].AsArray()[1].AsDouble());
+	settings.underlayer_color = ParsingColor(data["underlayer_color"s]);
+	settings.underlayer_width = data["underlayer_width"s].AsDouble();
+	for (auto& color : data["color_palette"s].AsArray())
+	{
+		settings.color_palette.push_back(ParsingColor(color));
+	}
+	return settings;
+}
 json::Document Handbook::Views::GetData(const json::Document& stat, const Handbook::Data::TransportCatalogue& t_q)
 {
 	using namespace std;
 	json::Node result;
 	int id = stat.GetRoot().AsMap().at("id"s).AsInt();
 	std::string type = stat.GetRoot().AsMap().at("type"s).AsString();
-	std::string name = stat.GetRoot().AsMap().at("name"s).AsString();
+
 	if (type == "Bus"s)
 	{
+		std::string name = stat.GetRoot().AsMap().at("name"s).AsString();
 		auto info = t_q.GetRouteInfo(name);
 		if (info.has_value())
 		{
@@ -86,6 +128,7 @@ json::Document Handbook::Views::GetData(const json::Document& stat, const Handbo
 	}
 	if (type == "Stop"s)
 	{
+		std::string name = stat.GetRoot().AsMap().at("name"s).AsString();
 		auto info = t_q.GetBusInfo(name);
 		if (info.has_value())
 		{
@@ -93,7 +136,13 @@ json::Document Handbook::Views::GetData(const json::Document& stat, const Handbo
 			result = json::Dict{{"request_id"s, id}, {"buses"s, buses}};
 			return json::Document(result);
 		}
+	}
+	if (type == "Map"s)
+	{
 
+		RenderSettings renderSettings = ReadRenderSettings(stat.GetRoot().AsMap().at("render_settings").AsMap());
+
+		return  json::Document(GetMapOfRoad(t_q, renderSettings, id));
 	}
 	result = json::Dict{{"request_id"s, id}, {"error_message"s, "not found"s}};
 	return json::Document(result);

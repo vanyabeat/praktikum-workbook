@@ -102,3 +102,9 @@ void Handbook::Data::TransportCatalogue::AddBus_(std::string bus_name, std::vect
 		stop_to_bus_[stop].insert(bus_name);
 	}
 }
+void Handbook::Data::TransportCatalogue::AddBus(std::string bus_name, std::vector<std::string> stops,
+												bool is_round_trip)
+{
+	AddBus_(bus_name, stops);
+	bus_to_round_trip_[bus_name] = is_round_trip;
+}

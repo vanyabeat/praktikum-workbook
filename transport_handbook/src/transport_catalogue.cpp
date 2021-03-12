@@ -23,6 +23,7 @@ std::optional<std::tuple<size_t, size_t, size_t, std::vector<std::string>, doubl
 		auto stops = bus_to_stops_.at(bus);
 		size_t path_size = RoutePathSize(stops);
 		double naive_size = RoutePathSizeNaive(stops);
+		                        // 0            //1                                                     //2         //3
 		return std::make_tuple(stops.size(), std::set<std::string>(stops.begin(), stops.end()).size(), path_size, stops,
 							   (path_size / naive_size));
 	}
@@ -93,7 +94,7 @@ void Handbook::Data::TransportCatalogue::AddStop(
 	}
 }
 
-void Handbook::Data::TransportCatalogue::AddBus(std::string bus_name, std::vector<std::string> stops)
+void Handbook::Data::TransportCatalogue::AddBus_(std::string bus_name, std::vector<std::string> stops)
 {
 	bus_to_stops_[bus_name] = std::move(stops);
 	for (const auto& stop : bus_to_stops_[bus_name])

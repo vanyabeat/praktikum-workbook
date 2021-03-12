@@ -1,8 +1,8 @@
 #pragma once
 
 #include "geo.h"
-#include "transport_catalogue.h"
 #include "json.h"
+#include "transport_catalogue.h"
 #include <algorithm>
 #include <iostream>
 #include <iterator>
@@ -56,11 +56,14 @@ namespace Handbook
 			const std::vector<std::string>& getStops() const;
 
 			void setStops(const std::vector<std::string>& stops);
+			bool getIsRoundtrip() const;
+			void setIsRoundtrip(bool isRoundtrip);
 
 		  private:
 			RequestType type_;
 			std::string name_;
 			std::vector<std::string> stops_;
+			bool is_roundtrip_;
 		};
 
 		class Stop : public Request
@@ -95,7 +98,7 @@ namespace Handbook
 		};
 
 		std::shared_ptr<Request> ParseRequestString(const std::string& r_str);
-		std::shared_ptr<Request> ParseRequestDocument(const json::Document &doc);
+		std::shared_ptr<Request> ParseRequestDocument(const json::Document& doc);
 		std::string ReadLine(std::istream& istream = std::cin);
 
 		int ReadLineWithNumber(std::istream& istream = std::cin);

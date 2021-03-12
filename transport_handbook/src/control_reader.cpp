@@ -97,7 +97,7 @@ static std::tuple<std::string, Handbook::Utilities::Coordinates, std::vector<std
 	}
 }
 
-//static Handbook::Utilities::Coordinates ParseCoordsSubstring(const std::string& r_str)
+// static Handbook::Utilities::Coordinates ParseCoordsSubstring(const std::string& r_str)
 //{
 //	// latitude, longitude
 //	using namespace std;
@@ -204,6 +204,15 @@ void Handbook::Control::Bus::setStops(const std::vector<std::string>& stops)
 {
 	Bus::stops_ = stops;
 }
+bool Handbook::Control::Bus::getIsRoundtrip() const
+{
+	return is_roundtrip_;
+}
+
+void Handbook::Control::Bus::setIsRoundtrip(bool isRoundtrip)
+{
+	is_roundtrip_ = isRoundtrip;
+}
 
 Handbook::Control::RequestType Handbook::Control::Stop::getRequestType() const
 {
@@ -243,7 +252,7 @@ void Handbook::Control::AddRequestToCatalogue(Handbook::Control::Request* reques
 	{
 	case Handbook::Control::RequestType::IsBus: {
 		Handbook::Control::Bus* bus = static_cast<Handbook::Control::Bus*>(request);
-		transport_catalogue.AddBus(bus->getName(), bus->getStops());
+		transport_catalogue.AddBus(bus->getName(), bus->getStops(), bus->getIsRoundtrip());
 		break;
 	}
 	case Handbook::Control::RequestType::IsStop: {
@@ -305,6 +314,8 @@ std::shared_ptr<Handbook::Control::Request> Handbook::Control::ParseRequestDocum
 			res.insert(res.end(), tmp.begin(), tmp.end());
 			static_cast<Handbook::Control::Bus*>(result.get())->setStops(std::move(res));
 		}
+
+		static_cast<Handbook::Control::Bus*>(result.get())->setIsRoundtrip(round_trip);
 		return result;
 	}
 

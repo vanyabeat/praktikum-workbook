@@ -163,7 +163,7 @@ std::shared_ptr<Handbook::Control::Request> Handbook::Control::ParseRequestStrin
 std::string Handbook::Control::ReadLine(std::istream& istream)
 {
 	std::string s;
-	getline(std::cin, s);
+	getline(istream, s);
 	return s;
 }
 

@@ -72,15 +72,18 @@ std::vector<svg::Text> DrawNameOfRoad(const std::deque<Handbook::Data::Bus*>& bu
 {
 	std::vector<svg::Text> NameOfRoad;
 	size_t cnt_color_palette = 0;
+
 	for (const auto bus : buses)
 	{
-		if (!std::get<1>(*bus).empty())
+		auto buses = std::get<1>(*bus);
+		auto is_roundtrip = std::get<6>(*bus);
+		if (!buses.empty())
 		{
-			if (std::get<6>(*bus))
+			if (is_roundtrip)
 			{
 				svg::Text text_first;
 				svg::Text text_second;
-				text_first.SetPosition(projector(std::get<1>(std::get<1>(*bus)[0])))
+				text_first.SetPosition(projector(std::get<1>(buses[0])))
 					.SetOffset(settings.bus_label_offset)
 					.SetFontSize(settings.bus_label_font_size)
 					.SetFontFamily("Verdana"s)
@@ -88,7 +91,7 @@ std::vector<svg::Text> DrawNameOfRoad(const std::deque<Handbook::Data::Bus*>& bu
 					.SetData(std::get<0>(*bus))
 					.SetFillColor(settings.color_palette[cnt_color_palette]);
 
-				text_second.SetPosition(projector(std::get<1>(std::get<1>(*bus)[0])))
+				text_second.SetPosition(projector(std::get<1>(buses[0])))
 					.SetOffset(settings.bus_label_offset)
 					.SetFontSize(settings.bus_label_font_size)
 					.SetFontFamily("Verdana"s)
@@ -103,14 +106,14 @@ std::vector<svg::Text> DrawNameOfRoad(const std::deque<Handbook::Data::Bus*>& bu
 				NameOfRoad.push_back(text_second);
 				NameOfRoad.push_back(text_first);
 			}
-			else if (!std::get<6>(*bus) && std::get<1>(*bus)[0] != std::get<1>(*bus)[(std::get<1>(*bus).size() / 2)])
+			else if (!is_roundtrip && buses[0] != buses[(buses.size() / 2)])
 			{
 				svg::Text text_first_first_stop;
 				svg::Text text_second_first_stop;
 				svg::Text text_first_secon_stop;
 				svg::Text text_second_second_stop;
 
-				text_first_first_stop.SetPosition(projector(std::get<1>(std::get<1>(*bus)[0])))
+				text_first_first_stop.SetPosition(projector(std::get<1>(buses[0])))
 					.SetOffset(settings.bus_label_offset)
 					.SetFontSize(settings.bus_label_font_size)
 					.SetFontFamily("Verdana"s)
@@ -118,7 +121,7 @@ std::vector<svg::Text> DrawNameOfRoad(const std::deque<Handbook::Data::Bus*>& bu
 					.SetData(std::get<0>(*bus))
 					.SetFillColor(settings.color_palette[cnt_color_palette]);
 
-				text_second_first_stop.SetPosition(projector(std::get<1>(std::get<1>(*bus)[0])))
+				text_second_first_stop.SetPosition(projector(std::get<1>(buses[0])))
 					.SetOffset(settings.bus_label_offset)
 					.SetFontSize(settings.bus_label_font_size)
 					.SetFontFamily("Verdana"s)
@@ -130,8 +133,7 @@ std::vector<svg::Text> DrawNameOfRoad(const std::deque<Handbook::Data::Bus*>& bu
 					.SetStrokeLineCap(svg::StrokeLineCap::ROUND)
 					.SetStrokeLineJoin(svg::StrokeLineJoin::ROUND);
 
-				text_first_secon_stop
-					.SetPosition(projector(std::get<1>(std::get<1>(*bus)[(std::get<1>(*bus).size() / 2)])))
+				text_first_secon_stop.SetPosition(projector(std::get<1>(buses[(buses.size() / 2)])))
 					.SetOffset(settings.bus_label_offset)
 					.SetFontSize(settings.bus_label_font_size)
 					.SetFontFamily("Verdana"s)
@@ -139,8 +141,7 @@ std::vector<svg::Text> DrawNameOfRoad(const std::deque<Handbook::Data::Bus*>& bu
 					.SetData(std::get<0>(*bus))
 					.SetFillColor(settings.color_palette[cnt_color_palette]);
 
-				text_second_second_stop
-					.SetPosition(projector(std::get<1>(std::get<1>(*bus)[(std::get<1>(*bus).size() / 2)])))
+				text_second_second_stop.SetPosition(projector(std::get<1>(buses[(buses.size() / 2)])))
 					.SetOffset(settings.bus_label_offset)
 					.SetFontSize(settings.bus_label_font_size)
 					.SetFontFamily("Verdana"s)
@@ -162,7 +163,7 @@ std::vector<svg::Text> DrawNameOfRoad(const std::deque<Handbook::Data::Bus*>& bu
 			{
 				svg::Text text_first;
 				svg::Text text_second;
-				text_first.SetPosition(projector(std::get<1>(std::get<1>(*bus)[0])))
+				text_first.SetPosition(projector(std::get<1>(buses[0])))
 					.SetOffset(settings.bus_label_offset)
 					.SetFontSize(settings.bus_label_font_size)
 					.SetFontFamily("Verdana"s)
@@ -170,7 +171,7 @@ std::vector<svg::Text> DrawNameOfRoad(const std::deque<Handbook::Data::Bus*>& bu
 					.SetData(std::get<0>(*bus))
 					.SetFillColor(settings.color_palette[cnt_color_palette]);
 
-				text_second.SetPosition(projector(std::get<1>(std::get<1>(*bus)[0])))
+				text_second.SetPosition(projector(std::get<1>(buses[0])))
 					.SetOffset(settings.bus_label_offset)
 					.SetFontSize(settings.bus_label_font_size)
 					.SetFontFamily("Verdana"s)

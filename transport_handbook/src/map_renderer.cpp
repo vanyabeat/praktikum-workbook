@@ -11,7 +11,7 @@ bool IsZero(double value)
 	return std::abs(value) < EPSILON;
 }
 
-SphereProjector CreatorSphereProjector(std::deque<Handbook::Data::Stop *>& stops, RenderSettings& settings)
+SphereProjector CreatorSphereProjector(std::deque<Handbook::Data::Stop*>& stops, RenderSettings& settings)
 {
 	std::vector<Handbook::Utilities::Coordinates> points;
 	for (auto stop : stops)
@@ -21,7 +21,7 @@ SphereProjector CreatorSphereProjector(std::deque<Handbook::Data::Stop *>& stops
 	return SphereProjector(points.begin(), points.end(), settings.width, settings.height, settings.padding);
 }
 
-std::vector<svg::Polyline> DrawLineofRoad(const std::deque<Handbook::Data::Bus *>& buses, RenderSettings& settings,
+std::vector<svg::Polyline> DrawLineofRoad(const std::deque<Handbook::Data::Bus*>& buses, RenderSettings& settings,
 										  SphereProjector& projector)
 {
 	std::vector<svg::Polyline> lines;
@@ -103,7 +103,7 @@ std::vector<svg::Text> DrawNameOfRoad(const std::deque<Handbook::Data::Bus*>& bu
 				NameOfRoad.push_back(text_second);
 				NameOfRoad.push_back(text_first);
 			}
-			else
+			else if (!std::get<6>(*bus) && std::get<1>(*bus)[0] != std::get<1>(*bus)[(std::get<1>(*bus).size() / 2)])
 			{
 				svg::Text text_first_first_stop;
 				svg::Text text_second_first_stop;
@@ -131,7 +131,7 @@ std::vector<svg::Text> DrawNameOfRoad(const std::deque<Handbook::Data::Bus*>& bu
 					.SetStrokeLineJoin(svg::StrokeLineJoin::ROUND);
 
 				text_first_secon_stop
-					.SetPosition(projector(std::get<1>(std::get<1>(*bus)[(std::get<1>(*bus).size()/2)])))
+					.SetPosition(projector(std::get<1>(std::get<1>(*bus)[(std::get<1>(*bus).size() / 2)])))
 					.SetOffset(settings.bus_label_offset)
 					.SetFontSize(settings.bus_label_font_size)
 					.SetFontFamily("Verdana"s)
@@ -140,7 +140,7 @@ std::vector<svg::Text> DrawNameOfRoad(const std::deque<Handbook::Data::Bus*>& bu
 					.SetFillColor(settings.color_palette[cnt_color_palette]);
 
 				text_second_second_stop
-					.SetPosition(projector(std::get<1>(std::get<1>(*bus)[(std::get<1>(*bus).size()/2)])))
+					.SetPosition(projector(std::get<1>(std::get<1>(*bus)[(std::get<1>(*bus).size() / 2)])))
 					.SetOffset(settings.bus_label_offset)
 					.SetFontSize(settings.bus_label_font_size)
 					.SetFontFamily("Verdana"s)
@@ -158,6 +158,33 @@ std::vector<svg::Text> DrawNameOfRoad(const std::deque<Handbook::Data::Bus*>& bu
 				NameOfRoad.push_back(text_second_second_stop);
 				NameOfRoad.push_back(text_first_secon_stop);
 			}
+			else
+			{
+				svg::Text text_first;
+				svg::Text text_second;
+				text_first.SetPosition(projector(std::get<1>(std::get<1>(*bus)[0])))
+					.SetOffset(settings.bus_label_offset)
+					.SetFontSize(settings.bus_label_font_size)
+					.SetFontFamily("Verdana"s)
+					.SetFontWeight("bold")
+					.SetData(std::get<0>(*bus))
+					.SetFillColor(settings.color_palette[cnt_color_palette]);
+
+				text_second.SetPosition(projector(std::get<1>(std::get<1>(*bus)[0])))
+					.SetOffset(settings.bus_label_offset)
+					.SetFontSize(settings.bus_label_font_size)
+					.SetFontFamily("Verdana"s)
+					.SetFontWeight("bold")
+					.SetData(std::get<0>(*bus))
+					.SetFillColor(settings.underlayer_color)
+					.SetStrokeColor(settings.underlayer_color)
+					.SetStrokeWidth(settings.underlayer_width)
+					.SetStrokeLineCap(svg::StrokeLineCap::ROUND)
+					.SetStrokeLineJoin(svg::StrokeLineJoin::ROUND);
+
+				NameOfRoad.push_back(text_second);
+				NameOfRoad.push_back(text_first);
+			}
 
 			if (cnt_color_palette < settings.color_palette.size())
 			{
@@ -172,7 +199,7 @@ std::vector<svg::Text> DrawNameOfRoad(const std::deque<Handbook::Data::Bus*>& bu
 	return NameOfRoad;
 }
 
-std::vector<svg::Circle> DrawStop(const std::deque<Handbook::Data::Stop *>& stops, RenderSettings& settings,
+std::vector<svg::Circle> DrawStop(const std::deque<Handbook::Data::Stop*>& stops, RenderSettings& settings,
 								  SphereProjector& projector)
 {
 	std::vector<svg::Circle> stops_point;
@@ -186,7 +213,7 @@ std::vector<svg::Circle> DrawStop(const std::deque<Handbook::Data::Stop *>& stop
 	return stops_point;
 }
 
-std::vector<svg::Text> DrawStopName(const std::deque<Handbook::Data::Stop *>& stops, RenderSettings& settings,
+std::vector<svg::Text> DrawStopName(const std::deque<Handbook::Data::Stop*>& stops, RenderSettings& settings,
 									SphereProjector& projector)
 {
 	std::vector<svg::Text> stops_name;
@@ -219,7 +246,7 @@ std::vector<svg::Text> DrawStopName(const std::deque<Handbook::Data::Stop *>& st
 json::Node GetMapOfRoad(const Handbook::Data::TransportCatalogue& transport_catalog, RenderSettings& settings, int id)
 {
 	auto raw_stops = transport_catalog.GetStops();
-	std::deque<Handbook::Data::Stop *> stops;
+	std::deque<Handbook::Data::Stop*> stops;
 	for (auto stop : raw_stops)
 	{
 		if (!transport_catalog.GetBusOfStop(std::get<0>(*stop)).empty())
@@ -231,7 +258,7 @@ json::Node GetMapOfRoad(const Handbook::Data::TransportCatalogue& transport_cata
 	SphereProjector projector = CreatorSphereProjector(stops, settings);
 
 	auto buses_ = transport_catalog.GetBuses();
-	std::deque<Handbook::Data::Bus *> buses;
+	std::deque<Handbook::Data::Bus*> buses;
 	buses.resize(buses.size());
 	std::move(begin(buses_), end(buses_), back_inserter(buses));
 	std::sort(buses.begin(), buses.end(), [](auto& left, auto& right) {

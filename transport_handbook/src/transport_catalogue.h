@@ -11,7 +11,9 @@ namespace Handbook
 	namespace Data
 	{
 		using Stop = std::tuple<std::string, Utilities::Coordinates>;
+		/*							0				1						2					3*/
 		using Bus = std::tuple<std::string, std::vector<Stop>, int /*stops_on_route*/, int /*uniq_stops*/,
+							   /*   4					5 					6*/
 							   int /*length*/, double /*curvature*/, bool /*roundtrip*/>;
 		class TransportCatalogue
 		{
@@ -19,13 +21,13 @@ namespace Handbook
 			void AddStop(std::string stop_name, Utilities::Coordinates coordinates,
 						 std::vector<std::pair<std::string, size_t>> vector_distances_to_other_stop = {});
 
-			Stop GetStop(std::string stop_name)
+			Stop GetStop(std::string stop_name) const
 			{
 				Utilities::Coordinates coordinates = stops_.at(stop_name);
 				return std::make_tuple(std::move(stop_name), std::move(coordinates));
 			}
 
-			Bus GetBus(std::string bus_name)
+			Bus GetBus(std::string bus_name) const
 			{
 				bool is_round_trip = bus_to_round_trip_.at(bus_name);
 				auto info = GetRouteInfo(bus_name);
@@ -42,11 +44,38 @@ namespace Handbook
 									   is_round_trip);
 			}
 
-			void AddBus(std::string bus_name, std::vector<std::string> stops, bool is_round_trip = false)
+			std::vector<Stop*> GetStops() const
 			{
-				AddBus_(bus_name, stops);
-				bus_to_round_trip_[bus_name] = is_round_trip;
+				return re_stops_views_;
 			}
+
+			std::vector<Bus*> GetBuses() const
+			{
+				return re_buses_views_;
+			}
+
+			void Heat()
+			{
+				re_stops_ = std::move(GetStops_());
+				re_buses_ = std::move(GetBuses_());
+				re_buses_views_.reserve(re_buses_.size());
+				re_stops_views_.reserve(re_stops_.size());
+				for (int id = 0; id < re_buses_.size(); ++id)
+				{
+					re_buses_views_.push_back(&re_buses_[id]);
+				}
+				for (int id = 0; id < re_stops_.size(); ++id)
+				{
+					re_stops_views_.push_back(&re_stops_[id]);
+				}
+			}
+
+			std::set<std::string> GetBusOfStop(std::string& stop) const
+			{
+				return stop_to_bus_.at(stop);
+			}
+
+			void AddBus(std::string bus_name, std::vector<std::string> stops, bool is_round_trip = false);
 
 			double RoutePathSizeNaive(const std::vector<std::string>& stops) const;
 
@@ -60,7 +89,30 @@ namespace Handbook
 			size_t GetDistanceBetweenStop(const std::string& stop_l, const std::string& stop_r) const;
 
 		  private:
+			std::vector<Stop> GetStops_() const
+			{
+				std::vector<Stop> res;
+				for (const auto& i : stops_)
+				{
+					res.push_back({i.first, i.second});
+				}
+				return res;
+			}
+
+			std::vector<Bus> GetBuses_() const
+			{
+				std::vector<Bus> buses;
+				for (const auto& [p, _] : bus_to_stops_)
+				{
+					buses.push_back(GetBus(p));
+				}
+				return buses;
+			}
 			void AddBus_(std::string bus_name, std::vector<std::string> stops);
+			std::vector<Stop> re_stops_;
+			std::vector<Bus> re_buses_;
+			std::vector<Stop*> re_stops_views_;
+			std::vector<Bus*> re_buses_views_;
 			std::unordered_map<std::string, std::unordered_map<std::string, size_t>> distance_between_stops_;
 			std::unordered_map<std::string, Utilities::Coordinates> stops_;
 			std::unordered_map<std::string, std::vector<std::string>> bus_to_stops_;

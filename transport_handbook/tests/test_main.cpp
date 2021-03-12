@@ -190,6 +190,11 @@ TEST(Catalogue, Test4)
 
 	ASSERT_EQ("Bus 256: 3 stops on route, 2 unique stops, 200 route length, 0.0590668 curvature",
 			  Handbook::Views::GetData(stats[0], transport_catalogue));
+
+	auto stop = transport_catalogue.GetStop("Marushkino"s);
+	auto bus = transport_catalogue.GetBus("256"s);
+
+	int a = 6;
 }
 
 TEST(Coordinates, Test1)
@@ -1016,7 +1021,8 @@ TEST(JSON, real_data)
 	ASSERT_EQ(actual, real);
 }
 
-TEST(WOW, test){
+TEST(WOW, test)
+{
 	auto real = LoadJSON("[ \n"
 						 "    { \n"
 						 "      \"curvature\" : 1.36124, \n"
@@ -1049,5 +1055,5 @@ TEST(WOW, test){
 						 "      \"request_id\" : 6 \n"
 						 "    } \n"
 						 "]");
-	auto  a =0;
+	auto a = 0;
 }

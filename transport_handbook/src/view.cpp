@@ -1,5 +1,5 @@
-#include "request_handler.h"
 #include "map_renderer.h"
+#include "view.h"
 #include <iomanip>
 #include <numeric>
 #include <sstream>
@@ -82,10 +82,10 @@ static svg::Color ParsingColor(json::Node& color)
 					 color.AsArray()[3].AsDouble());
 }
 
-static RenderSettings ReadRenderSettings(json::Dict data)
+static Handbook::Renderer::RenderSettings ReadRenderSettings(json::Dict data)
 {
 	using namespace std;
-	RenderSettings settings;
+	Handbook::Renderer::RenderSettings settings;
 	settings.width = data["width"s].AsDouble();
 	settings.height = data["height"s].AsDouble();
 	settings.padding = data["padding"s].AsDouble();
@@ -140,9 +140,9 @@ json::Document Handbook::Views::GetData(const json::Document& stat, const Handbo
 	if (type == "Map"s)
 	{
 
-		RenderSettings renderSettings = ReadRenderSettings(stat.GetRoot().AsMap().at("render_settings").AsMap());
+		Handbook::Renderer::RenderSettings renderSettings = ReadRenderSettings(stat.GetRoot().AsMap().at("render_settings").AsMap());
 
-		return json::Document(GetMapOfRoad(t_q, renderSettings, id));
+		return json::Document(Handbook::Renderer::GetMapOfRoad(t_q, renderSettings, id));
 	}
 	result = json::Dict{{"request_id"s, id}, {"error_message"s, "not found"s}};
 	return json::Document(result);

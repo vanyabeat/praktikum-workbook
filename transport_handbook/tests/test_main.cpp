@@ -1,9 +1,9 @@
-#include "domain.h"
+#include "control.h"
 #include "json.h"
 #include "json_reader.h"
 #include "regex"
-#include "request_handler.h"
 #include "svg.h"
+#include "view.h"
 #include <gtest/gtest.h>
 #include <iostream>
 #include <sstream>

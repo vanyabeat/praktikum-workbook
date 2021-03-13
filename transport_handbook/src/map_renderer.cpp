@@ -6,23 +6,26 @@
 
 using namespace std::literals;
 
-bool IsZero(double value)
+bool Handbook::Renderer::IsZero(double value)
 {
 	return std::abs(value) < EPSILON;
 }
 
-SphereProjector CreatorSphereProjector(std::deque<Handbook::Data::Stop*>& stops, RenderSettings& settings)
+Handbook::Renderer::SphereProjector Handbook::Renderer::CreatorSphereProjector(std::deque<Handbook::Data::Stop*>& stops,
+														   Handbook::Renderer::RenderSettings& settings)
 {
 	std::vector<Handbook::Utilities::Coordinates> points;
 	for (auto stop : stops)
 	{
 		points.push_back(std::get<1>(*stop));
 	}
-	return SphereProjector(points.begin(), points.end(), settings.width, settings.height, settings.padding);
+	return Handbook::Renderer::SphereProjector(points.begin(), points.end(), settings.width, settings.height,
+											   settings.padding);
 }
 
-std::vector<svg::Polyline> DrawLineofRoad(const std::deque<Handbook::Data::Bus*>& buses, RenderSettings& settings,
-										  SphereProjector& projector)
+std::vector<svg::Polyline> Handbook::Renderer::DrawLineofRoad(const std::deque<Handbook::Data::Bus*>& buses,
+										  Handbook::Renderer::RenderSettings& settings,
+										  Handbook::Renderer::SphereProjector& projector)
 {
 	std::vector<svg::Polyline> lines;
 	size_t cnt_color_palette = 0;
@@ -67,8 +70,9 @@ std::vector<svg::Polyline> DrawLineofRoad(const std::deque<Handbook::Data::Bus*>
 	return lines;
 }
 
-std::vector<svg::Text> DrawNameOfRoad(const std::deque<Handbook::Data::Bus*>& buses, RenderSettings& settings,
-									  SphereProjector& projector)
+std::vector<svg::Text> Handbook::Renderer::DrawNameOfRoad(const std::deque<Handbook::Data::Bus*>& buses,
+									  Handbook::Renderer::RenderSettings& settings,
+									  Handbook::Renderer::SphereProjector& projector)
 {
 	std::vector<svg::Text> NameOfRoad;
 	size_t cnt_color_palette = 0;
@@ -173,8 +177,9 @@ std::vector<svg::Text> DrawNameOfRoad(const std::deque<Handbook::Data::Bus*>& bu
 	return NameOfRoad;
 }
 
-std::vector<svg::Circle> DrawStop(const std::deque<Handbook::Data::Stop*>& stops, RenderSettings& settings,
-								  SphereProjector& projector)
+std::vector<svg::Circle> Handbook::Renderer::DrawStop(const std::deque<Handbook::Data::Stop*>& stops,
+								  Handbook::Renderer::RenderSettings& settings,
+								  Handbook::Renderer::SphereProjector& projector)
 {
 	std::vector<svg::Circle> stops_point;
 	for (const auto stop : stops)
@@ -187,8 +192,9 @@ std::vector<svg::Circle> DrawStop(const std::deque<Handbook::Data::Stop*>& stops
 	return stops_point;
 }
 
-std::vector<svg::Text> DrawStopName(const std::deque<Handbook::Data::Stop*>& stops, RenderSettings& settings,
-									SphereProjector& projector)
+std::vector<svg::Text> Handbook::Renderer::DrawStopName(const std::deque<Handbook::Data::Stop*>& stops,
+									Handbook::Renderer::RenderSettings& settings,
+									Handbook::Renderer::SphereProjector& projector)
 {
 	std::vector<svg::Text> stops_name;
 	for (const auto stop : stops)
@@ -217,7 +223,8 @@ std::vector<svg::Text> DrawStopName(const std::deque<Handbook::Data::Stop*>& sto
 	return stops_name;
 }
 #include <fstream>
-json::Node GetMapOfRoad(const Handbook::Data::TransportCatalogue& transport_catalog, RenderSettings& settings, int id)
+json::Node Handbook::Renderer::GetMapOfRoad(const Handbook::Data::TransportCatalogue& transport_catalog,
+						Handbook::Renderer::RenderSettings& settings, int id)
 {
 	auto raw_stops = transport_catalog.GetStops();
 	std::deque<Handbook::Data::Stop*> stops;
@@ -229,7 +236,7 @@ json::Node GetMapOfRoad(const Handbook::Data::TransportCatalogue& transport_cata
 		}
 	}
 
-	SphereProjector projector = CreatorSphereProjector(stops, settings);
+	Handbook::Renderer::SphereProjector projector = Handbook::Renderer::CreatorSphereProjector(stops, settings);
 
 	auto buses_ = transport_catalog.GetBuses();
 	std::deque<Handbook::Data::Bus*> buses;
@@ -241,8 +248,8 @@ json::Node GetMapOfRoad(const Handbook::Data::TransportCatalogue& transport_cata
 		/*return left->name_ < right->name_;*/
 	});
 
-	std::vector<svg::Polyline> lines = DrawLineofRoad(buses, settings, projector);
-	std::vector<svg::Text> NamesOfRoad = DrawNameOfRoad(buses, settings, projector);
+	std::vector<svg::Polyline> lines = Handbook::Renderer::DrawLineofRoad(buses, settings, projector);
+	std::vector<svg::Text> NamesOfRoad = Handbook::Renderer::DrawNameOfRoad(buses, settings, projector);
 
 	std::sort(stops.begin(), stops.end(), [](auto left, auto right) {
 		return std::lexicographical_compare(std::get<0>(*left).begin(), std::get<0>(*left).end(),
@@ -250,9 +257,9 @@ json::Node GetMapOfRoad(const Handbook::Data::TransportCatalogue& transport_cata
 		/*return left->name_ < right->name_;*/
 	});
 
-	std::vector<svg::Circle> stop_points = DrawStop(stops, settings, projector);
+	std::vector<svg::Circle> stop_points = Handbook::Renderer::DrawStop(stops, settings, projector);
 
-	std::vector<svg::Text> stop_names = DrawStopName(stops, settings, projector);
+	std::vector<svg::Text> stop_names = Handbook::Renderer::DrawStopName(stops, settings, projector);
 
 	svg::Document doc;
 
@@ -276,12 +283,11 @@ json::Node GetMapOfRoad(const Handbook::Data::TransportCatalogue& transport_cata
 		doc.Add(std::move(name));
 	}
 
-	std::ofstream myfile("result.svg");
-	if (myfile.is_open())
-	{
-		doc.Render(myfile);
-	}
-
+	//	std::ofstream myfile("result.svg");
+	//	if (myfile.is_open())
+	//	{
+	//		doc.Render(myfile);
+	//	}
 	//
 	//
 	//  return json::Node();

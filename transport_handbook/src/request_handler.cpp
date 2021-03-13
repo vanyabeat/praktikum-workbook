@@ -92,8 +92,8 @@ static RenderSettings ReadRenderSettings(json::Dict data)
 	settings.line_width = data["line_width"s].AsDouble();
 	settings.stop_radius = data["stop_radius"s].AsDouble();
 	settings.bus_label_font_size = data["bus_label_font_size"s].AsDouble();
-	settings.bus_label_offset =
-		svg::Point(data["bus_label_offset"s].AsArray()[0].AsDouble(), data["bus_label_offset"s].AsArray()[1].AsDouble());
+	settings.bus_label_offset = svg::Point(data["bus_label_offset"s].AsArray()[0].AsDouble(),
+										   data["bus_label_offset"s].AsArray()[1].AsDouble());
 	settings.stop_label_font_size = data["stop_label_font_size"s].AsInt();
 	settings.stop_label_offset = svg::Point(data["stop_label_offset"s].AsArray()[0].AsDouble(),
 											data["stop_label_offset"s].AsArray()[1].AsDouble());
@@ -142,7 +142,7 @@ json::Document Handbook::Views::GetData(const json::Document& stat, const Handbo
 
 		RenderSettings renderSettings = ReadRenderSettings(stat.GetRoot().AsMap().at("render_settings").AsMap());
 
-		return  json::Document(GetMapOfRoad(t_q, renderSettings, id));
+		return json::Document(GetMapOfRoad(t_q, renderSettings, id));
 	}
 	result = json::Dict{{"request_id"s, id}, {"error_message"s, "not found"s}};
 	return json::Document(result);

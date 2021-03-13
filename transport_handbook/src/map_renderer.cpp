@@ -79,34 +79,7 @@ std::vector<svg::Text> DrawNameOfRoad(const std::deque<Handbook::Data::Bus*>& bu
 		auto is_roundtrip = std::get<6>(*bus);
 		if (!buses.empty())
 		{
-			if (is_roundtrip)
-			{
-				svg::Text text_first;
-				svg::Text text_second;
-				text_first.SetPosition(projector(std::get<1>(buses[0])))
-					.SetOffset(settings.bus_label_offset)
-					.SetFontSize(settings.bus_label_font_size)
-					.SetFontFamily("Verdana"s)
-					.SetFontWeight("bold")
-					.SetData(std::get<0>(*bus))
-					.SetFillColor(settings.color_palette[cnt_color_palette]);
-
-				text_second.SetPosition(projector(std::get<1>(buses[0])))
-					.SetOffset(settings.bus_label_offset)
-					.SetFontSize(settings.bus_label_font_size)
-					.SetFontFamily("Verdana"s)
-					.SetFontWeight("bold")
-					.SetData(std::get<0>(*bus))
-					.SetFillColor(settings.underlayer_color)
-					.SetStrokeColor(settings.underlayer_color)
-					.SetStrokeWidth(settings.underlayer_width)
-					.SetStrokeLineCap(svg::StrokeLineCap::ROUND)
-					.SetStrokeLineJoin(svg::StrokeLineJoin::ROUND);
-
-				NameOfRoad.push_back(text_second);
-				NameOfRoad.push_back(text_first);
-			}
-			else if (!is_roundtrip && buses[0] != buses[(buses.size() / 2)])
+			if (!is_roundtrip && buses[0] != buses[(buses.size() / 2)])
 			{
 				svg::Text text_first_first_stop;
 				svg::Text text_second_first_stop;

@@ -51,6 +51,8 @@ std::optional<std::set<std::string>> Handbook::Data::TransportCatalogue::GetBusI
  * если автобус разворачивается и приезжает на ту же остановку.
  * Длина маршрута никогда не превосходит 10 000 000 метров.
  * */
+/// описано, что гарантировано, существования дистанци между соседними остановками, но возможен запрос до самой себя, а т.к. этот случай не гарантируется, то возможно зацикливание,
+/// необходимо разрещить данную ситуацию
 size_t Handbook::Data::TransportCatalogue::GetDistanceBetweenStop(const std::string& stop_l,
 																  const std::string& stop_r) const
 {

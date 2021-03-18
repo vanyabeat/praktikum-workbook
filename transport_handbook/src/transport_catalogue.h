@@ -10,8 +10,10 @@ namespace Handbook
 {
 	namespace Data
 	{
+/// правильей объявить полноценные структуры Stop и Bus, иначе что бы орентироваться в полях вам приходиться добавлять комментарии к индекса, т.е. уже видно что использовать не удобно
 		using Stop = std::tuple<std::string, Utilities::Coordinates>;
 		/*							0				1						2					3*/
+/// в Bus сохраняется полноценная копия остановки, желательно хранить только указатель
 		using Bus = std::tuple<std::string, std::vector<Stop>, int /*stops_on_route*/, int /*uniq_stops*/,
 							   /*   4					5 					6*/
 							   int /*length*/, double /*curvature*/, bool /*roundtrip*/>;
@@ -94,7 +96,7 @@ namespace Handbook
 				std::vector<Stop> res;
 				for (const auto& i : stops_)
 				{
-					res.push_back({i.first, i.second});
+					res.push_back({i.first, i.second});	/// по возможности пользуйтесь методом emplace_back он немножно эффективнее
 				}
 				return res;
 			}
@@ -111,8 +113,10 @@ namespace Handbook
 			void AddBus_(std::string bus_name, std::vector<std::string> stops);
 			std::vector<Stop> re_stops_;
 			std::vector<Bus> re_buses_;
-			std::vector<Stop*> re_stops_views_;
-			std::vector<Bus*> re_buses_views_;
+			std::vector<Stop*> re_stops_views_;	/// название контейнера не травиться, обычно для указателей добавляется _ptr, лучше что то такое re_stop_ptrs (смысл re_ не знаю)
+			std::vector<Bus*> re_buses_views_;	/// --//--
+/// у вас очень много сохраняется копий названий остановок и автобусов
+/// постарайтесь хранить названия (std::string) только в одном месте (в вашем случае re_stops_ и re_buses_), а в остальных контейрах либо указатели, либо string_view
 			std::unordered_map<std::string, std::unordered_map<std::string, size_t>> distance_between_stops_;
 			std::unordered_map<std::string, Utilities::Coordinates> stops_;
 			std::unordered_map<std::string, std::vector<std::string>> bus_to_stops_;

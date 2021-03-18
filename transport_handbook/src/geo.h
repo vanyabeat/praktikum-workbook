@@ -21,6 +21,7 @@ namespace Handbook
 				return !(*this == r);
 			}
 
+/// данный метод не зависит от объекта, должен быть статический
 			bool AreSame(double a, double b) const
 			{
 				return std::fabs(a - b) < std::numeric_limits<double>::epsilon();

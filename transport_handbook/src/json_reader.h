@@ -9,6 +9,7 @@ namespace Handbook
 {
 	namespace Control
 	{
+/// лишний комментарий
 		/*
 		 * {
   "base_requests": [ ... ],

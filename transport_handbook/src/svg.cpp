@@ -7,7 +7,7 @@ static std::string join_coords(const std::vector<svg::Point>& points)
 	auto size = points.size();
 	if (points.empty())
 	{
-		return "";
+		return "";	/// лучше выдавать return {}; иначе будет вызываться конструктор преобразования строки в объкт
 	}
 	size_t counter = 0;
 	for (const auto& p : points)
@@ -141,7 +141,7 @@ namespace svg
 	Text& Text::SetData(std::string data)
 	{
 		data_ = std::move(data);
-		for (auto c : data_)
+		for (auto c : data_)	/// вроде можно добавить const
 		{
 			for (auto& [key, value] : defs_)
 			{
@@ -158,6 +158,8 @@ namespace svg
 	std::ostream& operator<<(std::ostream& out, StrokeLineCap cap)
 	{
 		using namespace std;
+/// чисто совет по оператору switch, вам решать следовать или нет, жедательно всегда добавлять default (к примера с assert(false)), в случае появления нового занечения у StrokeLineCap
+/// будет понятно, что нужно добавиь обработку для этого нового значения
 		switch (cap)
 		{
 		case StrokeLineCap::ROUND: {
@@ -182,7 +184,7 @@ namespace svg
 		switch (cap)
 		{
 		case StrokeLineJoin::ARCS: {
-			out << "arcs";
+			out << "arcs";	/// в верхнем операторе использовать константы string_view, можно распространить это практику и на этом операторе
 			break;
 		}
 		case StrokeLineJoin::MITER: {

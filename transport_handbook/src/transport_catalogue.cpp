@@ -3,6 +3,10 @@
 double Handbook::Data::TransportCatalogue::RoutePathSizeNaive(const std::vector<std::string>& stops) const
 {
 	double result = 0.0;
+/// простые типы (i) желательно не объявлять auto, правильней указывать конктретный
+/// так же как минимум желательно добавить assert, что stops не пустой
+/// если он будет пустой, то stops.size() - 1 будет (-1) и если auto будет безнаковым, то это будет максимальное число
+/// как вариант можно переделать циксл от 1 до stops.size(), тогда assert будет не нужен
 	for (auto i = 0; i < stops.size() - 1; ++i)
 	{
 		result += ComputeDistance(stops_.at(stops[i]), stops_.at(stops[i + 1]));
@@ -74,6 +78,7 @@ size_t Handbook::Data::TransportCatalogue::GetDistanceBetweenStop(const std::str
 size_t Handbook::Data::TransportCatalogue::RoutePathSize(const std::vector<std::string>& stops) const
 {
 	size_t result = 0.0;
+/// такое же замечание как в RoutePathSizeNaive
 	for (auto i = 0; i < stops.size() - 1; ++i)
 	{
 		result += GetDistanceBetweenStop(stops[i], stops[i + 1]);
@@ -81,6 +86,7 @@ size_t Handbook::Data::TransportCatalogue::RoutePathSize(const std::vector<std::
 	return result;
 }
 
+///есть лишнее копирование stop_name, суда по коду, можно переделать в константную ссылку либо в string_view
 void Handbook::Data::TransportCatalogue::AddStop(
 	std::string stop_name, Utilities::Coordinates coordinates,
 	std::vector<std::pair<std::string, size_t>> vector_distances_to_other_stop)
@@ -96,6 +102,7 @@ void Handbook::Data::TransportCatalogue::AddStop(
 	}
 }
 
+///есть лишнее копирование stop_name, суда по коду, можно переделать в константную ссылку либо в в string_view
 void Handbook::Data::TransportCatalogue::AddBus_(std::string bus_name, std::vector<std::string> stops)
 {
 	bus_to_stops_[bus_name] = std::move(stops);
@@ -104,6 +111,9 @@ void Handbook::Data::TransportCatalogue::AddBus_(std::string bus_name, std::vect
 		stop_to_bus_[stop].insert(bus_name);
 	}
 }
+
+///есть лишнее копирование stop_name и stops, суда по коду, можно переделать в константные ссылки
+///строки можно переделать в string_view
 void Handbook::Data::TransportCatalogue::AddBus(std::string bus_name, std::vector<std::string> stops,
 												bool is_round_trip)
 {

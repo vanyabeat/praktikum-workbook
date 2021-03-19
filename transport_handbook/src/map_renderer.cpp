@@ -11,8 +11,8 @@ bool Handbook::Renderer::IsZero(double value)
 	return std::abs(value) < EPSILON;
 }
 
-Handbook::Renderer::SphereProjector Handbook::Renderer::CreatorSphereProjector(std::deque<Handbook::Data::Stop*>& stops,
-														   Handbook::Renderer::RenderSettings& settings)
+Handbook::Renderer::SphereProjector Handbook::Renderer::CreatorSphereProjector(
+	std::deque<Handbook::Data::Stop*>& stops, Handbook::Renderer::RenderSettings& settings)
 {
 	std::vector<Handbook::Utilities::Coordinates> points;
 	for (auto stop : stops)
@@ -24,55 +24,37 @@ Handbook::Renderer::SphereProjector Handbook::Renderer::CreatorSphereProjector(s
 }
 
 std::vector<svg::Polyline> Handbook::Renderer::DrawLineofRoad(const std::deque<Handbook::Data::Bus*>& buses,
-										  Handbook::Renderer::RenderSettings& settings,
-										  Handbook::Renderer::SphereProjector& projector)
+															  Handbook::Renderer::RenderSettings& settings,
+															  Handbook::Renderer::SphereProjector& projector)
 {
 	std::vector<svg::Polyline> lines;
-	size_t cnt_color_palette = 0;
+	size_t i = 0;
 	for (const auto bus : buses)
 	{
-		if (!std::get<1>(*bus).empty())
+		if (!std::get<1>(*bus).empty() && !settings.color_palette.empty())
 		{
-			svg::Polyline line;
-			for (auto& stop : std::get<1>(*bus))
+			for (const auto stop : std::get<1>(*bus))
 			{
-				line.AddPoint(projector(std::get<1>(stop)));
-				line.SetStrokeColor(settings.color_palette[cnt_color_palette]);
-				line.SetStrokeWidth(settings.line_width);
-				line.SetFillColor(svg::NoneColor);
-				line.SetStrokeLineCap(svg::StrokeLineCap::ROUND);
-				line.SetStrokeLineJoin(svg::StrokeLineJoin::ROUND);
+				size_t color_index = i % settings.color_palette.size();
+				svg::Polyline polyline;
+				polyline.SetFillColor(svg::NoneColor)
+					.SetStrokeColor(settings.color_palette.at(color_index))
+					.SetStrokeWidth(settings.line_width)
+					.SetStrokeLineCap(svg::StrokeLineCap::ROUND)
+					.SetStrokeLineJoin(svg::StrokeLineJoin::ROUND)
+					.AddPoint(projector(std::get<1>(stop)));
+				lines.push_back(polyline);
 			}
-
-			//			if (!std::get<6>(bus))
-			//			{
-			//				for (auto itr = bus->route_stops_.rbegin() + 1; itr < bus->route_stops_.rend(); ++itr)
-			//				{
-			//					line.AddPoint(projector((*itr)->coordinates_));
-			//				}
-			//			}
-
-			//      if (bus->route_stops_.size() == 1) {
-			//	  line.AddPoint(projector(bus->route_stops_[0]->coordinates_));
-			//      }
-
-			if (cnt_color_palette < settings.color_palette.size())
-			{
-				++cnt_color_palette;
-			}
-			else
-			{
-				cnt_color_palette = 0;
-			}
-			lines.push_back(line);
 		}
+
+		++i;
 	}
 	return lines;
 }
 
 std::vector<svg::Text> Handbook::Renderer::DrawNameOfRoad(const std::deque<Handbook::Data::Bus*>& buses,
-									  Handbook::Renderer::RenderSettings& settings,
-									  Handbook::Renderer::SphereProjector& projector)
+														  Handbook::Renderer::RenderSettings& settings,
+														  Handbook::Renderer::SphereProjector& projector)
 {
 	std::vector<svg::Text> NameOfRoad;
 	size_t cnt_color_palette = 0;
@@ -178,8 +160,8 @@ std::vector<svg::Text> Handbook::Renderer::DrawNameOfRoad(const std::deque<Handb
 }
 
 std::vector<svg::Circle> Handbook::Renderer::DrawStop(const std::deque<Handbook::Data::Stop*>& stops,
-								  Handbook::Renderer::RenderSettings& settings,
-								  Handbook::Renderer::SphereProjector& projector)
+													  Handbook::Renderer::RenderSettings& settings,
+													  Handbook::Renderer::SphereProjector& projector)
 {
 	std::vector<svg::Circle> stops_point;
 	for (const auto stop : stops)
@@ -193,8 +175,8 @@ std::vector<svg::Circle> Handbook::Renderer::DrawStop(const std::deque<Handbook:
 }
 
 std::vector<svg::Text> Handbook::Renderer::DrawStopName(const std::deque<Handbook::Data::Stop*>& stops,
-									Handbook::Renderer::RenderSettings& settings,
-									Handbook::Renderer::SphereProjector& projector)
+														Handbook::Renderer::RenderSettings& settings,
+														Handbook::Renderer::SphereProjector& projector)
 {
 	std::vector<svg::Text> stops_name;
 	for (const auto stop : stops)
@@ -224,7 +206,7 @@ std::vector<svg::Text> Handbook::Renderer::DrawStopName(const std::deque<Handboo
 }
 #include <fstream>
 json::Node Handbook::Renderer::GetMapOfRoad(const Handbook::Data::TransportCatalogue& transport_catalog,
-						Handbook::Renderer::RenderSettings& settings, int id)
+											Handbook::Renderer::RenderSettings& settings, int id)
 {
 	auto raw_stops = transport_catalog.GetStops();
 	std::deque<Handbook::Data::Stop*> stops;

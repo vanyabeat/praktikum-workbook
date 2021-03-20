@@ -27,7 +27,7 @@
 //	}
 //}
 
-#include "domain.h"
+#include "control.h"
 #include "json_reader.h"
 #include "request_handler.h"
 #include "sstream"

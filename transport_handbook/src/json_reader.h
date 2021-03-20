@@ -1,5 +1,5 @@
 #pragma once
-#include "domain.h"
+#include "control.h"
 #include "json.h"
 #include "map_renderer.h"
 #include "request_handler.h"
@@ -9,14 +9,6 @@ namespace Handbook
 {
 	namespace Control
 	{
-		/// лишний комментарий
-		/*
-		 * {
-  "base_requests": [ ... ],
-  "stat_requests": [ ... ]
-}
-		 * */
-
 		class JsonReader
 		{
 		  public:

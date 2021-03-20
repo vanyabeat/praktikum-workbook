@@ -1,7 +1,7 @@
 #include "json_reader.h"
 
-Handbook::Control::JsonReader::JsonReader(std::istream& out, Handbook::Data::TransportCatalogue& t_c)
-	: out_(out), t_c_(t_c), doc_({})
+Handbook::Control::JsonReader::JsonReader(std::istream& out, Handbook::Data::TransportCatalogue* t_c)
+	: out_(out), t_c_ptr(t_c), doc_({})
 {
 	doc_ = json::Load(out);
 	FillDataBase_();
@@ -22,12 +22,12 @@ json::Document Handbook::Control::JsonReader::GenerateReport()
 											 {"type"s, "Map"s},
 											 {"id"s, i.AsMap().at("id"s).AsInt()},
 											 {"render_settings"s, doc_.GetRoot().AsMap().at("render_settings"s)}}}),
-										 t_c_)
+										 t_c_ptr)
 					.GetRoot()));
 		}
 		else
 		{
-			result.push_back(std::move(Handbook::Views::GetData(json::Document(i), t_c_).GetRoot()));
+			result.push_back(std::move(Handbook::Views::GetData(json::Document(i), t_c_ptr).GetRoot()));
 		}
 	}
 	return json::Document(result);
@@ -37,7 +37,7 @@ void Handbook::Control::JsonReader::FillDataBase_()
 	using namespace std;
 	std::vector<std::tuple<std::string_view, std::string_view, int>> buffer_stops;
 	std::vector<std::shared_ptr<Handbook::Control::Request>> requests_;
-	Handbook::Data::TransportCatalogue* ctx = &t_c_;
+	Handbook::Data::TransportCatalogue* ctx = t_c_ptr;
 	for (const auto& i : doc_.GetRoot().AsMap().find("base_requests"s)->second.AsArray())
 	{
 		requests_.push_back(Handbook::Control::ParseRequestDocument(json::Document(i)));

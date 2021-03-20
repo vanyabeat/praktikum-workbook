@@ -634,15 +634,15 @@ TEST(JSON, Catalogue_Bus)
 TEST(JSON, Catalogue_Requests)
 {
 	using namespace std;
-	Handbook::Data::TransportCatalogue transport_catalogue;
-	transport_catalogue.AddStop("Tolstopaltsevo"s, Handbook::Utilities::Coordinates{55.611087, 37.20829});
-	transport_catalogue.AddStop("Marushkino"s, Handbook::Utilities::Coordinates{55.595884, 37.209755});
-	transport_catalogue.AddStopsDistance("Marushkino", "Tolstopaltsevo", 100);
-	transport_catalogue.AddBus("256"s, {"Marushkino", "Tolstopaltsevo", "Marushkino"}, false);
+	std::unique_ptr<Handbook::Data::TransportCatalogue> transport_catalogue = std::make_unique<Handbook::Data::TransportCatalogue>();
+	transport_catalogue->AddStop("Tolstopaltsevo"s, Handbook::Utilities::Coordinates{55.611087, 37.20829});
+	transport_catalogue->AddStop("Marushkino"s, Handbook::Utilities::Coordinates{55.595884, 37.209755});
+	transport_catalogue->AddStopsDistance("Marushkino", "Tolstopaltsevo", 100);
+	transport_catalogue->AddBus("256"s, {"Marushkino", "Tolstopaltsevo", "Marushkino"}, false);
 
 	auto json_document = LoadJSON("{ \"id\": 1, \"type\": \"Bus\", \"name\": \"256\" }");
 
-	auto result = Handbook::Views::GetData(json_document, transport_catalogue);
+	auto result = Handbook::Views::GetData(json_document, transport_catalogue.get());
 	std::cout << Print(result.GetRoot());
 }
 
@@ -696,9 +696,9 @@ TEST(JSON, Test_main)
 	auto test = LoadJSON(data);
 	std::istringstream is(data);
 
-	Handbook::Data::TransportCatalogue transport_catalogue;
+	std::unique_ptr<Handbook::Data::TransportCatalogue> transport_catalogue = std::make_unique<Handbook::Data::TransportCatalogue>();
 
-	Handbook::Control::JsonReader reader(is, transport_catalogue);
+	Handbook::Control::JsonReader reader(is, transport_catalogue.get());
 
 	auto res = reader.GenerateReport();
 
@@ -813,9 +813,9 @@ TEST(JSON, real_data)
 
 	std::istringstream is(real_json_data);
 
-	Handbook::Data::TransportCatalogue transport_catalogue;
+	std::unique_ptr<Handbook::Data::TransportCatalogue> transport_catalogue = std::make_unique<Handbook::Data::TransportCatalogue>();
 
-	Handbook::Control::JsonReader reader(is, transport_catalogue);
+	Handbook::Control::JsonReader reader(is, transport_catalogue.get());
 
 	auto res = reader.GenerateReport();
 	std::cout << Print(res.GetRoot()) << std::endl;
@@ -1002,9 +1002,9 @@ TEST(WOW, test)
 
 	std::istringstream is(data);
 
-	Handbook::Data::TransportCatalogue transport_catalogue;
+	std::unique_ptr<Handbook::Data::TransportCatalogue> transport_catalogue = std::make_unique<Handbook::Data::TransportCatalogue>();
 
-	Handbook::Control::JsonReader reader(is, transport_catalogue);
+	Handbook::Control::JsonReader reader(is, transport_catalogue.get());
 
 	auto res = reader.GenerateReport();
 

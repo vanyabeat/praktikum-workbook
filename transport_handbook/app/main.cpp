@@ -27,11 +27,11 @@
 //	}
 //}
 
-#include "control.h"
+#include "domain.h"
 #include "json_reader.h"
+#include "request_handler.h"
 #include "sstream"
 #include "transport_catalogue.h"
-#include "view.h"
 int main()
 {
 	Handbook::Data::TransportCatalogue transport_catalogue;

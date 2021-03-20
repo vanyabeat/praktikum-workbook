@@ -1,122 +1,133 @@
 #include "transport_catalogue.h"
 
-double Handbook::Data::TransportCatalogue::RoutePathSizeNaive(const std::vector<std::string>& stops) const
+double Handbook::Data::Bus::GetCoordinateLength() const
 {
-	double result = 0.0;
-/// простые типы (i) желательно не объявлять auto, правильней указывать конктретный
-/// так же как минимум желательно добавить assert, что stops не пустой
-/// если он будет пустой, то stops.size() - 1 будет (-1) и если auto будет безнаковым, то это будет максимальное число
-/// как вариант можно переделать циксл от 1 до stops.size(), тогда assert будет не нужен
-	for (auto i = 0; i < stops.size() - 1; ++i)
-	{
-		result += ComputeDistance(stops_.at(stops[i]), stops_.at(stops[i + 1]));
-	}
-	return result;
+	double length = std::transform_reduce(
+		next(stops.begin()), stops.end(), stops.begin(), 0.0, std::plus<>{}, [](const auto stop1, const auto stop2) {
+			return Handbook::Utilities::ComputeDistance(stop1->coordinates, stop2->coordinates);
+		});
+
+	return is_roundtrip ? length : length * 2;
 }
 
-std::optional<std::tuple<size_t, size_t, size_t, std::vector<std::string>, double>> Handbook::Data::TransportCatalogue::
-	GetRouteInfo(const std::string& bus) const
+const Handbook::Data::Stop* Handbook::Data::TransportCatalogue::FindStop(std::string_view name) const
 {
-	auto it = bus_to_stops_.find(bus);
-	if (it == bus_to_stops_.end())
+	const auto stop_it = stops_by_name_.find(name);
+	if (stop_it == stops_by_name_.end())
 	{
-		return {};
+		return nullptr;
 	}
 	else
 	{
-		auto stops = bus_to_stops_.at(bus);
-		size_t path_size = RoutePathSize(stops);
-		double naive_size = RoutePathSizeNaive(stops);
-		                        // 0            //1                                                     //2         //3
-		return std::make_tuple(stops.size(), std::set<std::string>(stops.begin(), stops.end()).size(), path_size, stops,
-							   (path_size / naive_size));
+		return stop_it->second;
 	}
+
 }
 
-std::optional<std::set<std::string>> Handbook::Data::TransportCatalogue::GetBusInfo(const std::string& stop) const
+void Handbook::Data::TransportCatalogue::AddStop(std::string_view name, Handbook::Utilities::Coordinates coordinates)
 {
-	auto it = stop_to_bus_.find(stop);
-	if (it == stop_to_bus_.end())
-	{
-		return {};
-	}
-	else
-	{
-		return stop_to_bus_.at(stop);
-	}
+	const auto& stop = stops_.emplace_back(Stop{std::string(name), coordinates});
+	stops_by_name_.insert({stop.name, &stop});
 }
 
-/*
- * Гарантируется, что для любых двух соседних остановок любого маршрута задано расстояние по дорогам.
- * Расстояние для пары остановок может задаваться только один раз.
- * В этом случае считается, что оно не зависит от направления движения.
- * Возможно задание разного расстояния между двумя остановками в разных направлениях.
- * Также возможно задание расстояния от остановки до самой себя — так бывает,
- * если автобус разворачивается и приезжает на ту же остановку.
- * Длина маршрута никогда не превосходит 10 000 000 метров.
- * */
-/// описано, что гарантировано, существования дистанци между соседними остановками, но возможен запрос до самой себя, а т.к. этот случай не гарантируется, то возможно зацикливание,
-/// необходимо разрещить данную ситуацию
-size_t Handbook::Data::TransportCatalogue::GetDistanceBetweenStop(const std::string& stop_l,
-																  const std::string& stop_r) const
+const std::unordered_set<Handbook::Data::BusPtr>* Handbook::Data::TransportCatalogue::GetBusesOnStop(
+	const Handbook::Data::Stop* stop) const
 {
+	const auto needle = buses_by_stop_.find(stop);
 
-	if (distance_between_stops_.find(stop_l) != distance_between_stops_.end())
+	if (needle == buses_by_stop_.end())
 	{
-		if (distance_between_stops_.at(stop_l).find(stop_r) != distance_between_stops_.at(stop_l).end())
+		static const std::unordered_set<BusPtr> empty_set;
+		return &empty_set;
+	}
+
+	return &needle->second;
+}
+
+void Handbook::Data::TransportCatalogue::AddStopsDistance(std::string_view from_stop, std::string_view to_stop,
+														  int distance)
+{
+	auto p = std::make_pair(FindStop(from_stop), FindStop(to_stop));
+	auto res = std::make_pair(p, distance);
+
+	stop_distances_.insert(res);
+}
+
+std::unordered_set<Handbook::Data::BusPtr> Handbook::Data::TransportCatalogue::GetBusesWithStops() const
+{
+	std::unordered_set<BusPtr> buses;
+
+	for (const auto& bus : buses_)
+	{
+		if (!bus.stops.empty())
 		{
-			return distance_between_stops_.at(stop_l).at(stop_r);
-		}
-		else
-		{
-			return GetDistanceBetweenStop(stop_r, stop_l);
+			buses.insert(&bus);
 		}
 	}
-	return GetDistanceBetweenStop(stop_r, stop_l);
+
+	return buses;
 }
 
-size_t Handbook::Data::TransportCatalogue::RoutePathSize(const std::vector<std::string>& stops) const
+int Handbook::Data::TransportCatalogue::FindStopsDistance(const Handbook::Data::Stop* from_stop_ptr,
+														  const Handbook::Data::Stop* to_stop_ptr) const
 {
-	size_t result = 0.0;
-/// такое же замечание как в RoutePathSizeNaive
-	for (auto i = 0; i < stops.size() - 1; ++i)
+	auto distance_it = stop_distances_.find({from_stop_ptr, to_stop_ptr});
+
+	if (distance_it == stop_distances_.end())
 	{
-		result += GetDistanceBetweenStop(stops[i], stops[i + 1]);
+		distance_it = stop_distances_.find({to_stop_ptr, from_stop_ptr});
 	}
-	return result;
+
+	return distance_it->second;
+}
+void Handbook::Data::TransportCatalogue::AddBus(std::string_view name, const std::vector<std::string>& bus_stops,
+												bool is_roundtrip)
+{
+	std::vector<const Stop*> stops;
+	stops.reserve(bus_stops.size());
+
+	auto& bus = buses_.emplace_back(Bus{std::string(name), is_roundtrip, stops});
+
+	for (const auto& stop_name : bus_stops)
+	{
+		const auto* stop_ptr = FindStop(stop_name);
+		bus.stops.push_back(stop_ptr);
+		buses_by_stop_[stop_ptr].emplace(&bus);
+	}
+
+	buses_by_name_.insert({bus.name, &bus});
 }
 
-///есть лишнее копирование stop_name, суда по коду, можно переделать в константную ссылку либо в string_view
-void Handbook::Data::TransportCatalogue::AddStop(
-	std::string stop_name, Utilities::Coordinates coordinates,
-	std::vector<std::pair<std::string, size_t>> vector_distances_to_other_stop)
+Handbook::Data::BusStat Handbook::Data::TransportCatalogue::GetBusStat(const Handbook::Data::Bus* bus) const
 {
-	stops_[stop_name] = std::move(coordinates);
-	if (stop_to_bus_.find(stop_name) == stop_to_bus_.end())
+	std::vector<const Stop*> stop_ptrs = {bus->stops.begin(), bus->stops.end()};
+
+	std::unordered_set<const Stop*> unique_stop_ptrs;
+	unique_stop_ptrs.reserve(stop_ptrs.size());
+
+	for_each(stop_ptrs.begin(), stop_ptrs.end(), [&unique_stop_ptrs](const auto stop) {
+		if (!unique_stop_ptrs.count(stop))
+		{
+			unique_stop_ptrs.insert(stop);
+		}
+	});
+
+	if (!bus->is_roundtrip)
 	{
-		stop_to_bus_[stop_name] = {};
+		stop_ptrs.insert(stop_ptrs.end(), next(bus->stops.rbegin()), bus->stops.rend());
 	}
-	for (const auto& [name, distance] : vector_distances_to_other_stop)
-	{
-		distance_between_stops_[stop_name].insert({std::move(name), std::move(distance)});
-	}
+
+	double route_length = transform_reduce(
+		next(stop_ptrs.begin()), stop_ptrs.end(), stop_ptrs.begin(), 0.0, std::plus<>{},
+		[this](const auto stop_to, const auto stop_from) { return FindStopsDistance(stop_from, stop_to); });
+
+	double curvature = route_length / bus->GetCoordinateLength();
+
+	return {static_cast<int>(stop_ptrs.size()), static_cast<int>(unique_stop_ptrs.size()), route_length, curvature};
 }
 
-///есть лишнее копирование stop_name, суда по коду, можно переделать в константную ссылку либо в в string_view
-void Handbook::Data::TransportCatalogue::AddBus_(std::string bus_name, std::vector<std::string> stops)
+const Handbook::Data::Bus* Handbook::Data::TransportCatalogue::FindBus(std::string_view name) const
 {
-	bus_to_stops_[bus_name] = std::move(stops);
-	for (const auto& stop : bus_to_stops_[bus_name])
-	{
-		stop_to_bus_[stop].insert(bus_name);
-	}
-}
-
-///есть лишнее копирование stop_name и stops, суда по коду, можно переделать в константные ссылки
-///строки можно переделать в string_view
-void Handbook::Data::TransportCatalogue::AddBus(std::string bus_name, std::vector<std::string> stops,
-												bool is_round_trip)
-{
-	AddBus_(bus_name, stops);
-	bus_to_round_trip_[bus_name] = is_round_trip;
+	const auto bus_it = buses_by_name_.find(name);
+	return bus_it != buses_by_name_.end() ? bus_it->second : nullptr;
 }

@@ -35,36 +35,37 @@ json::Document Handbook::Control::JsonReader::GenerateReport()
 void Handbook::Control::JsonReader::FillDataBase_()
 {
 	using namespace std;
+	std::vector<std::tuple<std::string_view, std::string_view, int>> buffer_stops;
+	std::vector<std::shared_ptr<Handbook::Control::Request>> requests_;
+	Handbook::Data::TransportCatalogue* ctx = &t_c_;
 	for (const auto& i : doc_.GetRoot().AsMap().find("base_requests"s)->second.AsArray())
 	{
-		Handbook::Control::AddRequestToCatalogue(Handbook::Control::ParseRequestDocument(json::Document(i)).get(),
-												 t_c_);
+		requests_.push_back(Handbook::Control::ParseRequestDocument(json::Document(i)));
 	}
-	t_c_.Heat();
-}
 
-// void Handbook::Control::JsonReader::FillRenderSettings()
-//{
-//	using namespace std;
-//	if (doc_.GetRoot().AsMap().find("render_settings") != doc_.GetRoot().AsMap().end())
-//	{
-//		auto data = doc_.GetRoot().AsMap().at("render_settings").AsMap();
-//		renderSettings_.width = data.at("width"s).AsDouble();
-//		renderSettings_.height = data.at("height"s).AsDouble();
-//		renderSettings_.padding = data.at("padding"s).AsDouble();
-//		renderSettings_.stop_radius = data.at("stop_radius"s).AsDouble();
-//		renderSettings_.line_width = data.at("stop_radius"s).AsDouble();
-//		renderSettings_.bus_label_font_size = data.at("label_font_size"s).AsDouble();
-//		renderSettings_.bus_label_offset = svg::Point(data["bus_label_offset"].AsArray()[0].AsDouble(),
-//													  data["bus_label_offset"].AsArray()[1].AsDouble());
-//		renderSettings_.stop_label_font_size = data["stop_label_font_size"].AsInt();
-//		renderSettings_.stop_label_offset = svg::Point(data["stop_label_offset"].AsArray()[0].AsDouble(),
-//													   data["stop_label_offset"].AsArray()[1].AsDouble());
-//		renderSettings_.underlayer_color = ParsingColor(data["underlayer_color"]);
-//		renderSettings_.underlayer_width = data["underlayer_width"].AsDouble();
-//		for (auto& color : data["color_palette"].AsArray())
-//		{
-//			renderSettings_.color_palette.push_back(ParsingColor(color));
-//		}
-//	}
-//}
+	// сначала добавим все остановки и буфернем их
+	std::for_each(requests_.begin(), requests_.end(),
+				  [&buffer_stops, ctx](std::shared_ptr<Handbook::Control::Request>& req) {
+					  if (req.get()->getRequestType() == Handbook::Control::RequestType::IsStop)
+					  {
+						  auto stop = static_cast<Handbook::Control::Stop*>(req.get());
+						  ctx->AddStop(stop->getName(), stop->coordinates);
+						  for (const auto& item : stop->getDistanceToOtherStop())
+						  {
+							  buffer_stops.emplace_back(stop->getName(), item.first, item.second);
+						  }
+					  }
+				  });
+	// обрабатываем сами расстояния
+	std::for_each(buffer_stops.begin(), buffer_stops.end(), [&ctx](auto& item) {
+		ctx->AddStopsDistance(std::get<0>(item), std::get<1>(item), std::get<2>(item));
+	});
+
+	std::for_each(requests_.begin(), requests_.end(), [&ctx](std::shared_ptr<Handbook::Control::Request>& req) {
+		if (req.get()->getRequestType() == Handbook::Control::RequestType::IsBus)
+		{
+			auto bus = static_cast<Handbook::Control::Bus*>(req.get());
+			ctx->AddBus(bus->getName(), bus->getStops(), bus->getIsRoundtrip());
+		}
+	});
+}

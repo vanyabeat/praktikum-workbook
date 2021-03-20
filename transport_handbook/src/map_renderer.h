@@ -16,19 +16,20 @@ namespace Handbook
 {
 	namespace Renderer
 	{
+		using BusesByName = std::map<std::string_view, Handbook::Data::BusPtr>;
 		struct RenderSettings
 		{
-			double width;
-			double height;
-			double padding;
-			double stop_radius;
-			double line_width;
-			double bus_label_font_size;
-			svg::Point bus_label_offset;
-			int stop_label_font_size;
-			svg::Point stop_label_offset;
-			svg::Color underlayer_color;
-			double underlayer_width;
+			double width = 0.0;
+			double height = 0.0;
+			double padding = 0.0;
+			double line_width = 0.0;
+			double stop_radius = 0.0;
+			int bus_label_font_size = 0;
+			svg::Point bus_label_offset{0, 0};
+			int stop_label_font_size = 0;
+			svg::Point stop_label_offset{0, 0};
+			svg::Color underlayer_color{svg::NoneColor};
+			double underlayer_width = 0.0;
 			std::vector<svg::Color> color_palette;
 		};
 
@@ -96,21 +97,39 @@ namespace Handbook
 			double zoom_coeff_ = 0;
 		};
 
-		SphereProjector CreatorSphereProjector(std::deque<Handbook::Data::Stop*>& stops, RenderSettings& settings);
+		class Map
+		{
+		  public:
+			Map() = default;
 
-		std::vector<svg::Polyline> DrawLineofRoad(const std::deque<Handbook::Data::Bus*>& buses,
-												  RenderSettings& settings, SphereProjector& projector);
+			explicit Map(RenderSettings props) : render_props_(std::move(props))
+			{
+			}
 
-		std::vector<svg::Text> DrawNameOfRoad(const std::deque<Handbook::Data::Bus*>& buses, RenderSettings& settings,
-											  SphereProjector& projector);
+			void SetRenderProps(RenderSettings props)
+			{
+				render_props_ = std::move(props);
+			}
 
-		std::vector<svg::Circle> DrawStop(const std::deque<Handbook::Data::Stop*>& stops, RenderSettings& settings,
-										  SphereProjector& projector);
+			void Render(const BusesByName& buses_by_name, std::ostream& out = std::cout) const;
 
-		std::vector<svg::Text> DrawStopName(const std::deque<Handbook::Data::Stop*>& stops, RenderSettings& settings,
-											SphereProjector& projector);
+		  private:
+			RenderSettings render_props_;
 
-		json::Node GetMapOfRoad(const Handbook::Data::TransportCatalogue& transport_catalog, RenderSettings& settings,
-								int id);
+			void DrawLineOfRoad(svg::Document& document, const SphereProjector& projector,
+								const BusesByName& buses) const;
+
+			void DrawBusTitles(svg::Document& document, const SphereProjector& projector,
+							   const BusesByName& buses) const;
+
+			void DrawBusTitle(svg::Document& document, std::string_view name, svg::Point pos,
+							  const svg::Color& color) const;
+
+			void DrawStops(svg::Document& document, const SphereProjector& projector,
+						   const std::map<std::string_view, Handbook::Data::StopPtr>& stops) const;
+
+			void DrawStopTitles(svg::Document& document, const SphereProjector& projector,
+								const std::map<std::string_view, Handbook::Data::StopPtr>& stops) const;
+		};
 	} // namespace Renderer
 } // namespace Handbook

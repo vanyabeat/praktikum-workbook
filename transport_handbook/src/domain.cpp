@@ -1,4 +1,4 @@
-#include "control.h"
+#include "domain.h"
 #include <regex>
 
 static std::string& ltrim(std::string& str)
@@ -258,7 +258,7 @@ void Handbook::Control::AddRequestToCatalogue(Handbook::Control::Request* reques
 	case Handbook::Control::RequestType::IsStop: {
 	}
 		Handbook::Control::Stop* stop = static_cast<Handbook::Control::Stop*>(request);
-		transport_catalogue.AddStop(stop->getName(), stop->coordinates, stop->getDistanceToOtherStop());
+		transport_catalogue.AddStop(stop->getName(), stop->coordinates);
 		break;
 	}
 }
@@ -300,24 +300,9 @@ std::shared_ptr<Handbook::Control::Request> Handbook::Control::ParseRequestDocum
 		{
 			stops.push_back(stop.AsString());
 		}
-		if (round_trip)
-		{
-			static_cast<Handbook::Control::Bus*>(result.get())->setStops(std::move(stops));
-		}
-		else
-		{
-			auto tmp = stops;
-			std::vector<std::string> res;
-			res.insert(res.end(), tmp.begin(), tmp.end());
-			tmp.pop_back();
-			std::reverse(tmp.begin(), tmp.end());
-			res.insert(res.end(), tmp.begin(), tmp.end());
-			static_cast<Handbook::Control::Bus*>(result.get())->setStops(std::move(res));
-		}
-
+		static_cast<Handbook::Control::Bus*>(result.get())->setStops(std::move(stops));
 		static_cast<Handbook::Control::Bus*>(result.get())->setIsRoundtrip(round_trip);
 		return result;
 	}
-
 	throw std::invalid_argument("Invalid JSON-object");
 }

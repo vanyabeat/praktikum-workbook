@@ -9,7 +9,7 @@ namespace Handbook
 {
 	namespace Control
 	{
-/// лишний комментарий
+		/// лишний комментарий
 		/*
 		 * {
   "base_requests": [ ... ],
@@ -20,16 +20,15 @@ namespace Handbook
 		class JsonReader
 		{
 		  public:
-			JsonReader(std::istream& out, Handbook::Data::TransportCatalogue& t_c);
+			JsonReader(std::istream& out, Handbook::Data::TransportCatalogue* t_c_ptr);
 
 			json::Document GenerateReport();
 
 		  private:
 			void FillDataBase_();
 
-
 			std::istream& out_;
-			Handbook::Data::TransportCatalogue& t_c_;
+			Handbook::Data::TransportCatalogue* t_c_ptr;
 			json::Document doc_;
 		};
 	} // namespace Control

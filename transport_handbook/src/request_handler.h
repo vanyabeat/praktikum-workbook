@@ -7,6 +7,6 @@ namespace Handbook
 {
 	namespace Views
 	{
-		json::Document GetData(const json::Document& stat, const Handbook::Data::TransportCatalogue& t_q);
+		json::Document GetData(const json::Document& stat, const Handbook::Data::TransportCatalogue* t_q);
 	} // namespace Views
 } // namespace Handbook

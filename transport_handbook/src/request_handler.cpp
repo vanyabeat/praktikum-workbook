@@ -44,7 +44,7 @@ static Handbook::Renderer::RenderSettings ReadRenderSettings(json::Dict data)
 	}
 	return settings;
 }
-json::Document Handbook::Views::GetData(const json::Document& stat, const Handbook::Data::TransportCatalogue& t_q)
+json::Document Handbook::Views::GetData(const json::Document& stat, const Handbook::Data::TransportCatalogue* t_q)
 {
 	using namespace std;
 	json::Node result;
@@ -54,10 +54,10 @@ json::Document Handbook::Views::GetData(const json::Document& stat, const Handbo
 	if (type == "Bus"s)
 	{
 		std::string name = stat.GetRoot().AsMap().at("name"s).AsString();
-		const Handbook::Data::Bus* bus = t_q.FindBus(name);
+		const Handbook::Data::Bus* bus = t_q->FindBus(name);
 		if (bus != nullptr)
 		{
-			auto info = t_q.GetBusStat(bus);
+			auto info = t_q->GetBusStat(bus);
 			result = json::Dict{{"curvature"s, info.curvature},
 								{"request_id"s, id},
 								{"route_length"s, info.route_length},
@@ -69,10 +69,10 @@ json::Document Handbook::Views::GetData(const json::Document& stat, const Handbo
 	if (type == "Stop"s)
 	{
 		std::string name = stat.GetRoot().AsMap().at("name"s).AsString();
-		auto stop = t_q.FindStop(name);
+		auto stop = t_q->FindStop(name);
 		if (stop)
 		{
-			auto info = t_q.GetBusesOnStop(stop);
+			auto info = t_q->GetBusesOnStop(stop);
 			if (!info->empty())
 			{
 				std::vector<json::Node> buses;
@@ -104,7 +104,7 @@ json::Document Handbook::Views::GetData(const json::Document& stat, const Handbo
 		Handbook::Renderer::Map map_renderer(renderSettings);
 		Handbook::Renderer::BusesByName buses_by_name;
 
-		for (const auto& bus : t_q.GetBusesWithStops())
+		for (const auto& bus : t_q->GetBusesWithStops())
 		{
 			buses_by_name.emplace(bus->name, bus);
 		}

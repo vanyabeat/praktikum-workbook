@@ -34,8 +34,8 @@
 #include "transport_catalogue.h"
 int main()
 {
-	Handbook::Data::TransportCatalogue transport_catalogue;
-	Handbook::Control::JsonReader json_reader(std::cin, transport_catalogue);
+	std::unique_ptr<Handbook::Data::TransportCatalogue> transport_catalogue = std::make_unique<Handbook::Data::TransportCatalogue>();
+	Handbook::Control::JsonReader json_reader(std::cin, transport_catalogue.get());
 	auto res = json_reader.GenerateReport();
 	json::Print(res, std::cout);
 }

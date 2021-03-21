@@ -36,7 +36,7 @@ void Handbook::Control::JsonReader::FillDataBase_()
 {
 	using namespace std;
 	std::vector<std::tuple<std::string_view, std::string_view, int>> buffer_stops;
-	std::vector<std::shared_ptr<Handbook::Control::Request>> requests_;
+	std::vector<std::shared_ptr<Handbook::Control::Request>> requests_; /// это не приватный член класса, лучше убрать символ подчеркивания
 	Handbook::Data::TransportCatalogue* ctx = t_c_ptr;
 	for (const auto& i : doc_.GetRoot().AsMap().find("base_requests"s)->second.AsArray())
 	{

@@ -138,6 +138,7 @@ std::shared_ptr<Handbook::Control::Request> Handbook::Control::ParseRequestStrin
 	std::string name;
 	if (found_stop != r_str.npos)
 	{
+/// лучше использовать std::make_shared
 		result = std::shared_ptr<Handbook::Control::Request>(new Handbook::Control::Stop());
 		result->setRequestType(Handbook::Control::RequestType::IsStop);
 
@@ -274,6 +275,7 @@ std::shared_ptr<Handbook::Control::Request> Handbook::Control::ParseRequestDocum
 
 	auto item = doc.GetRoot().AsMap();
 
+/// желательно item.at("type").AsString() выполнить один раз
 	if (item.at("type").AsString() == "Stop"s)
 	{
 		result = std::shared_ptr<Handbook::Control::Request>(new Handbook::Control::Stop());

@@ -92,6 +92,7 @@ json::Document Handbook::Views::GetData(const json::Document& stat, const Handbo
 			}
 		}
 
+/// лишний комментарий
 		//		result = json::Dict{{"request_id"s, id}, {"buses"s, std::vector<json::Node>{}}};
 		//		return json::Document(result);
 	}

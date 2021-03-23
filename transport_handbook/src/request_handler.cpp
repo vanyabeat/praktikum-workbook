@@ -4,7 +4,7 @@
 #include <numeric>
 #include <sstream>
 
-static svg::Color ParsingColor(json::Node& color)
+static svg::Color ParsingColor(const json::Node& color)
 {
 	svg::Color out;
 	if (color.IsString())
@@ -38,7 +38,7 @@ static Handbook::Renderer::RenderSettings ReadRenderSettings(json::Dict data)
 											data["stop_label_offset"s].AsArray()[1].AsDouble());
 	settings.underlayer_color = ParsingColor(data["underlayer_color"s]);
 	settings.underlayer_width = data["underlayer_width"s].AsDouble();
-	for (auto& color : data["color_palette"s].AsArray())
+	for (const auto& color : data["color_palette"s].AsArray())
 	{
 		settings.color_palette.push_back(ParsingColor(color));
 	}
@@ -48,27 +48,38 @@ json::Document Handbook::Views::GetData(const json::Document& stat, const Handbo
 {
 	using namespace std;
 	json::Node result;
-	int id = stat.GetRoot().AsMap().at("id"s).AsInt();
-	std::string type = stat.GetRoot().AsMap().at("type"s).AsString();
+	int id = stat.GetRoot().AsDict().at("id"s).AsInt();
+	std::string type = stat.GetRoot().AsDict().at("type"s).AsString();
 
 	if (type == "Bus"s)
 	{
-		std::string name = stat.GetRoot().AsMap().at("name"s).AsString();
+		std::string name = stat.GetRoot().AsDict().at("name"s).AsString();
 		const Handbook::Data::Bus* bus = t_q->FindBus(name);
 		if (bus != nullptr)
 		{
 			auto info = t_q->GetBusStat(bus);
-			result = json::Dict{{"curvature"s, info.curvature},
-								{"request_id"s, id},
-								{"route_length"s, info.route_length},
-								{"stop_count"s, info.stops_in_route},
-								{"unique_stop_count"s, info.unique_stops}};
+
+			result = json::Builder{}
+						 .StartDict()
+						 .Key("curvature")
+						 .Value(info.curvature)
+						 .Key("request_id")
+						 .Value(id)
+						 .Key("route_length")
+						 .Value(info.route_length)
+						 .Key("stop_count")
+						 .Value(info.stops_in_route)
+						 .Key("unique_stop_count")
+						 .Value(info.unique_stops)
+						 .EndDict()
+						 .Build().AsDict();
+
 			return json::Document(result);
 		}
 	}
 	if (type == "Stop"s)
 	{
-		std::string name = stat.GetRoot().AsMap().at("name"s).AsString();
+		std::string name = stat.GetRoot().AsDict().at("name"s).AsString();
 		auto stop = t_q->FindStop(name);
 		if (stop)
 		{
@@ -82,25 +93,37 @@ json::Document Handbook::Views::GetData(const json::Document& stat, const Handbo
 				}
 				std::sort(buses.begin(), buses.end(),
 						  [](json::Node& l, json::Node& r) { return l.AsString() < r.AsString(); });
-				result = json::Dict{{"request_id"s, id}, {"buses"s, std::move(buses)}};
+
+				result = json::Builder{}
+							 .StartDict()
+							 .Key("request_id")
+							 .Value(id)
+							 .Key("buses")
+							 .Value(std::move(buses))
+							 .EndDict()
+							 .Build().AsDict();
 				return json::Document(result);
 			}
 			else
 			{
-				result = json::Dict{{"request_id"s, id}, {"buses"s, std::vector<json::Node>{}}};
+				result = json::Builder{}
+							 .StartDict()
+							 .Key("request_id")
+							 .Value(id)
+							 .Key("buses")
+							 .StartArray()
+							 .EndArray()
+							 .EndDict()
+							 .Build().AsDict();
 				return json::Document(result);
 			}
 		}
-
-/// лишний комментарий
-		//		result = json::Dict{{"request_id"s, id}, {"buses"s, std::vector<json::Node>{}}};
-		//		return json::Document(result);
 	}
 	if (type == "Map"s)
 	{
 
 		Handbook::Renderer::RenderSettings renderSettings =
-			ReadRenderSettings(stat.GetRoot().AsMap().at("render_settings").AsMap());
+			ReadRenderSettings(stat.GetRoot().AsDict().at("render_settings").AsDict());
 
 		Handbook::Renderer::Map map_renderer(renderSettings);
 		Handbook::Renderer::BusesByName buses_by_name;
@@ -114,9 +137,8 @@ json::Document Handbook::Views::GetData(const json::Document& stat, const Handbo
 
 		map_renderer.Render(buses_by_name, out);
 
-		json::Dict res;
-		res.insert({"request_id", json::Node(id)});
-		res.insert({"map", json::Node(out.str())});
+		json::Node res =
+			json::Builder{}.StartDict().Key("request_id").Value(id).Key("map").Value(out.str()).EndDict().Build().AsDict();
 		return json::Document(res);
 	}
 	result = json::Dict{{"request_id"s, id}, {"error_message"s, "not found"s}};

@@ -212,37 +212,47 @@ namespace svg
 			stroke_line_join = strokeLineJoin;
 			return static_cast<C&>(*this);
 		}
+
 		void RenderAttrs(std::ostream& out) const
 		{
-			out << " ";
-			if (fill_color_.has_value())
+			if (!(stroke_color_.has_value() || stroke_width_.has_value() ||
+				  stroke_line_cap_.has_value() || stroke_line_join.has_value()))
 			{
-				std::string c = "";
-				std::visit(ColorString{c}, fill_color_.value());
-				out << "fill=\"" << c << "\" ";
+				return;
 			}
+			out << " ";
+
 			if (stroke_color_.has_value())
 			{
 				std::string c = "";
 				std::visit(ColorString{c}, stroke_color_.value());
-				out << "stroke=\"" << c << "\" ";
+				out << "stroke=\"" << c << "\"";
+				if (stroke_width_.has_value() || stroke_line_cap_.has_value() || stroke_line_join.has_value())
+				{
+					out << " ";
+				}
 			}
 			if (stroke_width_.has_value())
 			{
-				out << "stroke-width=\"" << stroke_width_.value() << "\" ";
+				out << "stroke-width=\"" << stroke_width_.value() << "\"";
+				if (stroke_line_cap_.has_value() || stroke_line_join.has_value())
+				{
+					out << " ";
+				}
 			}
 			if (stroke_line_cap_.has_value())
 			{
 				out << "stroke-linecap=";
 				out << "\"" << stroke_line_cap_.value() << "\"";
-				out << " ";
+				if (stroke_line_join.has_value())
+				{
+					out << " ";
+				}
 			}
 			if (stroke_line_join.has_value())
 			{
-				//  | miter-clip |  |  |
 				out << "stroke-linejoin=";
 				out << "\"" << stroke_line_join.value() << "\"";
-				out << " ";
 			}
 		}
 

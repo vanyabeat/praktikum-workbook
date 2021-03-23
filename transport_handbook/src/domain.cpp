@@ -1,4 +1,4 @@
-#include "control.h"
+#include "domain.h"
 #include <regex>
 
 static std::string& ltrim(std::string& str)
@@ -265,14 +265,14 @@ void Handbook::Control::AddRequestToCatalogue(Handbook::Control::Request* reques
 std::shared_ptr<Handbook::Control::Request> Handbook::Control::ParseRequestDocument(const json::Document& doc)
 {
 	using namespace std;
-	if (!doc.GetRoot().IsMap())
+	if (!doc.GetRoot().IsDict())
 	{
 		throw std::logic_error("Doc must be a dict (map)");
 	}
 
 	std::shared_ptr<Handbook::Control::Request> result = nullptr;
 
-	auto item = doc.GetRoot().AsMap();
+	auto item = doc.GetRoot().AsDict();
 
 	auto type = item.at("type").AsString();
 	if (type == "Stop"s)
@@ -283,7 +283,7 @@ std::shared_ptr<Handbook::Control::Request> Handbook::Control::ParseRequestDocum
 		static_cast<Handbook::Control::Stop*>(result.get())->coordinates = Handbook::Utilities::Coordinates{
 			static_cast<double>(item.at("latitude").AsDouble()), static_cast<double>(item.at("longitude").AsDouble())};
 		std::vector<std::pair<std::string, size_t>> vector_to_other_stops;
-		for (const auto& [road, dist] : item.at("road_distances").AsMap())
+		for (const auto& [road, dist] : item.at("road_distances").AsDict())
 		{
 			vector_to_other_stops.push_back({road, static_cast<size_t>(dist.AsInt())});
 		}

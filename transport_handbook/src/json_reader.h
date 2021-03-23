@@ -1,5 +1,5 @@
 #pragma once
-#include "control.h"
+#include "domain.h"
 #include "json.h"
 #include "map_renderer.h"
 #include "request_handler.h"

@@ -58,6 +58,24 @@ namespace svg
 		auto& out = context.out;
 		out << "<circle cx="sv << _q_(center_.x) << " cy="sv << _q_(center_.y) << " "sv;
 		out << "r="sv << _q_(radius_);
+		if (fill_color_.has_value())
+		{
+			std::string c = "";
+			std::visit(ColorString{c}, fill_color_.value());
+			out << " fill=\"" << c << "\"";
+			if (!PathPropsIsEmpty())
+			{
+				out << " ";
+			}
+		}
+		else
+		{
+			out << " fill=\"none\"";
+			if (!PathPropsIsEmpty())
+			{
+				out << " ";
+			}
+		}
 		if (!PathPropsIsEmpty())
 		{
 			RenderAttrs(out);
@@ -77,21 +95,64 @@ namespace svg
 		auto& out = context.out;
 
 		out << R"(<polyline points=)"sv << _q_(join_coords(points_));
+		if (fill_color_.has_value())
+		{
+			std::string c = "";
+			std::visit(ColorString{c}, fill_color_.value());
+			out << " fill=\"" << c << "\"";
+			if (!PathPropsIsEmpty())
+			{
+				out << " ";
+			}
+		}
+		else
+		{
+			out << " fill=\"none\"";
+			if (!PathPropsIsEmpty())
+			{
+				out << " ";
+			}
+		}
 		if (!PathPropsIsEmpty())
 		{
 			RenderAttrs(out);
-			out << R"(/>)"sv;
-			return;
 		}
-		out << R"( />)"sv;
+		out << R"(/>)"sv;
 	}
 
 	void Text::RenderObject(const RenderContext& context) const
 	{
 		auto& out = context.out;
 
-		out << R"(<text x=)"sv << _q_(position_.x) << R"( y=)"sv << _q_(position_.y) << R"( dx=)"sv << _q_(offset_.x)
-			<< R"( dy=)"sv << _q_(offset_.y) << R"( font-size=)"sv << _q_(font_size_);
+		out << R"(<text)";
+		if (fill_color_.has_value())
+		{
+			std::string c = "";
+			std::visit(ColorString{c}, fill_color_.value());
+			out << " fill=\"" << c << "\"";
+			if (PathPropsIsEmpty())
+			{
+				out << " ";
+			}
+		}
+		else
+		{
+			out << " fill=\"none\"";
+			if (PathPropsIsEmpty())
+			{
+				out << " ";
+			}
+		}
+		if (!PathPropsIsEmpty())
+		{
+			RenderAttrs(out);
+			out << " ";
+		}
+
+		out << R"(x=)"sv << _q_(position_.x) << R"( y=)"sv << _q_(position_.y) << R"( dx=)"sv << _q_(offset_.x)
+			<< R"( dy=)"sv << _q_(offset_.y);
+
+		out << R"( font-size=)"sv << _q_(font_size_);
 		if (!font_family_.empty())
 		{
 			out << R"( font-family=)"sv << _q_(font_family_);
@@ -100,15 +161,7 @@ namespace svg
 		{
 			out << R"( font-weight=)"sv << _q_(font_weight_);
 		}
-		if (!PathPropsIsEmpty())
-		{
-			RenderAttrs(out);
-			out << R"(>)"sv;
-		}
-		else
-		{
-			out << R"( >)"sv;
-		}
+		out << R"(>)"sv;
 		out << data_ << R"(</text>)";
 	}
 

@@ -10,18 +10,18 @@ json::Document Handbook::Control::JsonReader::GenerateReport()
 {
 	using namespace std;
 	json::Array result;
-	auto needle = doc_.GetRoot().AsMap().find("stat_requests"s)->second.AsArray();
-	bool settings = doc_.GetRoot().AsMap().find("render_settings") != doc_.GetRoot().AsMap().end();
+	auto needle = doc_.GetRoot().AsDict().find("stat_requests"s)->second.AsArray();
+	bool settings = doc_.GetRoot().AsDict().find("render_settings") != doc_.GetRoot().AsDict().end();
 	json::Node ren_set;
 	for (const auto& i : needle)
 	{
-		if (settings && i.AsMap().at("type"s).AsString() == "Map"s)
+		if (settings && i.AsDict().at("type"s).AsString() == "Map"s)
 		{
 			result.push_back(std::move(
 				Handbook::Views::GetData(json::Document(json::Node{json::Dict{
 											 {"type"s, "Map"s},
-											 {"id"s, i.AsMap().at("id"s).AsInt()},
-											 {"render_settings"s, doc_.GetRoot().AsMap().at("render_settings"s)}}}),
+											 {"id"s, i.AsDict().at("id"s).AsInt()},
+											 {"render_settings"s, doc_.GetRoot().AsDict().at("render_settings"s)}}}),
 										 t_c_ptr)
 					.GetRoot()));
 		}
@@ -38,7 +38,7 @@ void Handbook::Control::JsonReader::FillDataBase_()
 	std::vector<std::tuple<std::string_view, std::string_view, int>> buffer_stops;
 	std::vector<std::shared_ptr<Handbook::Control::Request>> requests;
 	Handbook::Data::TransportCatalogue* ctx = t_c_ptr;
-	for (const auto& i : doc_.GetRoot().AsMap().find("base_requests"s)->second.AsArray())
+	for (const auto& i : doc_.GetRoot().AsDict().find("base_requests"s)->second.AsArray())
 	{
 		requests.push_back(Handbook::Control::ParseRequestDocument(json::Document(i)));
 	}

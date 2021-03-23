@@ -138,8 +138,7 @@ std::shared_ptr<Handbook::Control::Request> Handbook::Control::ParseRequestStrin
 	std::string name;
 	if (found_stop != r_str.npos)
 	{
-/// лучше использовать std::make_shared
-		result = std::shared_ptr<Handbook::Control::Request>(new Handbook::Control::Stop());
+		result = std::make_shared<Handbook::Control::Stop>();
 		result->setRequestType(Handbook::Control::RequestType::IsStop);
 
 		auto stop = ParseStop(r_str);
@@ -150,7 +149,7 @@ std::shared_ptr<Handbook::Control::Request> Handbook::Control::ParseRequestStrin
 	}
 	else
 	{
-		result = std::shared_ptr<Handbook::Control::Request>(new Handbook::Control::Bus());
+		result = std::make_shared<Handbook::Control::Bus>();
 		find_semicolon = r_str.find(":"s);
 		name = std::string(r_str.begin() + "Bus "s.size(), r_str.begin() + find_semicolon);
 		result->setRequestType(Handbook::Control::RequestType::IsBus);
@@ -275,8 +274,8 @@ std::shared_ptr<Handbook::Control::Request> Handbook::Control::ParseRequestDocum
 
 	auto item = doc.GetRoot().AsMap();
 
-/// желательно item.at("type").AsString() выполнить один раз
-	if (item.at("type").AsString() == "Stop"s)
+	auto type = item.at("type").AsString();
+	if (type == "Stop"s)
 	{
 		result = std::shared_ptr<Handbook::Control::Request>(new Handbook::Control::Stop());
 		result->setName(item.at("name").AsString());
@@ -291,7 +290,7 @@ std::shared_ptr<Handbook::Control::Request> Handbook::Control::ParseRequestDocum
 		static_cast<Handbook::Control::Stop*>(result.get())->setDistanceToOtherStop(std::move(vector_to_other_stops));
 		return result;
 	}
-	if (item.at("type").AsString() == "Bus"s)
+	if (type == "Bus"s)
 	{
 		result = std::shared_ptr<Handbook::Control::Request>(new Handbook::Control::Bus());
 		result->setName(item.at("name").AsString());

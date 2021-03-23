@@ -12,8 +12,7 @@ namespace
 bool Handbook::Utilities::operator==(const Handbook::Utilities::Coordinates& lhs,
 									 const Handbook::Utilities::Coordinates& rhs)
 {
-/// тип double не сравнивают на == только с отпределеной точностью
-	return (&lhs == &rhs) || (lhs.lat == rhs.lat && lhs.lng == rhs.lng);
+	return (&lhs == &rhs) || (::AreSame(lhs.lat, rhs.lat) && ::AreSame(lhs.lng, rhs.lng));
 }
 
 double Handbook::Utilities::ComputeDistance(Handbook::Utilities::Coordinates from, Handbook::Utilities::Coordinates to)

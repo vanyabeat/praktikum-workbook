@@ -36,15 +36,15 @@ void Handbook::Control::JsonReader::FillDataBase_()
 {
 	using namespace std;
 	std::vector<std::tuple<std::string_view, std::string_view, int>> buffer_stops;
-	std::vector<std::shared_ptr<Handbook::Control::Request>> requests_; /// это не приватный член класса, лучше убрать символ подчеркивания
+	std::vector<std::shared_ptr<Handbook::Control::Request>> requests;
 	Handbook::Data::TransportCatalogue* ctx = t_c_ptr;
 	for (const auto& i : doc_.GetRoot().AsMap().find("base_requests"s)->second.AsArray())
 	{
-		requests_.push_back(Handbook::Control::ParseRequestDocument(json::Document(i)));
+		requests.push_back(Handbook::Control::ParseRequestDocument(json::Document(i)));
 	}
 
 	// сначала добавим все остановки и буфернем их
-	std::for_each(requests_.begin(), requests_.end(),
+	std::for_each(requests.begin(), requests.end(),
 				  [&buffer_stops, ctx](std::shared_ptr<Handbook::Control::Request>& req) {
 					  if (req.get()->getRequestType() == Handbook::Control::RequestType::IsStop)
 					  {
@@ -61,7 +61,7 @@ void Handbook::Control::JsonReader::FillDataBase_()
 		ctx->AddStopsDistance(std::get<0>(item), std::get<1>(item), std::get<2>(item));
 	});
 
-	std::for_each(requests_.begin(), requests_.end(), [&ctx](std::shared_ptr<Handbook::Control::Request>& req) {
+	std::for_each(requests.begin(), requests.end(), [&ctx](std::shared_ptr<Handbook::Control::Request>& req) {
 		if (req.get()->getRequestType() == Handbook::Control::RequestType::IsBus)
 		{
 			auto bus = static_cast<Handbook::Control::Bus*>(req.get());

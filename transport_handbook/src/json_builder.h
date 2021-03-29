@@ -39,7 +39,7 @@ namespace json
 			ENDED
 		};
 		State state_ = State::EMPTY;
-		std::stack<std::unique_ptr<Node>> stack_;
+		std::stack<std::unique_ptr<Node>> stack_;	/// предлагаю сменить имя поля, имя поля должно отражать что в нем храниться, а не как
 	};
 
 	class ArrayItemContext

@@ -13,7 +13,7 @@ json::Document Handbook::Control::JsonReader::GenerateReport()
 	auto needle = doc_.GetRoot().AsDict().find("stat_requests"s)->second.AsArray();
 	bool settings = doc_.GetRoot().AsDict().find("render_settings") != doc_.GetRoot().AsDict().end();
 	json::Node ren_set;
-	for (const auto& i : needle)
+	for (const auto& i : needle)	/// лучше поменять имя переменной, i, в основном, используется для индексов, хотя бы использовать o (от object) или item, но лучше более понятное
 	{
 		if (settings && i.AsDict().at("type"s).AsString() == "Map"s)
 		{
@@ -37,7 +37,7 @@ void Handbook::Control::JsonReader::FillDataBase_()
 	using namespace std;
 	std::vector<std::tuple<std::string_view, std::string_view, int>> buffer_stops;
 	std::vector<std::shared_ptr<Handbook::Control::Request>> requests;
-	Handbook::Data::TransportCatalogue* ctx = t_c_ptr;
+	Handbook::Data::TransportCatalogue* ctx = t_c_ptr;	/// как я понял переменная объявлена только для лябд, захватывать можно this (по-значению) и будет доступ к полям
 	for (const auto& i : doc_.GetRoot().AsDict().find("base_requests"s)->second.AsArray())
 	{
 		requests.push_back(Handbook::Control::ParseRequestDocument(json::Document(i)));
@@ -57,7 +57,7 @@ void Handbook::Control::JsonReader::FillDataBase_()
 					  }
 				  });
 	// обрабатываем сами расстояния
-	std::for_each(buffer_stops.begin(), buffer_stops.end(), [&ctx](auto& item) {
+	std::for_each(buffer_stops.begin(), buffer_stops.end(), [&ctx](auto& item) { /// указатели джостаточно захватывать "по зачению"
 		ctx->AddStopsDistance(std::get<0>(item), std::get<1>(item), std::get<2>(item));
 	});
 

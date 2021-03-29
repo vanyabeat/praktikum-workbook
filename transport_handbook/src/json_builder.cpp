@@ -9,9 +9,9 @@ json::DictValueCtx json::Builder::Key(std::string key)
 		throw std::logic_error("[Key] empty node key"s);
 		break;
 	case State::STAGING: {
-		if (stack_.top()->IsDict())
+		if (node_stack_ptrs_.top()->IsDict())
 		{
-			stack_.push(std::make_unique<Node>(key));
+			node_stack_ptrs_.push(std::make_unique<Node>(key));
 		}
 		else
 		{
@@ -34,24 +34,24 @@ json::Builder& json::Builder::Value(json::Node::Value value)
 	switch (state_)
 	{
 	case State::EMPTY: {
-		stack_.push(std::make_unique<Node>(value));
+		node_stack_ptrs_.push(std::make_unique<Node>(value));
 		state_ = State::ENDED;
 	}
 	break;
 	case State::STAGING: {
-		if (stack_.top()->IsArray())
+		if (node_stack_ptrs_.top()->IsArray())
 		{
-			json::Array tmp = std::move(stack_.top()->AsArray());
+			json::Array tmp = std::move(node_stack_ptrs_.top()->AsArray());
 			tmp.emplace_back(value);
-			*stack_.top() = Node(std::move(tmp));
+			*node_stack_ptrs_.top() = Node(std::move(tmp));
 		}
 		else if (IsKeyOnTop())
 		{
-			std::string key = std::move(stack_.top()->AsString());
-			stack_.pop();
-			json::Dict dict = std::move(stack_.top()->AsDict());
+			std::string key = std::move(node_stack_ptrs_.top()->AsString());
+			node_stack_ptrs_.pop();
+			json::Dict dict = std::move(node_stack_ptrs_.top()->AsDict());
 			dict.insert({key, value});
-			*stack_.top() = Node(std::move(dict));
+			*node_stack_ptrs_.top() = Node(std::move(dict));
 		}
 		else
 		{
@@ -75,12 +75,12 @@ json::DictItemCtx json::Builder::StartDict()
 	{
 	case State::EMPTY:
 		state_ = State::STAGING;
-		stack_.push(std::make_unique<Node>(Dict()));
+		node_stack_ptrs_.push(std::make_unique<Node>(Dict()));
 		break;
 	case State::STAGING:
-		if (!stack_.top()->IsDict())
+		if (!node_stack_ptrs_.top()->IsDict())
 		{
-			stack_.push(std::make_unique<Node>(Dict()));
+			node_stack_ptrs_.push(std::make_unique<Node>(Dict()));
 		}
 		else
 		{
@@ -105,22 +105,22 @@ json::Builder& json::Builder::EndDict()
 		throw std::logic_error("[Dict] empty node"s);
 		break;
 	case State::STAGING: {
-		if (stack_.top()->IsDict())
+		if (node_stack_ptrs_.top()->IsDict())
 		{
-			if (stack_.size() == 1)
+			if (node_stack_ptrs_.size() == 1)
 			{
 				state_ = State::ENDED;
 			}
 			else
 			{
-				json::Dict value = std::move(stack_.top()->AsDict());
-				stack_.pop();
+				json::Dict value = std::move(node_stack_ptrs_.top()->AsDict());
+				node_stack_ptrs_.pop();
 				this->Value(value);
 			}
 		}
 		else
 		{
-			throw std::logic_error(stack_.top()->IsString() ? "[Dict] dict value expected"s
+			throw std::logic_error(node_stack_ptrs_.top()->IsString() ? "[Dict] dict value expected"s
 															: "[Dict] it is not a dict"s);
 		}
 	}
@@ -141,14 +141,14 @@ json::ArrayItemContext json::Builder::StartArray()
 	{
 	case State::EMPTY:
 		state_ = State::STAGING;
-		stack_.push(std::make_unique<Node>(Array()));
+		node_stack_ptrs_.push(std::make_unique<Node>(Array()));
 		break;
 	case State::STAGING: {
-		if (stack_.top()->IsDict())
+		if (node_stack_ptrs_.top()->IsDict())
 		{
 			throw std::logic_error("[Array] start array error"s);
 		}
-		stack_.push(std::make_unique<Node>(Array()));
+		node_stack_ptrs_.push(std::make_unique<Node>(Array()));
 	}
 	break;
 	case State::ENDED:
@@ -169,16 +169,16 @@ json::Builder& json::Builder::EndArray()
 		throw std::logic_error("[Array] empty node end array"s);
 		break;
 	case State::STAGING: {
-		if (stack_.top()->IsArray())
+		if (node_stack_ptrs_.top()->IsArray())
 		{
-			if (stack_.size() == 1)
+			if (node_stack_ptrs_.size() == 1)
 			{
 				state_ = State::ENDED;
 			}
 			else
 			{
-				json::Array value = std::move(stack_.top()->AsArray());
-				stack_.pop();
+				json::Array value = std::move(node_stack_ptrs_.top()->AsArray());
+				node_stack_ptrs_.pop();
 				this->Value(value);
 			}
 		}
@@ -202,7 +202,7 @@ json::Node json::Builder::Build()
 	using namespace std;
 	if (state_ == State::ENDED)
 	{
-		return *stack_.top();
+		return *node_stack_ptrs_.top();
 	}
 	else
 	{

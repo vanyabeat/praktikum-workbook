@@ -20,7 +20,7 @@ namespace Handbook
 			void FillDataBase_();
 
 			std::istream& out_;
-			Handbook::Data::TransportCatalogue* t_c_ptr;	/// приватное поле, должно быть с подчеркиванием
+			Handbook::Data::TransportCatalogue* t_c_ptr_;	/// приватное поле, должно быть с подчеркиванием
 			json::Document doc_;
 		};
 	} // namespace Control

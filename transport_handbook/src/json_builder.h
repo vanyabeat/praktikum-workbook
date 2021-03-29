@@ -30,7 +30,7 @@ namespace json
 	  private:
 		bool IsKeyOnTop()
 		{
-			return (stack_.size() > 1) && stack_.top()->IsString();
+			return (node_stack_ptrs_.size() > 1) && node_stack_ptrs_.top()->IsString();
 		}
 		enum class State
 		{
@@ -39,7 +39,7 @@ namespace json
 			ENDED
 		};
 		State state_ = State::EMPTY;
-		std::stack<std::unique_ptr<Node>> stack_;	/// предлагаю сменить имя поля, имя поля должно отражать что в нем храниться, а не как
+		std::stack<std::unique_ptr<Node>> node_stack_ptrs_;
 	};
 
 	class ArrayItemContext

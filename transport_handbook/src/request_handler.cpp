@@ -1,5 +1,6 @@
 #include "request_handler.h"
 #include "map_renderer.h"
+
 #include <iomanip>
 #include <numeric>
 #include <sstream>
@@ -44,7 +45,50 @@ static Handbook::Renderer::RenderSettings ReadRenderSettings(json::Dict data)
 	}
 	return settings;
 }
-json::Document Handbook::Views::GetData(const json::Document& stat, const Handbook::Data::TransportCatalogue* t_q)
+static json::Node makePathAnswer(int requestId, const std::vector<const transport::TripItem*>& data)
+{
+	using namespace std;
+	json::Builder builder;
+	builder.StartArray();
+	double totalTime = 0.0;
+	for (const auto& item : data)
+	{
+		totalTime += (item->spending.wait_time + item->spending.trip_time);
+		builder.StartDict()
+			.Key("type"s)
+			.Value("Wait"s)
+			.Key("stop_name"s)
+			.Value(item->from->name)
+			.Key("time"s)
+			.Value(item->spending.wait_time / 60)
+			.EndDict()
+
+			.StartDict()
+			.Key("type"s)
+			.Value("Bus"s)
+			.Key("bus"s)
+			.Value(item->bus->name)
+			.Key("span_count"s)
+			.Value(item->spending.stop_count)
+			.Key("time"s)
+			.Value(item->spending.trip_time / 60)
+			.EndDict();
+	}
+	json::Node x = builder.EndArray().Build();
+
+	return json::Builder{}
+		.StartDict()
+		.Key("request_id"s)
+		.Value(requestId)
+		.Key("total_time"s)
+		.Value(totalTime / 60)
+		.Key("items"s)
+		.Value(x.AsArray())
+		.EndDict()
+		.Build();
+}
+json::Document Handbook::Views::GetData(const json::Document& stat, const Handbook::Data::TransportCatalogue* t_q,
+										const transport::RouteFinder* r_f)
 {
 	using namespace std;
 	json::Node result;
@@ -72,12 +116,13 @@ json::Document Handbook::Views::GetData(const json::Document& stat, const Handbo
 						 .Key("unique_stop_count")
 						 .Value(info.unique_stops)
 						 .EndDict()
-						 .Build().AsDict();
+						 .Build()
+						 .AsDict();
 
 			return json::Document(result);
 		}
 	}
-	if (type == "Stop"s)
+	else if (type == "Stop"s)
 	{
 		std::string name = stat.GetRoot().AsDict().at("name"s).AsString();
 		auto stop = t_q->FindStop(name);
@@ -101,7 +146,8 @@ json::Document Handbook::Views::GetData(const json::Document& stat, const Handbo
 							 .Key("buses")
 							 .Value(std::move(buses))
 							 .EndDict()
-							 .Build().AsDict();
+							 .Build()
+							 .AsDict();
 				return json::Document(result);
 			}
 			else
@@ -114,12 +160,13 @@ json::Document Handbook::Views::GetData(const json::Document& stat, const Handbo
 							 .StartArray()
 							 .EndArray()
 							 .EndDict()
-							 .Build().AsDict();
+							 .Build()
+							 .AsDict();
 				return json::Document(result);
 			}
 		}
 	}
-	if (type == "Map"s)
+	else if (type == "Map"s)
 	{
 
 		Handbook::Renderer::RenderSettings renderSettings =
@@ -137,9 +184,26 @@ json::Document Handbook::Views::GetData(const json::Document& stat, const Handbo
 
 		map_renderer.Render(buses_by_name, out);
 
-		json::Node res =
-			json::Builder{}.StartDict().Key("request_id").Value(id).Key("map").Value(out.str()).EndDict().Build().AsDict();
+		json::Node res = json::Builder{}
+							 .StartDict()
+							 .Key("request_id")
+							 .Value(id)
+							 .Key("map")
+							 .Value(out.str())
+							 .EndDict()
+							 .Build()
+							 .AsDict();
 		return json::Document(res);
+	}
+	else if (type == "Route" && r_f)
+	{
+		std::string f = stat.GetRoot().AsDict().at("from"s).AsString();
+		std::string t = stat.GetRoot().AsDict().at("to"s).AsString();
+		auto path_info = r_f->findRoute(f, t);
+		if (path_info.has_value())
+		{
+			return json::Document(makePathAnswer(id, path_info.value()));
+		}
 	}
 	result = json::Dict{{"request_id"s, id}, {"error_message"s, "not found"s}};
 	return json::Document(result);

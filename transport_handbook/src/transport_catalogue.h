@@ -74,6 +74,26 @@ namespace Handbook
 
 			BusStat GetBusStat(const Bus* bus) const;
 
+			std::vector<BusPtr> AllBuses()
+			{
+				std::vector<BusPtr> result;
+				for (const auto [_, ptr] : buses_by_name_)
+				{
+					result.push_back(ptr);
+				}
+				return result;
+			}
+
+			std::vector<StopPtr> AllStops()
+			{
+				std::vector<StopPtr> result;
+				for (const auto [_, ptr] : stops_by_name_)
+				{
+					result.push_back(ptr);
+				}
+				return result;
+			}
+
 		  private:
 			std::deque<Bus> buses_;
 			std::deque<Stop> stops_;

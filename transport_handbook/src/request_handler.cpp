@@ -7,19 +7,17 @@
 
 static svg::Color ParsingColor(const json::Node& color)
 {
-	svg::Color out;
 	if (color.IsString())
 	{
 		return color.AsString();
 	}
-
-	if (color.AsArray().size() == 3)
+	const auto& color_array = color.AsArray();
+	if (color_array.size() == 3)
 	{
-		return svg::Rgb(color.AsArray()[0].AsInt(), color.AsArray()[1].AsInt(), color.AsArray()[2].AsInt());
+		return svg::Rgb(color_array[0].AsInt(), color_array[1].AsInt(), color_array[2].AsInt());
 	}
 
-	return svg::Rgba(color.AsArray()[0].AsInt(), color.AsArray()[1].AsInt(), color.AsArray()[2].AsInt(),
-					 color.AsArray()[3].AsDouble());
+	return svg::Rgba(color_array[0].AsInt(), color_array[1].AsInt(), color_array[2].AsInt(), color_array[3].AsDouble());
 }
 
 static Handbook::Renderer::RenderSettings ReadRenderSettings(json::Dict data)
@@ -92,12 +90,13 @@ json::Document Handbook::Views::GetData(const json::Document& stat, const Handbo
 {
 	using namespace std;
 	json::Node result;
-	int id = stat.GetRoot().AsDict().at("id"s).AsInt();
-	std::string type = stat.GetRoot().AsDict().at("type"s).AsString();
+	const auto& dict = stat.GetRoot().AsDict();
+	int id = dict.at("id"s).AsInt();
+	std::string type = dict.at("type"s).AsString();
 
 	if (type == "Bus"s)
 	{
-		std::string name = stat.GetRoot().AsDict().at("name"s).AsString();
+		std::string name = dict.at("name"s).AsString();
 		const Handbook::Data::Bus* bus = t_q->FindBus(name);
 		if (bus != nullptr)
 		{
@@ -124,7 +123,7 @@ json::Document Handbook::Views::GetData(const json::Document& stat, const Handbo
 	}
 	else if (type == "Stop"s)
 	{
-		std::string name = stat.GetRoot().AsDict().at("name"s).AsString();
+		std::string name = dict.at("name"s).AsString();
 		auto stop = t_q->FindStop(name);
 		if (stop)
 		{
@@ -169,8 +168,7 @@ json::Document Handbook::Views::GetData(const json::Document& stat, const Handbo
 	else if (type == "Map"s)
 	{
 
-		Handbook::Renderer::RenderSettings renderSettings =
-			ReadRenderSettings(stat.GetRoot().AsDict().at("render_settings").AsDict());
+		Handbook::Renderer::RenderSettings renderSettings = ReadRenderSettings(dict.at("render_settings").AsDict());
 
 		Handbook::Renderer::Map map_renderer(renderSettings);
 		Handbook::Renderer::BusesByName buses_by_name;
@@ -197,8 +195,8 @@ json::Document Handbook::Views::GetData(const json::Document& stat, const Handbo
 	}
 	else if (type == "Route" && r_f)
 	{
-		std::string f = stat.GetRoot().AsDict().at("from"s).AsString();
-		std::string t = stat.GetRoot().AsDict().at("to"s).AsString();
+		std::string f = dict.at("from"s).AsString();
+		std::string t = dict.at("to"s).AsString();
 		auto path_info = r_f->findRoute(f, t);
 		if (path_info.has_value())
 		{

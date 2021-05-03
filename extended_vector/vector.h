@@ -4,12 +4,14 @@
 #include <new>
 #include <utility>
 
+#include "raw_memory.h"
+
 template <typename T> class Vector
 {
   public:
 	Vector() = default;
 
-	explicit Vector(size_t size) : data_(alloc_(size)), capacity_(size), size_(size) //
+	explicit Vector(size_t size) : data_(size), capacity_(size), size_(size) //
 	{
 		size_t i = 0;
 		try
@@ -21,21 +23,25 @@ template <typename T> class Vector
 		}
 		catch (...)
 		{
-			// В переменной i содержится количество созданных элементов.
-			// Теперь их надо разрушить
-			destroy_n_(data_, i);
-			// Освобождаем память, выделенную через Allocate
-			dealloc_(data_);
-			// Перевыбрасываем пойманное исключение, чтобы сообщить об ошибке создания объекта
+			destroy_n_(data_.GetAddress(), i);
 			throw;
 		}
 	}
 
-	Vector(const Vector& other) : data_(alloc_(other.size_)), capacity_(other.size_), size_(other.size_) //
+	Vector(const Vector& other) : data_(other.size_), capacity_(other.size_), size_(other.size_) //
 	{
-		for (size_t i = 0; i != other.size_; ++i)
+		size_t i = 0;
+		try
 		{
-			copy_construct_(data_ + i, other.data_[i]);
+			for (; i != other.size_; ++i)
+			{
+				copy_construct_(data_ + i, other.data_[i]);
+			}
+		}
+		catch (...)
+		{
+			destroy_n_(data_.GetAddress(), i);
+			throw;
 		}
 	}
 
@@ -45,22 +51,36 @@ template <typename T> class Vector
 		{
 			return;
 		}
-		T* new_data = alloc_(new_capacity);
-		for (size_t i = 0; i != size_; ++i)
+		RawMemory<T> new_data;
+		try
 		{
-			copy_construct_(new_data + i, data_[i]);
+			RawMemory<T> other(new_capacity);
+			new_data.Swap(other);
 		}
-		destroy_n_(data_, size_);
-		dealloc_(data_);
-
-		data_ = new_data;
-		capacity_ = new_capacity;
+		catch (...)
+		{
+			throw;
+		}
+		size_t i = 0;
+		try
+		{
+			for (; i != size_; ++i)
+			{
+				copy_construct_(new_data + i, data_[i]);
+			}
+			data_.Swap(new_data);
+		}
+		catch (...)
+		{
+			destroy_n_(data_.GetAddress(), i);
+			throw;
+		}
+		destroy_n_(new_data.GetAddress(), i);
 	}
 
 	~Vector()
 	{
-		destroy_n_(data_, size_);
-		dealloc_(data_);
+		destroy_n_(data_.GetAddress(), size_);
 	}
 
 	size_t Size() const noexcept
@@ -85,23 +105,11 @@ template <typename T> class Vector
 	}
 
   private:
-	T* data_ = nullptr;
+	RawMemory<T> data_;
 	size_t capacity_ = 0;
 	size_t size_ = 0;
 
   private:
-	// Выделяет сырую память под n элементов и возвращает указатель на неё
-	static T* alloc_(size_t n)
-	{
-		return n != 0 ? static_cast<T*>(operator new(n * sizeof(T))) : nullptr;
-	}
-
-	// Освобождает сырую память, выделенную ранее по адресу buf при помощи alloc_
-	static void dealloc_(T* buf) noexcept
-	{
-		operator delete(buf);
-	}
-
 	// Вызывает деструкторы n объектов массива по адресу buf
 	static void destroy_n_(T* buf, size_t n) noexcept
 	{

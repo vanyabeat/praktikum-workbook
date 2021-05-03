@@ -76,6 +76,7 @@ template <typename T> class Vector
 			throw;
 		}
 		destroy_n_(new_data.GetAddress(), i);
+		capacity_ = new_capacity;
 	}
 
 	~Vector()

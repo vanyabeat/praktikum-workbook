@@ -113,3 +113,134 @@ TEST(Vector, Test1)
 	}
 	ASSERT_EQ(Obj::GetAliveObjectCount(), 0);
 }
+
+namespace
+{
+
+struct Obj2
+{
+	Obj2()
+	{
+		if (default_construction_throw_countdown > 0)
+		{
+			if (--default_construction_throw_countdown == 0)
+			{
+				throw std::runtime_error("Oops");
+			}
+		}
+		++num_default_constructed;
+	}
+
+	Obj2(const Obj2& other)
+	{
+		if (other.throw_on_copy)
+		{
+			throw std::runtime_error("Oops");
+		}
+		++num_copied;
+	}
+
+	Obj2(Obj&& /*other*/) noexcept
+	{
+		++num_moved;
+	}
+
+	Obj2& operator=(const Obj2& other) = default;
+	Obj2& operator=(Obj2&& other) = default;
+
+	~Obj2()
+	{
+		++num_destroyed;
+	}
+
+	static int GetAliveObjectCount()
+	{
+		return num_default_constructed + num_copied + num_moved - num_destroyed;
+	}
+
+	static void ResetCounters()
+	{
+		default_construction_throw_countdown = 0;
+		num_default_constructed = 0;
+		num_copied = 0;
+		num_moved = 0;
+		num_destroyed = 0;
+	}
+
+	bool throw_on_copy = false;
+
+	static inline int default_construction_throw_countdown = 0;
+	static inline int num_default_constructed = 0;
+	static inline int num_copied = 0;
+	static inline int num_moved = 0;
+	static inline int num_destroyed = 0;
+};
+
+} // namespace
+
+TEST(Vector, Test2)
+{
+
+	const size_t SIZE = 100;
+	Obj2::ResetCounters();
+	{
+		Obj2::default_construction_throw_countdown = SIZE / 2;
+		try
+		{
+			Vector<Obj2> v(SIZE);
+			ASSERT_TRUE(false && "Exception is expected");
+		}
+		catch (const std::runtime_error&)
+		{
+		}
+		catch (...)
+		{
+			// Unexpected error
+			ASSERT_TRUE(false && "Unexpected exception");
+		}
+		ASSERT_EQ(Obj2::num_default_constructed, SIZE / 2 - 1);
+		ASSERT_EQ(Obj2::GetAliveObjectCount(), 0);
+	}
+	Obj2::ResetCounters();
+	{
+		Vector<Obj2> v(SIZE);
+		try
+		{
+			v[SIZE / 2].throw_on_copy = true;
+			Vector<Obj2> v_copy(v);
+			ASSERT_TRUE(false && "Exception is expected");
+		}
+		catch (const std::runtime_error&)
+		{
+			ASSERT_EQ(Obj2::num_copied, SIZE / 2);
+		}
+		catch (...)
+		{
+			// Unexpected error
+			ASSERT_TRUE(false && "Unexpected exception");
+		}
+		ASSERT_EQ(Obj2::GetAliveObjectCount(), SIZE);
+	}
+	Obj2::ResetCounters();
+	{
+		Vector<Obj2> v(SIZE);
+		try
+		{
+			v[SIZE - 1].throw_on_copy = true;
+			v.Reserve(SIZE * 2);
+			ASSERT_TRUE(false && "Exception is expected");
+		}
+		catch (const std::runtime_error&)
+		{
+			ASSERT_EQ(Obj2::num_copied, SIZE - 1);
+		}
+		catch (...)
+		{
+			// Unexpected error
+			ASSERT_TRUE(false && "Unexpected exception");
+		}
+		ASSERT_EQ(v.Capacity(), SIZE);
+		ASSERT_EQ(v.Size(), SIZE);
+		ASSERT_EQ(Obj2::GetAliveObjectCount(), SIZE);
+	}
+}

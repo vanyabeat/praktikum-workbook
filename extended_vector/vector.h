@@ -119,90 +119,61 @@ template <typename T> class Vector
 		}
 	}
 
-	template <typename C> void PushBack(C value)
+	void PushBack(const T& value)
 	{
-		if (size_ == 0 && Capacity() == 0)
-		{
-			Reserve(1);
-		}
-		constexpr bool is_nothrow_move = std::is_nothrow_move_constructible_v<C>;
-		constexpr bool is_move = std::is_move_constructible_v<C>;
-		constexpr bool is_nothrow_copy = std::is_nothrow_copy_constructible_v<C>;
-		constexpr bool is_copy = std::is_copy_constructible_v<C>;
-
 		if (size_ == Capacity())
 		{
-			RawMemory<T> tmp(Capacity() * 2);
-			if constexpr (is_nothrow_move && !is_nothrow_copy)
+			auto new_cap = size_ == 0 ? 1 : size_ * 2;
+			RawMemory<T> new_data(new_cap);
+			new (new_data + size_) T(value);
+			if constexpr (std::is_nothrow_move_constructible_v<T> || !std::is_copy_constructible_v<T>)
 			{
-				new (tmp.GetAddress() + size_) T(std::move(value));
-			}
-			else if constexpr (is_move && !is_copy)
-			{
-				try
-				{
-					new (tmp.GetAddress() + size_) T(std::move(value));
-				}
-				catch (...)
-				{
-					throw;
-				}
-			}
-			else if constexpr (is_nothrow_copy && !is_nothrow_move)
-			{
-				new (tmp.GetAddress() + size_) T(value);
-			}
-			else if constexpr (is_copy && !is_move)
-			{
-				try
-				{
-					new (tmp.GetAddress() + size_) T(value);
-				}
-				catch (...)
-				{
-					throw;
-				}
-			}
 
-			std::uninitialized_move_n(data_.GetAddress(), size_, tmp.GetAddress());
+				std::uninitialized_move_n(data_.GetAddress(), size_, new_data.GetAddress());
+			}
+			else
+			{
+
+				std::uninitialized_copy_n(data_.GetAddress(), size_, new_data.GetAddress());
+			}
 			std::destroy_n(data_.GetAddress(), size_);
-			std::swap(data_, tmp);
-			capacity_ = capacity_ * 2;
+
+			data_.Swap(new_data);
+			capacity_ = new_cap;
 		}
 		else
 		{
-			if constexpr (is_nothrow_move && !is_nothrow_copy)
-			{
-				new (data_ + size_) T(std::move(value));
-			}
-			else if constexpr (is_move && !is_copy)
-			{
-				try
-				{
-					new (data_ + size_) T(std::move(value));
-				}
-				catch (...)
-				{
-					throw;
-				}
-			}
-			else if constexpr (is_nothrow_copy && !is_nothrow_move)
-			{
-				new (data_ + size_) T(value);
-			}
-			else if constexpr (is_copy && !is_move)
-			{
-				try
-				{
-					new (data_ + size_) T(value);
-				}
-				catch (...)
-				{
-					throw;
-				}
-			}
+			new (data_ + size_) T(value);
 		}
+		++size_;
+	}
 
+	void PushBack(T&& value)
+	{
+		if (size_ == Capacity())
+		{
+			auto new_cap = size_ == 0 ? 1 : size_ * 2;
+			RawMemory<T> new_data(size_ == 0 ? 1 : size_ * 2);
+			new (new_data + size_) T(std::move(value));
+			if constexpr (std::is_nothrow_move_constructible_v<T> || !std::is_copy_constructible_v<T>)
+			{
+
+				std::uninitialized_move_n(data_.GetAddress(), size_, new_data.GetAddress());
+			}
+			else
+			{
+
+				std::uninitialized_copy_n(data_.GetAddress(), size_, new_data.GetAddress());
+			}
+			std::destroy_n(data_.GetAddress(), size_);
+
+			data_.Swap(new_data);
+			capacity_ = new_cap;
+		}
+		else
+		{
+			new (data_ + size_) T(std::move(value));
+		}
 		++size_;
 	}
 

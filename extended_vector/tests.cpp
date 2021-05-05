@@ -503,7 +503,7 @@ TEST(Vector, Test4)
 			ASSERT_EQ(v_copy.Size(), MEDIUM_SIZE);
 			ASSERT_EQ(v_copy.Capacity(), MEDIUM_SIZE);
 		}
-		ASSERT_EQ(Obj4::GetAliveObjectCount() , 0);
+		ASSERT_EQ(Obj4::GetAliveObjectCount(), 0);
 	}
 	{
 		Obj4::ResetCounters();
@@ -544,7 +544,7 @@ TEST(Vector, Test4)
 			ASSERT_EQ(v_large[LARGE_SIZE - 1].id, ID);
 			ASSERT_EQ(Obj4::GetAliveObjectCount(), LARGE_SIZE + LARGE_SIZE);
 		}
-		ASSERT_EQ(Obj4::GetAliveObjectCount() , LARGE_SIZE);
+		ASSERT_EQ(Obj4::GetAliveObjectCount(), LARGE_SIZE);
 	}
 	assert(Obj4::GetAliveObjectCount() == 0);
 	{
@@ -555,9 +555,178 @@ TEST(Vector, Test4)
 		v_small.Reserve(MEDIUM_SIZE + 1);
 		const size_t num_copies = Obj4::num_copied;
 		v_small = v;
-		ASSERT_EQ(v_small.Size() , v.Size());
-		ASSERT_EQ(v_small.Capacity() , MEDIUM_SIZE + 1);
+		ASSERT_EQ(v_small.Size(), v.Size());
+		ASSERT_EQ(v_small.Capacity(), MEDIUM_SIZE + 1);
 		v_small[MEDIUM_SIZE - 1].id = ID;
-		ASSERT_EQ(Obj4::num_copied - num_copies , MEDIUM_SIZE - (MEDIUM_SIZE / 2));
+		ASSERT_EQ(Obj4::num_copied - num_copies, MEDIUM_SIZE - (MEDIUM_SIZE / 2));
+	}
+}
+
+// Магическое число, используемое для отслеживания живости объекта
+inline const uint32_t DEFAULT_COOKIE = 0xdeadbeef;
+
+struct TestObj
+{
+	TestObj() = default;
+	TestObj(const TestObj& other) = default;
+	TestObj& operator=(const TestObj& other) = default;
+	TestObj(TestObj&& other) = default;
+	TestObj& operator=(TestObj&& other) = default;
+	~TestObj()
+	{
+		cookie = 0;
+	}
+	[[nodiscard]] bool IsAlive() const noexcept
+	{
+		return cookie == DEFAULT_COOKIE;
+	}
+	uint32_t cookie = DEFAULT_COOKIE;
+};
+
+struct Obj5
+{
+	Obj5()
+	{
+		if (default_construction_throw_countdown > 0)
+		{
+			if (--default_construction_throw_countdown == 0)
+			{
+				throw std::runtime_error("Oops");
+			}
+		}
+		++num_default_constructed;
+	}
+
+	explicit Obj5(int id) : id(id) //
+	{
+		++num_constructed_with_id;
+	}
+
+	Obj5(const Obj5& other) : id(other.id) //
+	{
+		if (other.throw_on_copy)
+		{
+			throw std::runtime_error("Oops");
+		}
+		++num_copied;
+	}
+
+	Obj5(Obj5&& other) noexcept : id(other.id) //
+	{
+		++num_moved;
+	}
+
+	Obj5& operator=(const Obj5& other) = default;
+	Obj5& operator=(Obj5&& other) = default;
+
+	~Obj5()
+	{
+		++num_destroyed;
+		id = 0;
+	}
+
+	static int GetAliveObjectCount()
+	{
+		return num_default_constructed + num_copied + num_moved + num_constructed_with_id - num_destroyed;
+	}
+
+	static void ResetCounters()
+	{
+		default_construction_throw_countdown = 0;
+		num_default_constructed = 0;
+		num_copied = 0;
+		num_moved = 0;
+		num_destroyed = 0;
+		num_constructed_with_id = 0;
+	}
+
+	bool throw_on_copy = false;
+	int id = 0;
+
+	static inline int default_construction_throw_countdown = 0;
+	static inline int num_default_constructed = 0;
+	static inline int num_constructed_with_id = 0;
+	static inline int num_copied = 0;
+	static inline int num_moved = 0;
+	static inline int num_destroyed = 0;
+};
+
+TEST(Vector, Test5)
+{
+	const size_t ID = 42;
+	const size_t SIZE = 100'500;
+	{
+		Obj5::ResetCounters();
+		Vector<Obj5> v;
+		v.Resize(SIZE);
+		ASSERT_EQ(v.Size(), SIZE);
+		ASSERT_EQ(v.Capacity(), SIZE);
+		ASSERT_EQ(Obj5::num_default_constructed, SIZE);
+	}
+	ASSERT_EQ(Obj5::GetAliveObjectCount(), 0);
+
+	{
+		const size_t NEW_SIZE = 10'000;
+		Obj5::ResetCounters();
+		Vector<Obj5> v(SIZE);
+		v.Resize(NEW_SIZE);
+		ASSERT_EQ(v.Size(), NEW_SIZE);
+		ASSERT_EQ(v.Capacity(), SIZE);
+		ASSERT_EQ(Obj5::num_destroyed, SIZE - NEW_SIZE);
+	}
+	ASSERT_EQ(Obj5::GetAliveObjectCount(), 0);
+	{
+		Obj5::ResetCounters();
+		Vector<Obj5> v(SIZE);
+		Obj5 o{ID};
+		v.PushBack(o);
+		ASSERT_EQ(v.Size(), SIZE + 1);
+		ASSERT_EQ(v.Capacity(), SIZE * 2);
+		ASSERT_EQ(v[SIZE].id, ID);
+		ASSERT_EQ(Obj5::num_default_constructed, SIZE);
+		ASSERT_EQ(Obj5::num_copied, 1);
+		ASSERT_EQ(Obj5::num_constructed_with_id, 1);
+		ASSERT_EQ(Obj5::num_moved, SIZE);
+	}
+	ASSERT_EQ(Obj5::GetAliveObjectCount(), 0);
+	{
+		Obj5::ResetCounters();
+		Vector<Obj5> v(SIZE);
+		v.PushBack(Obj5{ID});
+		ASSERT_EQ(v.Size(), SIZE + 1);
+		ASSERT_EQ(v.Capacity(), SIZE * 2);
+		ASSERT_EQ(v[SIZE].id, ID);
+		ASSERT_EQ(Obj5::num_default_constructed, SIZE);
+		ASSERT_EQ(Obj5::num_copied, 0);
+		ASSERT_EQ(Obj5::num_constructed_with_id, 1);
+		ASSERT_EQ(Obj5::num_moved, SIZE + 1);
+	}
+	{
+		Obj5::ResetCounters();
+		Vector<Obj5> v;
+		v.PushBack(Obj5{ID});
+		v.PopBack();
+		ASSERT_EQ(v.Size(), 0);
+		ASSERT_EQ(v.Capacity(), 1);
+		ASSERT_EQ(Obj5::GetAliveObjectCount(), 0);
+	}
+
+	{
+		Vector<TestObj> v(1);
+		ASSERT_EQ(v.Size(), v.Capacity());
+		// Операция PushBack существующего элемента вектора должна быть безопасна
+		// даже при реаллокации памяти
+		v.PushBack(v[0]);
+		ASSERT_TRUE(v[0].IsAlive());
+		ASSERT_TRUE(v[1].IsAlive());
+	}
+	{
+		Vector<TestObj> v(1);
+		ASSERT_EQ(v.Size(), v.Capacity());
+		// Операция PushBack для перемещения существующего элемента вектора должна быть безопасна
+		// даже при реаллокации памяти
+		v.PushBack(std::move(v[0]));
+		ASSERT_TRUE(v[0].IsAlive());
+		ASSERT_TRUE(v[1].IsAlive());
 	}
 }

@@ -101,6 +101,117 @@ template <typename T> class Vector
 		capacity_ = new_capacity;
 	}
 
+	void Resize(size_t new_size)
+	{
+		if (new_size < size_)
+		{
+			std::destroy_n(data_.GetAddress() + new_size, size_ - new_size);
+			size_ = new_size;
+		}
+		else
+		{
+			if (new_size > capacity_)
+			{
+				Reserve(new_size);
+			}
+			std::uninitialized_value_construct_n(data_.GetAddress() + size_, new_size - size_);
+			size_ = new_size;
+		}
+	}
+
+	template <typename C> void PushBack(C value)
+	{
+		if (size_ == 0 && Capacity() == 0)
+		{
+			Reserve(1);
+		}
+		constexpr bool is_nothrow_move = std::is_nothrow_move_constructible_v<C>;
+		constexpr bool is_move = std::is_move_constructible_v<C>;
+		constexpr bool is_nothrow_copy = std::is_nothrow_copy_constructible_v<C>;
+		constexpr bool is_copy = std::is_copy_constructible_v<C>;
+
+		if (size_ == Capacity())
+		{
+			RawMemory<T> tmp(Capacity() * 2);
+			if constexpr (is_nothrow_move && !is_nothrow_copy)
+			{
+				new (tmp.GetAddress() + size_) T(std::move(value));
+			}
+			else if constexpr (is_move && !is_copy)
+			{
+				try
+				{
+					new (tmp.GetAddress() + size_) T(std::move(value));
+				}
+				catch (...)
+				{
+					throw;
+				}
+			}
+			else if constexpr (is_nothrow_copy && !is_nothrow_move)
+			{
+				new (tmp.GetAddress() + size_) T(value);
+			}
+			else if constexpr (is_copy && !is_move)
+			{
+				try
+				{
+					new (tmp.GetAddress() + size_) T(value);
+				}
+				catch (...)
+				{
+					throw;
+				}
+			}
+
+			std::uninitialized_move_n(data_.GetAddress(), size_, tmp.GetAddress());
+			std::destroy_n(data_.GetAddress(), size_);
+			std::swap(data_, tmp);
+			capacity_ = capacity_ * 2;
+		}
+		else
+		{
+			if constexpr (is_nothrow_move && !is_nothrow_copy)
+			{
+				new (data_ + size_) T(std::move(value));
+			}
+			else if constexpr (is_move && !is_copy)
+			{
+				try
+				{
+					new (data_ + size_) T(std::move(value));
+				}
+				catch (...)
+				{
+					throw;
+				}
+			}
+			else if constexpr (is_nothrow_copy && !is_nothrow_move)
+			{
+				new (data_ + size_) T(value);
+			}
+			else if constexpr (is_copy && !is_move)
+			{
+				try
+				{
+					new (data_ + size_) T(value);
+				}
+				catch (...)
+				{
+					throw;
+				}
+			}
+		}
+
+		++size_;
+	}
+
+	void PopBack() noexcept
+	{
+		std::destroy_at(data_.GetAddress() + size_);
+		--size_;
+	}
+
 	~Vector()
 	{
 		std::destroy_n(data_.GetAddress(), size_);

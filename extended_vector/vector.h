@@ -10,6 +10,40 @@
 template <typename T> class Vector
 {
   public:
+#pragma region "Iterators"
+	using iterator = T*;
+	using const_iterator = const T*;
+
+	iterator begin() noexcept
+	{
+		return data_.GetAddress();
+	}
+
+	iterator end() noexcept
+	{
+		return data_ + size_;
+	}
+
+	const_iterator begin() const noexcept
+	{
+		return data_.GetAddress();
+	}
+
+	const_iterator end() const noexcept
+	{
+		return data_ + size_;
+	}
+
+	const_iterator cbegin() const noexcept
+	{
+		return data_.GetAddress();
+	}
+
+	const_iterator cend() const noexcept
+	{
+		return data_ + size_;
+	}
+#pragma endregion
 	Vector() = default;
 
 	explicit Vector(size_t size) : data_(size), capacity_(size), size_(size) //
@@ -251,6 +285,86 @@ template <typename T> class Vector
 		++size_;
 
 		return data_[size_ - 1];
+	}
+
+	template <typename... Args> iterator Emplace(const_iterator pos, Args&&... args)
+	{
+		iterator res_pos = begin();
+		if (pos == cend())
+		{
+			res_pos = &EmplaceBack(std::forward<Args>(args)...);
+		}
+		else if (size_ == data_.Capacity())
+		{
+			auto new_cap = size_ == 0 ? 1 : size_ * 2;
+			RawMemory<T> new_data(new_cap);
+			const size_t dest_pos = (pos - begin());
+			new (new_data + dest_pos) T(std::forward<Args>(args)...);
+			if constexpr (std::is_nothrow_move_constructible_v<T> || !std::is_copy_constructible_v<T>)
+			{
+				std::uninitialized_move_n(data_.GetAddress(), dest_pos, new_data.GetAddress());
+			}
+			else
+			{
+				try
+				{
+					std::uninitialized_copy_n(data_.GetAddress(), dest_pos, new_data.GetAddress());
+				}
+				catch (...)
+				{
+					std::destroy_n(new_data + dest_pos, 1);
+				}
+			}
+
+			if constexpr (std::is_nothrow_move_constructible_v<T> || !std::is_copy_constructible_v<T>)
+			{
+				std::uninitialized_move_n(data_.GetAddress() + dest_pos, size_ - dest_pos,
+										  new_data.GetAddress() + dest_pos + 1);
+			}
+			else
+			{
+				try
+				{
+					std::uninitialized_copy_n(data_.GetAddress() + dest_pos, size_ - dest_pos,
+											  new_data.GetAddress() + dest_pos + 1);
+				}
+				catch (...)
+				{
+					std::destroy_n(new_data.GetAddress(), dest_pos + 1);
+				}
+			}
+			std::destroy_n(data_.GetAddress(), size_);
+			data_.Swap(new_data);
+			res_pos = begin() + dest_pos;
+			capacity_ = new_cap;
+			++size_;
+		}
+		else
+		{
+			T tmp(std::forward<Args>(args)...);
+			new (data_ + size_) T(std::move(data_[size_ - 1]));
+			res_pos = begin() + (pos - begin());
+			std::move_backward(res_pos, end() - 1, end());
+			*res_pos = std::move(tmp);
+			++size_;
+		}
+
+		return res_pos;
+	}
+
+	iterator Erase(const_iterator pos)
+	{
+		iterator res_it = begin() + (pos - begin());
+		std::move(res_it + 1, end(), res_it);
+		std::destroy_n(end() - 1, 1);
+		--size_;
+
+		return res_it;
+	}
+
+	template <typename Type> iterator Insert(const_iterator pos, Type&& value)
+	{
+		return Emplace(pos, std::forward<Type>(value));
 	}
 
   private:

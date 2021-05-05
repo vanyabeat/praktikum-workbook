@@ -223,6 +223,36 @@ template <typename T> class Vector
 		swap(first.size_, second.size_);
 	}
 
+	template <typename... Args> T& EmplaceBack(Args&&... args)
+	{
+		if (size_ == Capacity())
+		{
+			auto new_cap = size_ == 0 ? 1 : size_ * 2;
+			RawMemory<T> new_data(new_cap);
+			new (new_data + size_) T(std::forward<Args>(args)...);
+
+			if constexpr (std::is_nothrow_move_constructible_v<T> || !std::is_copy_constructible_v<T>)
+			{
+				std::uninitialized_move_n(data_.GetAddress(), size_, new_data.GetAddress());
+			}
+			else
+			{
+				std::uninitialized_copy_n(data_.GetAddress(), size_, new_data.GetAddress());
+			}
+			std::destroy_n(data_.GetAddress(), size_);
+
+			data_.Swap(new_data);
+			capacity_ = new_cap;
+		}
+		else
+		{
+			new (data_ + size_) T(std::forward<Args>(args)...);
+		}
+		++size_;
+
+		return data_[size_ - 1];
+	}
+
   private:
 	RawMemory<T> data_;
 	size_t capacity_ = 0;

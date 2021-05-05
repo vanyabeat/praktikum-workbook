@@ -1,4 +1,6 @@
 #pragma once
+#include <cstdlib>
+#include <memory>
 
 template <typename T> class RawMemory
 {
@@ -8,7 +10,27 @@ template <typename T> class RawMemory
 	explicit RawMemory(size_t capacity) : buffer_(Allocate(capacity)), capacity_(capacity)
 	{
 	}
+	RawMemory(const RawMemory&) = delete;
+	RawMemory& operator=(const RawMemory& rhs) = delete;
+	RawMemory(RawMemory&& other) noexcept
+	{
+		buffer_ = other.buffer_;
+		other.buffer_ = nullptr;
 
+		capacity_ = other.capacity_;
+		other.capacity_ = 0;
+	}
+
+	RawMemory& operator=(RawMemory&& rhs) noexcept
+	{
+		buffer_ = rhs.buffer_;
+		rhs.buffer_ = nullptr;
+
+		capacity_ = rhs.capacity_;
+		rhs.capacity_ = 0;
+
+		return *this;
+	}
 	~RawMemory()
 	{
 		Deallocate(buffer_);

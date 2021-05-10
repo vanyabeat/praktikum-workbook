@@ -14,8 +14,8 @@ template <typename T> class RawMemory
 	RawMemory& operator=(const RawMemory& rhs) = delete;
 	RawMemory(RawMemory&& other) noexcept
 	{
-		buffer_ = other.buffer_;
-		other.buffer_ = nullptr;
+		buffer_ = other.buffer_;	/// при возможносьт нужно инициализировать поля в списке инициализации, иначе будет двойная инициализация
+		other.buffer_ = nullptr;	/// рекомендация, есть хорошая функция std::exchange, пример использования: buffer_(std::exchange(other.exchange_, nullptr))
 
 		capacity_ = other.capacity_;
 		other.capacity_ = 0;
@@ -23,6 +23,7 @@ template <typename T> class RawMemory
 
 	RawMemory& operator=(RawMemory&& rhs) noexcept
 	{
+/// если buffer_ был не пустым, то будет утечка пямяти, нужно обязательно перед присваиванием очищать
 		buffer_ = rhs.buffer_;
 		rhs.buffer_ = nullptr;
 

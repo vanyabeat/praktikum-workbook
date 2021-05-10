@@ -10,6 +10,7 @@
 template <typename T> class Vector
 {
   public:
+/// рекомендация, вначале желательно располагать конструкторы и деструктор, они более важны чем все остальные методы
 #pragma region "Iterators"
 	using iterator = T*;
 	using const_iterator = const T*;
@@ -63,7 +64,7 @@ template <typename T> class Vector
 		other_.size_ = 0;
 	}
 
-	Vector& operator=(const Vector& right_)
+	Vector& operator=(const Vector& right_)	/// именя с подчеркиванием лучше использовать только привантных полей класса
 	{
 		if (this != &right_)
 		{
@@ -84,7 +85,7 @@ template <typename T> class Vector
 				else
 				{
 					;
-					for (auto [it_r, it_this] = std::tuple{right_.data_.GetAddress(), data_.GetAddress()};
+					for (auto [it_r, it_this] = std::tuple{right_.data_.GetAddress(), data_.GetAddress()};	/// постарайтесь поненять на std::copy_n
 						 it_r != right_.data_.GetAddress() + size_; ++it_r, ++it_this)
 					{
 						*it_this = *it_r;
@@ -104,7 +105,7 @@ template <typename T> class Vector
 		{
 			data_ = std::move(right_.data_);
 			capacity_ = std::move(right_.capacity_);
-			size_ = std::move(right_.size_);
+			size_ = std::move(right_.size_);	/// для типа size_t излишне делать std::move
 			right_.capacity_ = 0;
 			right_.size_ = 0;
 		}
@@ -119,6 +120,7 @@ template <typename T> class Vector
 		}
 		RawMemory<T> new_data(new_capacity);
 		// Конструируем элементы в new_data, копируя их из data_
+/// могу шибаться, но мне кажется при резервировании в старом векторе знечения уже будут не нужны, возможно достаточно делать всегда перемещение
 		if constexpr (std::is_nothrow_move_constructible_v<T> || !std::is_copy_constructible_v<T>)
 		{
 			std::uninitialized_move_n(data_.GetAddress(), size_, new_data.GetAddress());
@@ -128,6 +130,7 @@ template <typename T> class Vector
 			std::uninitialized_copy_n(data_.GetAddress(), size_, new_data.GetAddress());
 		}
 		// Разрушаем элементы в data_
+/// также могу ошибаться, но если было перемещение, от что будет разрушать destroy_n?
 		std::destroy_n(data_.GetAddress(), size_);
 		// Избавляемся от старой сырой памяти, обменивая её на новую
 		data_.Swap(new_data);
@@ -153,10 +156,12 @@ template <typename T> class Vector
 		}
 	}
 
+/// дублирование кода, 2 идентичных метода PushBack
 	void PushBack(const T& value)
 	{
 		if (size_ == Capacity())
 		{
+/// желательно изменять вместимость только ожним методом, хорошо подойдет Reserve
 			auto new_cap = size_ == 0 ? 1 : size_ * 2;
 			RawMemory<T> new_data(new_cap);
 			new (new_data + size_) T(value);
@@ -261,6 +266,7 @@ template <typename T> class Vector
 	{
 		if (size_ == Capacity())
 		{
+/// желательно изменить вместимость через Reserve
 			auto new_cap = size_ == 0 ? 1 : size_ * 2;
 			RawMemory<T> new_data(new_cap);
 			new (new_data + size_) T(std::forward<Args>(args)...);
@@ -287,6 +293,8 @@ template <typename T> class Vector
 		return data_[size_ - 1];
 	}
 
+/// рекомендую упростить метод, разбить его на отдельные смысловые части в приватные методы и по возможности для изменения вместимости использльзовать Reserve (будет немного менее эффективно)
+/// возможно присутствую проблемы из методов выше, т.к. код сдублирован и при решении дублирования, они могут решиться
 	template <typename... Args> iterator Emplace(const_iterator pos, Args&&... args)
 	{
 		iterator res_pos = begin();
@@ -312,7 +320,7 @@ template <typename T> class Vector
 				}
 				catch (...)
 				{
-					std::destroy_n(new_data + dest_pos, 1);
+					std::destroy_n(new_data + dest_pos, 1);	/// желательно дальше пробросить исключение
 				}
 			}
 
@@ -330,7 +338,7 @@ template <typename T> class Vector
 				}
 				catch (...)
 				{
-					std::destroy_n(new_data.GetAddress(), dest_pos + 1);
+					std::destroy_n(new_data.GetAddress(), dest_pos + 1);	/// желательно дальше пробросить исключение
 				}
 			}
 			std::destroy_n(data_.GetAddress(), size_);
@@ -369,6 +377,6 @@ template <typename T> class Vector
 
   private:
 	RawMemory<T> data_;
-	size_t capacity_ = 0;
+	size_t capacity_ = 0;	/// постарайтесь избавиться от этого поля, вместимость уже есть в RawMemory
 	size_t size_ = 0;
 };

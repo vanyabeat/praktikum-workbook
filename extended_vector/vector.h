@@ -10,7 +10,67 @@
 template <typename T> class Vector
 {
   public:
-/// рекомендация, вначале желательно располагать конструкторы и деструктор, они более важны чем все остальные методы
+
+	Vector() = default;
+
+	explicit Vector(size_t size) : data_(size), size_(size) //
+	{
+		std::uninitialized_value_construct_n(data_.GetAddress(), size);
+	}
+
+	Vector(const Vector& other) : data_(other.size_), size_(other.size_) //
+	{
+		std::uninitialized_copy_n(other.data_.GetAddress(), other.size_, data_.GetAddress());
+	}
+
+	Vector(Vector&& other_) noexcept : data_(std::move(other_.data_)), size_(std::move(other_.size_))
+	{
+		other_.size_ = 0;
+	}
+
+	Vector& operator=(const Vector& other)
+	{
+		if (this != &other)
+		{
+			if (other.size_ > data_.Capacity())
+			{
+				/* Применить copy-and-swap */
+				Vector copy(other);
+				Swap(copy);
+			}
+			else
+			{
+				if (!(size_ < other.size_))
+				{
+					std::copy_n(other.data_.GetAddress(), other.size_, data_.GetAddress());
+					std::destroy_n(data_.GetAddress() + other.size_, size_ - other.size_);
+					size_ = other.size_;
+				}
+				else
+				{
+					std::copy_n(other.data_.GetAddress(), size_, data_.GetAddress());
+					std::uninitialized_copy_n(other.data_.GetAddress() + size_, other.size_ - size_,
+											  data_.GetAddress() + size_);
+					size_ = other.size_;
+				}
+			}
+		}
+		return *this;
+	}
+
+	Vector& operator=(Vector&& right_) noexcept
+	{
+		if (this != &right_)
+		{
+			data_ = std::move(right_.data_);
+			size_ = right_.size_;
+
+			right_.size_ = 0;
+		}
+		return *this;
+	}
+
+	/// Принял буду размещать!
 #pragma region "Iterators"
 	using iterator = T*;
 	using const_iterator = const T*;
@@ -45,72 +105,6 @@ template <typename T> class Vector
 		return data_ + size_;
 	}
 #pragma endregion
-	Vector() = default;
-
-	explicit Vector(size_t size) : data_(size), capacity_(size), size_(size) //
-	{
-		std::uninitialized_value_construct_n(data_.GetAddress(), size);
-	}
-
-	Vector(const Vector& other) : data_(other.size_), capacity_(other.size_), size_(other.size_) //
-	{
-		std::uninitialized_copy_n(other.data_.GetAddress(), other.size_, data_.GetAddress());
-	}
-
-	Vector(Vector&& other_) noexcept
-		: data_(std::move(other_.data_)), capacity_(std::move(other_.capacity_)), size_(std::move(other_.size_))
-	{
-		other_.capacity_ = 0;
-		other_.size_ = 0;
-	}
-
-	Vector& operator=(const Vector& right_)	/// именя с подчеркиванием лучше использовать только привантных полей класса
-	{
-		if (this != &right_)
-		{
-			if (right_.size_ > data_.Capacity())
-			{
-				/* Применить copy-and-swap */
-				Vector copy(right_);
-				Swap(copy);
-			}
-			else
-			{
-				if (!(size_ < right_.size_))
-				{
-					std::copy_n(right_.data_.GetAddress(), right_.size_, data_.GetAddress());
-					std::destroy_n(data_.GetAddress() + right_.size_, size_ - right_.size_);
-					size_ = right_.size_;
-				}
-				else
-				{
-					;
-					for (auto [it_r, it_this] = std::tuple{right_.data_.GetAddress(), data_.GetAddress()};	/// постарайтесь поненять на std::copy_n
-						 it_r != right_.data_.GetAddress() + size_; ++it_r, ++it_this)
-					{
-						*it_this = *it_r;
-					}
-					std::uninitialized_copy_n(right_.data_.GetAddress() + size_, right_.size_ - size_,
-											  data_.GetAddress() + size_);
-					size_ = right_.size_;
-				}
-			}
-		}
-		return *this;
-	}
-
-	Vector& operator=(Vector&& right_) noexcept
-	{
-		if (this != &right_)
-		{
-			data_ = std::move(right_.data_);
-			capacity_ = std::move(right_.capacity_);
-			size_ = std::move(right_.size_);	/// для типа size_t излишне делать std::move
-			right_.capacity_ = 0;
-			right_.size_ = 0;
-		}
-		return *this;
-	}
 
 	void Reserve(size_t new_capacity)
 	{
@@ -120,7 +114,8 @@ template <typename T> class Vector
 		}
 		RawMemory<T> new_data(new_capacity);
 		// Конструируем элементы в new_data, копируя их из data_
-/// могу шибаться, но мне кажется при резервировании в старом векторе знечения уже будут не нужны, возможно достаточно делать всегда перемещение
+		/// могу шибаться, но мне кажется при резервировании в старом векторе знечения уже будут не нужны, возможно
+		/// достаточно делать всегда перемещение UPD(делал не проходит тренажер)
 		if constexpr (std::is_nothrow_move_constructible_v<T> || !std::is_copy_constructible_v<T>)
 		{
 			std::uninitialized_move_n(data_.GetAddress(), size_, new_data.GetAddress());
@@ -130,12 +125,11 @@ template <typename T> class Vector
 			std::uninitialized_copy_n(data_.GetAddress(), size_, new_data.GetAddress());
 		}
 		// Разрушаем элементы в data_
-/// также могу ошибаться, но если было перемещение, от что будет разрушать destroy_n?
+		/// также могу ошибаться, но если было перемещение, от что будет разрушать destroy_n?
 		std::destroy_n(data_.GetAddress(), size_);
 		// Избавляемся от старой сырой памяти, обменивая её на новую
 		data_.Swap(new_data);
 		// При выходе из метода старая память будет возвращена в кучу
-		capacity_ = new_capacity;
 	}
 
 	void Resize(size_t new_size)
@@ -147,7 +141,7 @@ template <typename T> class Vector
 		}
 		else
 		{
-			if (new_size > capacity_)
+			if (new_size > Capacity())
 			{
 				Reserve(new_size);
 			}
@@ -156,64 +150,9 @@ template <typename T> class Vector
 		}
 	}
 
-/// дублирование кода, 2 идентичных метода PushBack
-	void PushBack(const T& value)
+	template <typename Type> void PushBack(Type&& value)
 	{
-		if (size_ == Capacity())
-		{
-/// желательно изменять вместимость только ожним методом, хорошо подойдет Reserve
-			auto new_cap = size_ == 0 ? 1 : size_ * 2;
-			RawMemory<T> new_data(new_cap);
-			new (new_data + size_) T(value);
-			if constexpr (std::is_nothrow_move_constructible_v<T> || !std::is_copy_constructible_v<T>)
-			{
-
-				std::uninitialized_move_n(data_.GetAddress(), size_, new_data.GetAddress());
-			}
-			else
-			{
-
-				std::uninitialized_copy_n(data_.GetAddress(), size_, new_data.GetAddress());
-			}
-			std::destroy_n(data_.GetAddress(), size_);
-
-			data_.Swap(new_data);
-			capacity_ = new_cap;
-		}
-		else
-		{
-			new (data_ + size_) T(value);
-		}
-		++size_;
-	}
-
-	void PushBack(T&& value)
-	{
-		if (size_ == Capacity())
-		{
-			auto new_cap = size_ == 0 ? 1 : size_ * 2;
-			RawMemory<T> new_data(size_ == 0 ? 1 : size_ * 2);
-			new (new_data + size_) T(std::move(value));
-			if constexpr (std::is_nothrow_move_constructible_v<T> || !std::is_copy_constructible_v<T>)
-			{
-
-				std::uninitialized_move_n(data_.GetAddress(), size_, new_data.GetAddress());
-			}
-			else
-			{
-
-				std::uninitialized_copy_n(data_.GetAddress(), size_, new_data.GetAddress());
-			}
-			std::destroy_n(data_.GetAddress(), size_);
-
-			data_.Swap(new_data);
-			capacity_ = new_cap;
-		}
-		else
-		{
-			new (data_ + size_) T(std::move(value));
-		}
-		++size_;
+		EmplaceBack(std::forward<Type>(value));
 	}
 
 	void PopBack() noexcept
@@ -234,7 +173,7 @@ template <typename T> class Vector
 
 	size_t Capacity() const noexcept
 	{
-		return capacity_;
+		return data_.Capacity();
 	}
 
 	const T& operator[](size_t index) const noexcept
@@ -258,7 +197,6 @@ template <typename T> class Vector
 	{
 		using std::swap;
 		swap(first.data_, second.data_);
-		swap(first.capacity_, second.capacity_);
 		swap(first.size_, second.size_);
 	}
 
@@ -266,7 +204,7 @@ template <typename T> class Vector
 	{
 		if (size_ == Capacity())
 		{
-/// желательно изменить вместимость через Reserve
+			// в лекциях объясняли почему лучше так :(
 			auto new_cap = size_ == 0 ? 1 : size_ * 2;
 			RawMemory<T> new_data(new_cap);
 			new (new_data + size_) T(std::forward<Args>(args)...);
@@ -282,7 +220,6 @@ template <typename T> class Vector
 			std::destroy_n(data_.GetAddress(), size_);
 
 			data_.Swap(new_data);
-			capacity_ = new_cap;
 		}
 		else
 		{
@@ -293,8 +230,9 @@ template <typename T> class Vector
 		return data_[size_ - 1];
 	}
 
-/// рекомендую упростить метод, разбить его на отдельные смысловые части в приватные методы и по возможности для изменения вместимости использльзовать Reserve (будет немного менее эффективно)
-/// возможно присутствую проблемы из методов выше, т.к. код сдублирован и при решении дублирования, они могут решиться
+	/// рекомендую упростить метод, разбить его на отдельные смысловые части в приватные методы и по возможности для
+	/// изменения вместимости использльзовать Reserve (будет немного менее эффективно) возможно присутствую проблемы из
+	/// методов выше, т.к. код сдублирован и при решении дублирования, они могут решиться
 	template <typename... Args> iterator Emplace(const_iterator pos, Args&&... args)
 	{
 		iterator res_pos = begin();
@@ -320,7 +258,8 @@ template <typename T> class Vector
 				}
 				catch (...)
 				{
-					std::destroy_n(new_data + dest_pos, 1);	/// желательно дальше пробросить исключение
+					std::destroy_n(new_data + dest_pos, 1);
+					throw;
 				}
 			}
 
@@ -338,13 +277,13 @@ template <typename T> class Vector
 				}
 				catch (...)
 				{
-					std::destroy_n(new_data.GetAddress(), dest_pos + 1);	/// желательно дальше пробросить исключение
+					std::destroy_n(new_data.GetAddress(), dest_pos + 1);
+					throw;
 				}
 			}
 			std::destroy_n(data_.GetAddress(), size_);
 			data_.Swap(new_data);
 			res_pos = begin() + dest_pos;
-			capacity_ = new_cap;
 			++size_;
 		}
 		else
@@ -377,6 +316,5 @@ template <typename T> class Vector
 
   private:
 	RawMemory<T> data_;
-	size_t capacity_ = 0;	/// постарайтесь избавиться от этого поля, вместимость уже есть в RawMemory
 	size_t size_ = 0;
 };

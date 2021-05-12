@@ -1,6 +1,6 @@
 #pragma once
-#include <cstdlib>
 #include <memory>
+#include <string>
 
 template <typename T> class RawMemory
 {
@@ -13,23 +13,27 @@ template <typename T> class RawMemory
 	RawMemory(const RawMemory&) = delete;
 	RawMemory& operator=(const RawMemory& rhs) = delete;
 	RawMemory(RawMemory&& other) noexcept
+		: buffer_(std::exchange(other.buffer_, nullptr)), capacity_(std::exchange(other.capacity_, 0))
 	{
-		buffer_ = other.buffer_;	/// при возможносьт нужно инициализировать поля в списке инициализации, иначе будет двойная инициализация
-		other.buffer_ = nullptr;	/// рекомендация, есть хорошая функция std::exchange, пример использования: buffer_(std::exchange(other.exchange_, nullptr))
-
-		capacity_ = other.capacity_;
-		other.capacity_ = 0;
+		//		buffer_ = other.buffer_; /// при возможносьт нужно инициализировать поля в списке инициализации, иначе
+		//будет
+		//								 /// двойная инициализация
+		//		other.buffer_ = nullptr; /// рекомендация, есть хорошая функция std::exchange, пример использования:
+		//								 /// buffer_(std::exchange(other.exchange_, nullptr))
+		//
+		//		capacity_ = other.capacity_;
+		//		other.capacity_ = 0;
 	}
 
 	RawMemory& operator=(RawMemory&& rhs) noexcept
 	{
-/// если buffer_ был не пустым, то будет утечка пямяти, нужно обязательно перед присваиванием очищать
-		buffer_ = rhs.buffer_;
-		rhs.buffer_ = nullptr;
+		if (buffer_)
+		{
+			Deallocate(buffer_);
+		}
 
-		capacity_ = rhs.capacity_;
-		rhs.capacity_ = 0;
-
+		buffer_ = std::exchange(rhs.buffer_, nullptr);
+		capacity_ = std::exchange(rhs.capacity_, 0);
 		return *this;
 	}
 	~RawMemory()

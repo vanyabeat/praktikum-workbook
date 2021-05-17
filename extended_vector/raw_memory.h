@@ -15,6 +15,7 @@ template <typename T> class RawMemory
 	RawMemory(RawMemory&& other) noexcept
 		: buffer_(std::exchange(other.buffer_, nullptr)), capacity_(std::exchange(other.capacity_, 0))
 	{
+/// не нужно оставлять такие комментарии
 		//		buffer_ = other.buffer_; /// при возможносьт нужно инициализировать поля в списке инициализации, иначе
 		//будет
 		//								 /// двойная инициализация

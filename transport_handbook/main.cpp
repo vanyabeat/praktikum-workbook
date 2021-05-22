@@ -39,14 +39,14 @@
 // transport_catalogue.get()); 	auto res = json_reader.GenerateReport(); 	json::Print(res, std::cout);
 //}
 
-#include "domain.h"
-#include "request_handler.h"
-#include "serialization.h"
-#include "sstream"
-#include "transport_catalogue.h"
 #include <fstream>
 #include <iostream>
 #include <string_view>
+#include "domain.h"
+#include "serialization.h"
+#include "request_handler.h"
+#include "sstream"
+#include "transport_catalogue.h"
 using namespace std::literals;
 
 void PrintUsage(std::ostream& stream = std::cerr)
@@ -67,7 +67,9 @@ int main(int argc, char* argv[])
 		std::make_unique<Handbook::Data::TransportCatalogue>();
 	if (mode == "make_base"sv)
 	{
+
 		Handbook::Control::Serializer serializer(std::cin, transport_catalogue.get());
+		int a = 6;
 	}
 	else if (mode == "process_requests"sv)
 	{

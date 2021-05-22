@@ -74,26 +74,11 @@ namespace Handbook
 
 			BusStat GetBusStat(const Bus* bus) const;
 
-			std::vector<BusPtr> AllBuses()
-			{
-				std::vector<BusPtr> result;
-				for (const auto [_, ptr] : buses_by_name_)
-				{
-					result.push_back(ptr);
-				}
-				return result;
-			}
+			std::vector<BusPtr> AllBuses();
 
-			std::vector<StopPtr> AllStops()
-			{
-				std::vector<StopPtr> result;
-				for (const auto [_, ptr] : stops_by_name_)
-				{
-					result.push_back(ptr);
-				}
-				return result;
-			}
+			std::vector<StopPtr> AllStops();
 
+			std::pair<std::unordered_map<std::string, int>, std::string> AllBayanedStops();
 		  private:
 			std::deque<Bus> buses_;
 			std::deque<Stop> stops_;
@@ -102,6 +87,7 @@ namespace Handbook
 			std::unordered_map<std::string_view, const Stop*> stops_by_name_;
 			std::unordered_map<const Stop*, std::unordered_set<const Bus*>> buses_by_stop_;
 			std::unordered_map<PairPtrs<Stop>, int, PairPtrHasher<Stop>> stop_distances_;
+			const std::string bayan_bitch = "[:|||:]";
 		};
 	} // namespace Data
 } // namespace Handbook

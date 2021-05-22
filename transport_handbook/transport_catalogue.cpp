@@ -21,7 +21,6 @@ const Handbook::Data::Stop* Handbook::Data::TransportCatalogue::FindStop(std::st
 	{
 		return stop_it->second;
 	}
-
 }
 
 void Handbook::Data::TransportCatalogue::AddStop(std::string_view name, Handbook::Utilities::Coordinates coordinates)
@@ -130,4 +129,32 @@ const Handbook::Data::Bus* Handbook::Data::TransportCatalogue::FindBus(std::stri
 {
 	const auto bus_it = buses_by_name_.find(name);
 	return bus_it != buses_by_name_.end() ? bus_it->second : nullptr;
+}
+std::vector<Handbook::Data::BusPtr> Handbook::Data::TransportCatalogue::AllBuses()
+{
+	std::vector<BusPtr> result;
+	for (const auto [_, ptr] : buses_by_name_)
+	{
+		result.push_back(ptr);
+	}
+	return result;
+}
+std::vector<Handbook::Data::StopPtr> Handbook::Data::TransportCatalogue::AllStops()
+{
+	std::vector<StopPtr> result;
+	for (const auto [_, ptr] : stops_by_name_)
+	{
+		result.push_back(ptr);
+	}
+	return result;
+}
+
+std::pair<std::unordered_map<std::string, int>, std::string> Handbook::Data::TransportCatalogue::AllBayanedStops()
+{
+	std::unordered_map<std::string, int> result;
+	for (auto& [pair, dist] : stop_distances_)
+	{
+		result[pair.first->name + bayan_bitch + pair.second->name] = dist;
+	}
+	return {result, bayan_bitch};
 }

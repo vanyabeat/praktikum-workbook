@@ -6,6 +6,7 @@ Handbook::Control::Serializer::Serializer(std::istream& out, Handbook::Data::Tra
 {
 	doc_ = json::Load(out_);
 	ouput_path_ = doc_.GetRoot().AsDict().at("serialization_settings").AsDict().at("file").AsString();
+	render_settings_ = JsonDocToString_(json::Document(doc_.GetRoot().AsDict().at("render_settings").AsDict()));
 	FillDataBase_();
 	Serialize_();
 }
@@ -75,8 +76,15 @@ void Handbook::Control::Serializer::Serialize_()
 			tmp->add_stops(stop->name);
 		}
 	}
+	tc_proto.set_render_settings(render_settings_);
 	std::ofstream ofs(ouput_path_, std::ios_base::out | std::ios_base::binary);
 	tc_proto.SerializeToOstream(&ofs);
+}
+std::string Handbook::Control::Serializer::JsonDocToString_(json::Document&& doc)
+{
+	std::stringstream ss;
+	json::Print(doc, ss);
+	return ss.str();
 }
 
 Handbook::Control::Deserializer::Deserializer(std::istream& out, Handbook::Data::TransportCatalogue* tCPtr)
@@ -87,10 +95,11 @@ Handbook::Control::Deserializer::Deserializer(std::istream& out, Handbook::Data:
 	std::ifstream ifs(input_path, std::ios_base::in | std::ios_base::binary);
 	protodata::TransportCatalogue tc_proto;
 	tc_proto.ParseFromIstream(&ifs);
+	render_settings_ = DictFromString(tc_proto.render_settings());
 
 	for (const auto& item : tc_proto.stops())
 	{
-		t_c_ptr_->AddStop(item.name(), {.lng = item.lng(), .lat = item.lat()});
+		t_c_ptr_->AddStop(item.name(), {.lat = item.lat(), .lng = item.lng()});
 	}
 	std::string separator = tc_proto.separator();
 	for (const auto& [key, value] : tc_proto.distances_between_stops())
@@ -98,7 +107,7 @@ Handbook::Control::Deserializer::Deserializer(std::istream& out, Handbook::Data:
 		// в баянах твоя сила и мудрость
 		// да и списывать не повадно будет из моего гита)
 		t_c_ptr_->AddStopsDistance(key.substr(0, key.find(separator)),
-								key.substr(key.find(separator) + separator.size(), key.size()), value);
+								   key.substr(key.find(separator) + separator.size(), key.size()), value);
 	}
 	for (const auto& item : tc_proto.buses())
 	{
@@ -112,7 +121,8 @@ void Handbook::Control::Deserializer::PrintReport()
 	using namespace std;
 	json::Array result;
 	auto needle = doc_.GetRoot().AsDict().find("stat_requests"s)->second.AsArray();
-	bool settings = doc_.GetRoot().AsDict().find("render_settings") != doc_.GetRoot().AsDict().end();
+	//	bool settings = doc_.GetRoot().AsDict().find("render_settings") != doc_.GetRoot().AsDict().end();
+	bool settings = !render_settings_.empty();
 	bool routing_settings = doc_.GetRoot().AsDict().find("routing_settings") != doc_.GetRoot().AsDict().end();
 	int busWaitTime = 0;
 	double busVelocity = 0.0;
@@ -129,25 +139,25 @@ void Handbook::Control::Deserializer::PrintReport()
 	{
 		if (settings && item.AsDict().at("type"s).AsString() == "Map"s)
 		{
+
 			result.push_back(std::move(
 				Handbook::Views::GetData(json::Document(json::Node{json::Dict{
 											 {"type"s, "Map"s},
 											 {"id"s, item.AsDict().at("id"s).AsInt()},
-											 {"render_settings"s, doc_.GetRoot().AsDict().at("render_settings"s)}}}),
+											 {"render_settings"s, json::Node(render_settings_)}}}),
 										 t_c_ptr_, nullptr)
 					.GetRoot()));
 		}
 		else if (routing_settings && item.AsDict().at("type").AsString() == "Route")
 		{
-			result.push_back(std::move(
-				Handbook::Views::GetData(json::Document(json::Node{json::Dict{
-											 {"type"s, "Route"s},
-											 {"id"s, item.AsDict().at("id"s).AsInt()},
-											 {"from"s, item.AsDict().at("from"s).AsString()},
-											 {"to"s, item.AsDict().at("to"s).AsString()}
-										 }}),
-										 t_c_ptr_, r_f.get())
-					.GetRoot()));
+			result.push_back(
+				std::move(Handbook::Views::GetData(
+							  json::Document(json::Node{json::Dict{{"type"s, "Route"s},
+																   {"id"s, item.AsDict().at("id"s).AsInt()},
+																   {"from"s, item.AsDict().at("from"s).AsString()},
+																   {"to"s, item.AsDict().at("to"s).AsString()}}}),
+							  t_c_ptr_, r_f.get())
+							  .GetRoot()));
 		}
 		else
 		{
@@ -155,4 +165,10 @@ void Handbook::Control::Deserializer::PrintReport()
 		}
 	}
 	json::Print(json::Document(result), std::cout);
+}
+json::Dict Handbook::Control::Deserializer::DictFromString(const std::string& str)
+{
+	std::stringstream ss(str);
+	auto doc = json::Load(ss);
+	return doc.GetRoot().AsDict();
 }

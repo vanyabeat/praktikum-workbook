@@ -67,9 +67,7 @@ int main(int argc, char* argv[])
 		std::make_unique<Handbook::Data::TransportCatalogue>();
 	if (mode == "make_base"sv)
 	{
-
 		Handbook::Control::Serializer serializer(std::cin, transport_catalogue.get());
-		int a = 6;
 	}
 	else if (mode == "process_requests"sv)
 	{

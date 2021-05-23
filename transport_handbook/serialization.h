@@ -5,7 +5,8 @@
 #include "request_handler.h"
 #include "transport_catalogue.h"
 #include "transport_catalogue.pb.h"
-
+#include "svg.pb.h"
+#include "map_renderer.pb.h"
 namespace Handbook
 {
 	namespace Control

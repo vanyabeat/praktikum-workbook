@@ -1,0 +1,6 @@
+syntax = "proto3";
+package protodata;
+
+message MapRenderer{
+  string lol = 1;
+}

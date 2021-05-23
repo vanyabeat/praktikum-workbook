@@ -114,7 +114,6 @@ Handbook::Control::Deserializer::Deserializer(std::istream& out, Handbook::Data:
 		std::vector<std::string> stops(item.stops().begin(), item.stops().end());
 		t_c_ptr_->AddBus(item.name(), stops, item.is_roundtrip());
 	}
-	int a = 5;
 }
 void Handbook::Control::Deserializer::PrintReport()
 {

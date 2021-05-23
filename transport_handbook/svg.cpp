@@ -63,17 +63,19 @@ namespace svg
 			std::string c = "";
 			std::visit(ColorString{c}, fill_color_.value());
 			out << " fill=\"" << c << "\"";
-			if (!PathPropsIsEmpty())
+			if (PathPropsIsEmpty())
 			{
-				out << " ";
+				out << "/>"sv;
+				return;
 			}
 		}
 		else
 		{
 			out << " fill=\"none\"";
-			if (!PathPropsIsEmpty())
+			if (PathPropsIsEmpty())
 			{
-				out << " ";
+				out << "/>"sv;
+				return;
 			}
 		}
 		if (!PathPropsIsEmpty())
@@ -100,17 +102,19 @@ namespace svg
 			std::string c = "";
 			std::visit(ColorString{c}, fill_color_.value());
 			out << " fill=\"" << c << "\"";
-			if (!PathPropsIsEmpty())
+			if (PathPropsIsEmpty())
 			{
-				out << " ";
+				out << R"(/>)"sv;
+				return;
 			}
 		}
 		else
 		{
 			out << " fill=\"none\"";
-			if (!PathPropsIsEmpty())
+			if (PathPropsIsEmpty())
 			{
-				out << " ";
+				out << R"(/>)"sv;
+				return;
 			}
 		}
 		if (!PathPropsIsEmpty())

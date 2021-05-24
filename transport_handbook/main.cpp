@@ -72,7 +72,7 @@ int main(int argc, char* argv[])
 	else if (mode == "process_requests"sv)
 	{
 		Handbook::Control::Deserializer deserializer(std::cin, transport_catalogue.get());
-		deserializer.PrintReport();
+ 		deserializer.PrintReport();
 	}
 	else
 	{

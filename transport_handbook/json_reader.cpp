@@ -3,7 +3,7 @@
 Handbook::Control::JsonReader::JsonReader(std::istream& out, Handbook::Data::TransportCatalogue* t_c)
 	: out_(out), t_c_ptr_(t_c), doc_({})
 {
-	doc_ = json::Load(out);
+	doc_ = json::Load(out_);
 	FillDataBase_();
 }
 json::Document Handbook::Control::JsonReader::GenerateReport()

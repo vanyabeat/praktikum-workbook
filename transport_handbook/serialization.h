@@ -41,6 +41,7 @@ namespace Handbook
 			json::Dict render_settings_;
 			std::string input_path;
 			json::Dict DictFromString(const std::string &str);
+			json::Node NodeFromString(const std::string &str);
 		};
 	} // namespace Control
 

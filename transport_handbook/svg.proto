@@ -1,6 +1,0 @@
-syntax = "proto3";
-package protodata;
-
-message Svg{
-  string lol = 1;
-}

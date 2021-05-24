@@ -31,12 +31,15 @@ message RenderSettings {
   double underlayer_width = 11;
   string color_palette = 12;
 }
-
+message RoutingSettings{
+  int32 wait_time = 1;
+  double velocity = 2;
+}
 message TransportCatalogue {
   repeated Bus buses = 1;
   repeated Stop stops = 2;
   map<string, uint64> distances_between_stops = 3;
   string separator = 4;
-  string render_settings = 5;
-  RenderSettings render = 6;
+  RenderSettings render = 5;
+  RoutingSettings routing_settings = 6;
 }

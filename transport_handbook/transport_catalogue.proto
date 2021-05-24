@@ -20,7 +20,7 @@ message Bus {
 message TransportCatalogue {
   repeated Bus buses = 1;
   repeated Stop stops = 2;
-  map<string, uint32> distances_between_stops = 3;
+  map<string, uint64> distances_between_stops = 3;
   string separator = 4;
   string render_settings = 5;
 }

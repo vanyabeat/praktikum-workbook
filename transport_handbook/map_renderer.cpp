@@ -8,7 +8,7 @@ using namespace std::literals;
 
 bool Handbook::Renderer::IsZero(double value)
 {
-	return std::abs(value) < EPSILON;
+	return std::abs(value) < std::numeric_limits<double>::epsilon();
 }
 
 namespace

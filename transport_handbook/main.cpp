@@ -63,14 +63,17 @@ int main(int argc, char* argv[])
 	}
 
 	const std::string_view mode(argv[1]);
-	std::unique_ptr<Handbook::Data::TransportCatalogue> transport_catalogue =
-		std::make_unique<Handbook::Data::TransportCatalogue>();
+
 	if (mode == "make_base"sv)
 	{
+		std::unique_ptr<Handbook::Data::TransportCatalogue> transport_catalogue =
+			std::make_unique<Handbook::Data::TransportCatalogue>();
 		Handbook::Control::Serializer serializer(std::cin, transport_catalogue.get());
 	}
 	else if (mode == "process_requests"sv)
 	{
+		std::unique_ptr<Handbook::Data::TransportCatalogue> transport_catalogue =
+			std::make_unique<Handbook::Data::TransportCatalogue>();
 		Handbook::Control::Deserializer deserializer(std::cin, transport_catalogue.get());
  		deserializer.PrintReport();
 	}

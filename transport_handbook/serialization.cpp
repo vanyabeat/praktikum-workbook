@@ -125,7 +125,7 @@ void Handbook::Control::Serializer::Serialize_() {
         }
     }
     tc_proto.set_allocated_render(render_settings_tc_);
-    protodata::RoutingSettings * r_s = new protodata::RoutingSettings;
+    protodata::RoutingSettings *r_s = new protodata::RoutingSettings;
     r_s->set_wait_time(doc_.GetRoot().AsDict().at("routing_settings").AsDict().at("bus_wait_time").AsInt());
     r_s->set_velocity(doc_.GetRoot().AsDict().at("routing_settings").AsDict().at("bus_velocity").AsDouble());
     tc_proto.set_allocated_routing_settings(r_s);

@@ -10,99 +10,93 @@
 #include <string>
 #include <vector>
 
-namespace Handbook
-{
-	namespace Control
-	{
-		enum RequestType
-		{
-			IsStop,
-			IsBus
-		};
+namespace Handbook {
+    namespace Control {
+        enum RequestType {
+            IsStop,
+            IsBus
+        };
 
-		class Request
-		{
-		  public:
-			virtual RequestType getRequestType() const = 0;
+        class Request {
+        public:
+            virtual RequestType getRequestType() const = 0;
 
-			virtual void setRequestType(RequestType requestType) = 0;
+            virtual void setRequestType(RequestType requestType) = 0;
 
-			virtual const std::string& getName() const = 0;
+            virtual const std::string &getName() const = 0;
 
-			virtual void setName(const std::string& name) = 0;
+            virtual void setName(const std::string &name) = 0;
 
-			virtual ~Request() = default;
-		};
+            virtual ~Request() = default;
+        };
 
-		class Bus : public Request
-		{
-		  public:
-			Bus()
-			{
-			}
+        class Bus : public Request {
+        public:
+            Bus() {
+            }
 
-			~Bus()
-			{
-			}
+            ~Bus() {
+            }
 
-			RequestType getRequestType() const override;
+            RequestType getRequestType() const override;
 
-			void setRequestType(RequestType requestType) override;
+            void setRequestType(RequestType requestType) override;
 
-			const std::string& getName() const override;
+            const std::string &getName() const override;
 
-			void setName(const std::string& name) override;
+            void setName(const std::string &name) override;
 
-			const std::vector<std::string>& getStops() const;
+            const std::vector<std::string> &getStops() const;
 
-			void setStops(const std::vector<std::string>& stops);
-			bool getIsRoundtrip() const;
-			void setIsRoundtrip(bool isRoundtrip);
+            void setStops(const std::vector<std::string> &stops);
 
-		  private:
-			RequestType type_;
-			std::string name_;
-			std::vector<std::string> stops_;
-			bool is_roundtrip_;
-		};
+            bool getIsRoundtrip() const;
 
-		class Stop : public Request
-		{
-		  public:
-			Stop()
-			{
-			}
+            void setIsRoundtrip(bool isRoundtrip);
 
-			~Stop()
-			{
-			}
+        private:
+            RequestType type_;
+            std::string name_;
+            std::vector<std::string> stops_;
+            bool is_roundtrip_;
+        };
 
-			RequestType getRequestType() const override;
+        class Stop : public Request {
+        public:
+            Stop() {
+            }
 
-			void setRequestType(RequestType requestType) override;
+            ~Stop() {
+            }
 
-			const std::string& getName() const override;
+            RequestType getRequestType() const override;
 
-			void setName(const std::string& name) override;
+            void setRequestType(RequestType requestType) override;
 
-			Utilities::Coordinates coordinates;
+            const std::string &getName() const override;
 
-			const std::vector<std::pair<std::string, size_t>>& getDistanceToOtherStop() const;
+            void setName(const std::string &name) override;
 
-			void setDistanceToOtherStop(const std::vector<std::pair<std::string, size_t>>& distanceToOtherStop);
+            Utilities::Coordinates coordinates;
 
-		  private:
-			std::vector<std::pair<std::string, size_t>> distance_to_other_stop;
-			RequestType type_;
-			std::string name_;
-		};
+            const std::vector<std::pair<std::string, size_t>> &getDistanceToOtherStop() const;
 
-		std::shared_ptr<Request> ParseRequestString(const std::string& r_str);
-		std::shared_ptr<Request> ParseRequestDocument(const json::Document& doc);
-		std::string ReadLine(std::istream& istream = std::cin);
+            void setDistanceToOtherStop(const std::vector<std::pair<std::string, size_t>> &distanceToOtherStop);
 
-		int ReadLineWithNumber(std::istream& istream = std::cin);
+        private:
+            std::vector<std::pair<std::string, size_t>> distance_to_other_stop;
+            RequestType type_;
+            std::string name_;
+        };
 
-		void AddRequestToCatalogue(Request* request, Handbook::Data::TransportCatalogue& transport_catalogue);
-	} // namespace Control
+        std::shared_ptr<Request> ParseRequestString(const std::string &r_str);
+
+        std::shared_ptr<Request> ParseRequestDocument(const json::Document &doc);
+
+        std::string ReadLine(std::istream &istream = std::cin);
+
+        int ReadLineWithNumber(std::istream &istream = std::cin);
+
+        void AddRequestToCatalogue(Request *request, Handbook::Data::TransportCatalogue &transport_catalogue);
+    } // namespace Control
 } // namespace Handbook

@@ -66,7 +66,7 @@ void Handbook::Control::Serializer::Serialize_() {
             tmp->add_stops(stop->name);
         }
     }
-    tc_proto.set_render_settings(render_settings_);
+
     protodata::RenderSettings *render_settings_tc_ = new protodata::RenderSettings;
     /*1*/
     render_settings_tc_->set_width(doc_.GetRoot().AsDict().at("render_settings").AsDict().at("width").AsDouble());
@@ -125,6 +125,10 @@ void Handbook::Control::Serializer::Serialize_() {
         }
     }
     tc_proto.set_allocated_render(render_settings_tc_);
+    protodata::RoutingSettings * r_s = new protodata::RoutingSettings;
+    r_s->set_wait_time(doc_.GetRoot().AsDict().at("routing_settings").AsDict().at("bus_wait_time").AsInt());
+    r_s->set_velocity(doc_.GetRoot().AsDict().at("routing_settings").AsDict().at("bus_velocity").AsDouble());
+    tc_proto.set_allocated_routing_settings(r_s);
     std::ofstream ofs(ouput_path_, std::ios_base::out | std::ios_base::binary);
     tc_proto.SerializeToOstream(&ofs);
 }
@@ -164,7 +168,8 @@ Handbook::Control::Deserializer::Deserializer(std::istream &out, Handbook::Data:
             {"bus_label_font_size",  static_cast<int>(tc_proto.render().bus_label_font_size())},
             {"bus_label_offset",     blo}
     };
-
+    routing_settings_.push_back(tc_proto.routing_settings().wait_time());
+    routing_settings_.push_back(tc_proto.routing_settings().velocity());
     for (const auto &item : tc_proto.stops()) {
         t_c_ptr_->AddStop(item.name(), {.lat = item.lat(), .lng = item.lng()});
     }
@@ -187,13 +192,13 @@ void Handbook::Control::Deserializer::PrintReport() {
     auto needle = doc_.GetRoot().AsDict().find("stat_requests"s)->second.AsArray();
     //	bool settings = doc_.GetRoot().AsDict().find("render_settings") != doc_.GetRoot().AsDict().end();
     bool settings = !render_settings_.empty();
-    bool routing_settings = doc_.GetRoot().AsDict().find("routing_settings") != doc_.GetRoot().AsDict().end();
-    int busWaitTime = 0;
-    double busVelocity = 0.0;
-    if (routing_settings) {
-        busWaitTime = doc_.GetRoot().AsDict().at("routing_settings").AsDict().at("bus_wait_time").AsInt();
-        busVelocity = doc_.GetRoot().AsDict().at("routing_settings").AsDict().at("bus_velocity").AsDouble();
-    }
+    bool routing_settings = !routing_settings_.empty();
+    int busWaitTime = std::get<int>(routing_settings_[0]);
+    double busVelocity = std::get<double>(routing_settings_[1]);;
+//    if (routing_settings) {
+//        busWaitTime = doc_.GetRoot().AsDict().at("routing_settings").AsDict().at("bus_wait_time").AsInt();
+//        busVelocity = doc_.GetRoot().AsDict().at("routing_settings").AsDict().at("bus_velocity").AsDouble();
+//    }
     std::unique_ptr<transport::RouteFinder> r_f =
             std::make_unique<transport::RouteFinder>(t_c_ptr_, busWaitTime, busVelocity);
     json::Node ren_set;

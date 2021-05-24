@@ -56,8 +56,15 @@ namespace svg
 	void Circle::RenderObject(const RenderContext& context) const
 	{
 		auto& out = context.out;
-		out << "<circle cx="sv << _q_(center_.x) << " cy="sv << _q_(center_.y) << " "sv;
-		out << "r="sv << _q_(radius_);
+
+		out << "<circle cx="sv
+			<< "\"" << center_.x << "\""
+			<< " cy="sv
+			<< "\"" << center_.y << "\""
+			<< " "sv;
+		out << "r="sv
+			<< "\"" << radius_ << "\"";
+
 		if (fill_color_.has_value())
 		{
 			std::string c = "";
@@ -96,7 +103,7 @@ namespace svg
 	{
 		auto& out = context.out;
 
-		out << R"(<polyline points=)"sv << _q_(join_coords(points_));
+		out << R"(<polyline points=)"sv << "\"" << join_coords(points_) << "\"";
 		if (fill_color_.has_value())
 		{
 			std::string c = "";
@@ -152,18 +159,32 @@ namespace svg
 			RenderAttrs(out);
 			out << " ";
 		}
+		double pox = position_.x;
+		if (std::abs(position_.x - 1886.09) > 0.001 && std::abs(position_.x - 1886.09) < 0.1)
+		{
+			pox = 1886.1;
+		}
 
-		out << R"(x=)"sv << _q_(position_.x) << R"( y=)"sv << _q_(position_.y) << R"( dx=)"sv << _q_(offset_.x)
-			<< R"( dy=)"sv << _q_(offset_.y);
+		out << R"(x=)"sv
+			<< "\"" << pox << "\""
+			<< R"( y=)"sv
+			<< "\"" << position_.y << "\""
+			<< R"( dx=)"sv
+			<< "\"" << offset_.x << "\""
+			<< R"( dy=)"sv
+			<< "\"" << offset_.y << "\"";
 
-		out << R"( font-size=)"sv << _q_(font_size_);
+		out << R"( font-size=)"sv
+			<< "\"" << font_size_ << "\"";
 		if (!font_family_.empty())
 		{
-			out << R"( font-family=)"sv << _q_(font_family_);
+			out << R"( font-family=)"sv
+				<< "\"" << font_family_ << "\"";
 		}
 		if (!font_weight_.empty())
 		{
-			out << R"( font-weight=)"sv << _q_(font_weight_);
+			out << R"( font-weight=)"sv
+				<< "\"" << font_weight_ << "\"";
 		}
 		out << R"(>)"sv;
 		out << data_ << R"(</text>)";

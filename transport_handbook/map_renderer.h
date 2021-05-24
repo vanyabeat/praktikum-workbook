@@ -72,15 +72,15 @@ namespace Handbook
 
 				if (width_zoom && height_zoom)
 				{
-					zoom_coeff_ = std::min(*width_zoom, *height_zoom);
+					zoom_coeff_ = std::min(width_zoom.value(), height_zoom.value());
 				}
 				else if (width_zoom)
 				{
-					zoom_coeff_ = *width_zoom;
+					zoom_coeff_ = width_zoom.value();
 				}
 				else if (height_zoom)
 				{
-					zoom_coeff_ = *height_zoom;
+					zoom_coeff_ = height_zoom.value();
 				}
 			}
 

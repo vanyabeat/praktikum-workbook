@@ -1,0 +1,45 @@
+syntax = "proto3";
+package protodata;
+
+message SerializationSettings {
+  string file = 1;
+}
+
+message Stop{
+  string name = 1;
+  double lat = 2;
+  double lng = 3;
+}
+
+message Bus {
+  string name = 1;
+  bool is_roundtrip = 2;
+  repeated string stops = 3;
+}
+
+message RenderSettings {
+  double width = 1;
+  double height = 2;
+  double padding = 3;
+  double stop_radius = 4;
+  double line_width = 5;
+  uint32 bus_label_font_size = 6;
+  repeated double bus_label_offset = 7;
+  uint32 stop_label_font_size = 8;
+  repeated double stop_label_offset = 9;
+  string underlayer_color = 10;
+  double underlayer_width = 11;
+  string color_palette = 12;
+}
+message RoutingSettings{
+  int32 wait_time = 1;
+  double velocity = 2;
+}
+message TransportCatalogue {
+  repeated Bus buses = 1;
+  repeated Stop stops = 2;
+  map<string, uint64> distances_between_stops = 3;
+  string separator = 4;
+  RenderSettings render = 5;
+  RoutingSettings routing_settings = 6;
+}

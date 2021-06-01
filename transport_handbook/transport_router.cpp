@@ -65,10 +65,10 @@ namespace transport {
         for (auto *route : catalogue->AllBuses()) {
             DistanceFinder df(catalogue, route);
             const auto &stops = route->stops;
-            for (int i = 0; i + 1 < (int) stops.size(); ++i) {
-                for (int j = i + 1; j < (int) stops.size(); ++j) {
+            for (int i = 0; i + 1 < (int) stops.size(); ++i) {		/// старайтесь использовать пиредение типа из c++ static_cast, возможно правильней i и j объявить как size_t
+                for (int j = i + 1; j < (int) stops.size(); ++j) {	/// старайтесь использовать пиредение типа из c++ static_cast
                     AddTripItem(stops[i], stops[j], route,
-                                {std::abs(i - j), static_cast<double>(bus_wait_time_),
+                                {std::abs(i - j), static_cast<double>(bus_wait_time_),	/// по условию цикла всегда j > i, зачем std::abs(i - j), может достаточно j - i ?
                                  df.DistanceBetween(i, j) / bus_velocity_});
                     if (!route->is_roundtrip) {
                         AddTripItem(stops[j], stops[i], route,
@@ -83,8 +83,8 @@ namespace transport {
 
     std::optional<std::vector<const TripItem *>>
     RouteFinder::findRoute(std::string_view from, std::string_view to) const {
-        auto stopFrom = catalogue_->FindStop(from);
-        auto stopTo = catalogue_->FindStop(to);
+        auto stopFrom = catalogue_->FindStop(from);	/// рекомендую использовать простые типы для объявления (Data::StopPtr), будет сразу понятно, что это указатель на остановку
+        auto stopTo = catalogue_->FindStop(to);		///	--//--
         if (stopFrom == nullptr || stopTo == nullptr) {
             return std::nullopt;
         }
@@ -114,8 +114,8 @@ namespace transport {
                 graph::Edge<GraphWeight>{stop_to_graph_vertex_[item.from], stop_to_graph_vertex_[item.to],
                                          item.spending});
         graph_edges_.push_back(std::move(item));
-        if (id != (int) graph_edges_.size() - 1) {
-            throw std::exception();
+        if (id != (int) graph_edges_.size() - 1) {	/// старайтесь использовать пиредение типа из c++ static_cast
+            throw std::exception();			/// пустые исключения очень сложно отыскивать, старайтесь добавлять хотябы минимальные сообщения, а лучше достаточно информативные, что бы от сообщения была польза
         }
     }
 

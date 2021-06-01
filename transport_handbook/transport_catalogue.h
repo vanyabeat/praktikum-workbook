@@ -52,19 +52,19 @@ namespace Handbook {
         public:
             void AddStop(std::string_view name, Utilities::Coordinates coordinates);
 
-            const Stop *FindStop(std::string_view name) const;
+            const Stop *FindStop(std::string_view name) const;		/// желательно поменять тип результата на StopPtr
 
-            const std::unordered_set<BusPtr> *GetBusesOnStop(const Stop *stop) const;
+            const std::unordered_set<BusPtr> *GetBusesOnStop(const Stop *stop) const;	/// желательно использовать тип StopPtr
 
             std::unordered_set<BusPtr> GetBusesWithStops() const;
 
             void AddStopsDistance(std::string_view from_stop, std::string_view to_stop, int distance);
 
-            int FindStopsDistance(const Stop *from_stop_ptr, const Stop *to_stop_ptr) const;
+            int FindStopsDistance(const Stop *from_stop_ptr, const Stop *to_stop_ptr) const;	/// желательно использовать тип StopPtr
 
             void AddBus(std::string_view name, const std::vector<std::string> &bus_stops, bool is_roundtrip);
 
-            const Bus *FindBus(std::string_view name) const;
+            const Bus *FindBus(std::string_view name) const;		/// желательно поменять тип результата на BusPtr
 
             BusStat GetBusStat(const Bus *bus) const;
 
@@ -82,7 +82,7 @@ namespace Handbook {
             std::unordered_map<std::string_view, const Stop *> stops_by_name_;
             std::unordered_map<const Stop *, std::unordered_set<const Bus *>> buses_by_stop_;
             std::unordered_map<PairPtrs<Stop>, int, PairPtrHasher<Stop>> stop_distances_;
-            const std::string bayan_bitch = "[:|||:]";
+            const std::string bayan_bitch = "[:|||:]";	/// рекомендую поменять имя, используется только в AllBayanedStops поэтому скорее всего можно объявить прямо в методе как статическую константу
         };
     } // namespace Data
 } // namespace Handbook

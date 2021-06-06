@@ -90,6 +90,8 @@ namespace Handbook
 			std::unordered_map<StopPtr, std::unordered_set<BusPtr>> buses_by_stop_;
 			std::unordered_map<PairPtrs<Stop>, int, PairPtrHasher<Stop>> stop_distances_;
 			const std::string bayan = "[:|||:]"; /// оставлю здесь, так удобнее менять сепараторы...
+/// не соглашусь с аргументом, класс долже бать споректирован, как другим удобно использовать, а это поле получается бессмысленным
+/// если предполагается менять сепараторы, то должно быть для этого api
 		};
 	} // namespace Data
 } // namespace Handbook

@@ -1,24 +1,7 @@
-#include "lexer.h"
-#include "test_runner_p.h"
+#include <gtest/gtest.h>
 
-#include <iostream>
-
-namespace parse {
-void RunOpenLexerTests(TestRunner& tr);
-}
-
-int main() {
-    try {
-        TestRunner tr;
-        parse::RunOpenLexerTests(tr);
-        parse::Lexer lexer(std::cin);
-        parse::Token t;
-        while ((t = lexer.CurrentToken()) != parse::token_type::Eof{}) {
-            std::cout << t << std::endl;
-            lexer.NextToken();
-        }
-    } catch (const std::exception& e) {
-        std::cerr << e.what();
-        return 1;
-    }
+int main(int argc, char** argv)
+{
+	::testing::InitGoogleTest(&argc, argv);
+	return RUN_ALL_TESTS();
 }

@@ -224,25 +224,21 @@ bool Less(const ObjectHolder& lhs, const ObjectHolder& rhs, Context& context)
 bool NotEqual(const ObjectHolder& lhs, const ObjectHolder& rhs, Context& context)
 {
 	return !Equal(lhs, rhs, context);
-	//	throw std::runtime_error("Cannot compare objects for equality"s);
 }
 
 bool Greater(const ObjectHolder& lhs, const ObjectHolder& rhs, Context& context)
 {
 	return !Less(lhs, rhs, context) && !Equal(lhs, rhs, context);
-	//	throw std::runtime_error("Cannot compare objects for equality"s);
 }
 
 bool LessOrEqual(const ObjectHolder& lhs, const ObjectHolder& rhs, Context& context)
 {
 	return !Greater(lhs, rhs, context);
-	//	throw std::runtime_error("Cannot compare objects for equality"s);
 }
 
 bool GreaterOrEqual(const ObjectHolder& lhs, const ObjectHolder& rhs, Context& context)
 {
 	return !Less(lhs, rhs, context);
-	//	throw std::runtime_error("Cannot compare objects for equality"s);
 }
 
 } // namespace runtime

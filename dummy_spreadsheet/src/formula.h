@@ -28,3 +28,5 @@ public:
 // Парсит переданное выражение и возвращает объект формулы.
 // Бросает FormulaException в случае, если формула синтаксически некорректна.
 std::unique_ptr<FormulaInterface> ParseFormula(std::string expression);
+
+std::ostream &operator<<(std::ostream &output, FormulaError fe);

@@ -2,11 +2,10 @@
 
 #include "FormulaAST.h"
 
+#include <memory>
 #include <algorithm>
-#include <cassert>
-#include <cctype>
 #include <sstream>
-
+#include <ostream>
 using namespace std::literals;
 
 std::ostream &operator<<(std::ostream &output, FormulaError fe) {
@@ -18,10 +17,22 @@ namespace {
     public:
 // Реализуйте следующие методы:
         explicit Formula(std::string expression)
+                : ast_(ParseFormulaAST(std::move(expression))) {}
 
-        Value Evaluate() const override
+        Value Evaluate() const override {
+            try {
+                return ast_.Execute();
+            }
+            catch (const FormulaError &fe) {
+                return fe;
+            }
+        }
 
-        std::string GetExpression() const override
+        std::string GetExpression() const override {
+            std::ostringstream os;
+            ast_.PrintFormula(os);
+            return os.str();
+        }
 
     private:
         FormulaAST ast_;

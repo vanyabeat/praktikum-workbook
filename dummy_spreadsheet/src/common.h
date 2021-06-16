@@ -14,9 +14,11 @@ struct Position {
     int col = 0;
 
     bool operator==(Position rhs) const;
+
     bool operator<(Position rhs) const;
 
     bool IsValid() const;
+
     std::string ToString() const;
 
     static Position FromString(std::string_view str);

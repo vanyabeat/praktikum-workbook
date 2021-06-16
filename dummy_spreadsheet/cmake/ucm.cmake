@@ -1,5 +1,5 @@
 #
-# ucm.cmake - useful cmake macros
+# cmake.cmake - useful cmake macros
 #
 # Copyright (c) 2016 Viktor Kirilov
 #

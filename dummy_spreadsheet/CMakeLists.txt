@@ -23,6 +23,6 @@ include_directories(src)
 
 include_directories(tests)
 
-add_executable(dummy_spreadsheet main.cpp ${SRC} ${TESTS})
+add_executable(dummy_spreadsheet main.cpp ${SRC} ${TESTS} src/common.h src/structures.cpp tests/position_tests.cpp)
 
 target_link_libraries(dummy_spreadsheet ${CONAN_LIBS})

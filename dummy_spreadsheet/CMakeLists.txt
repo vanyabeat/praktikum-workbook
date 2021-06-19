@@ -8,7 +8,10 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_BUILD_TYPE Debug)
 set(ANTLR_EXECUTABLE ${CMAKE_CURRENT_SOURCE_DIR}/antlr-4.9.2-complete.jar)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindANTLR.cmake)
-
+set(
+        CMAKE_CXX_FLAGS
+        "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -Werror -Wno-unused-parameter -Wno-implicit-fallthrough"
+)
 add_definitions(
         -DANTLR4CPP_STATIC
         -D_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS

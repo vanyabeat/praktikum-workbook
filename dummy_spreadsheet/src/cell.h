@@ -2,6 +2,7 @@
 
 #include "common.h"
 #include "formula.h"
+#include <variant>
 
 class Cell : public CellInterface {
 public:
@@ -27,7 +28,9 @@ private:
 
         virtual std::string GetText() const = 0;
     };
+
     std::unique_ptr<Impl> MakeImpl_(std::string text) const;
+
     class EmptyImpl : public Impl {
     public:
         EmptyImpl();
@@ -62,8 +65,5 @@ private:
         std::unique_ptr<FormulaInterface> formula_;
     };
 
-
     std::unique_ptr<Impl> impl_;
-
-
 };

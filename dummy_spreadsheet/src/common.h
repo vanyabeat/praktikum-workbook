@@ -13,9 +13,6 @@
 #include <memory>
 
 
-
-
-
 // Позиция ячейки. Индексация с нуля.
 struct Position {
     int row = 0;
@@ -50,8 +47,6 @@ public:
     using std::runtime_error::runtime_error;
 };
 
-inline constexpr char FORMULA_SIGN = '=';
-inline constexpr char ESCAPE_SIGN = '\'';
 
 class CellInterface {
 public:
@@ -81,3 +76,6 @@ public:
     // содержащий экранирующие символы). В случае формулы - её выражение.
     virtual std::string GetText() const = 0;
 };
+
+inline constexpr char FORMULA_SIGN = '=';
+inline constexpr char ESCAPE_SIGN = '\'';

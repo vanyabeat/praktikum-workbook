@@ -4,6 +4,7 @@
 #include <iostream>
 #include <string>
 #include <optional>
+#include <memory>
 
 Cell::EmptyImpl::EmptyImpl()
         : Impl() {}
@@ -30,7 +31,7 @@ std::string Cell::TextImpl::GetText() const {
 
 
 Cell::FormulaImpl::FormulaImpl(std::string str)
-        : Impl(), formula_(std::move(ParseFormula(str))) {}
+        : Impl(), formula_(ParseFormula(str)) {}
 
 Cell::Value Cell::FormulaImpl::GetValue() const {
     auto res = formula_->Evaluate();
@@ -44,9 +45,25 @@ std::string Cell::FormulaImpl::GetText() const {
     return FORMULA_SIGN + formula_->GetExpression();
 }
 
+std::unique_ptr<Cell::Impl> Cell::MakeImpl_(std::string text) const {
+    using namespace std::literals;
+    if (text.empty()) {
+        return std::make_unique<EmptyImpl>();
+    }
+    if (text.front() == FORMULA_SIGN && text.size() > 1) {
+        try {
+            return std::make_unique<FormulaImpl>(text.substr(1));
+        }
+        catch (...) {
+            throw FormulaException("Error with formula"s);
+        }
+    } else {
+        return std::make_unique<TextImpl>(std::move(text));
+    }
+}
+
 // Реализуйте следующие методы
-Cell::Cell()
-        : CellInterface(), impl_(std::make_unique<EmptyImpl>()) {}
+Cell::Cell() : CellInterface(), impl_(std::make_unique<EmptyImpl>()) {}
 
 Cell::~Cell() {}
 
@@ -66,21 +83,4 @@ Cell::Value Cell::GetValue() const {
 
 std::string Cell::GetText() const {
     return impl_->GetText();
-}
-
-std::unique_ptr<Cell::Impl> Cell::MakeImpl_(std::string text) const {
-    using namespace std::literals;
-    if (text.empty()) {
-        return std::make_unique<EmptyImpl>();
-    }
-    if (text.front() == FORMULA_SIGN && text.size() > 1) {
-        try {
-            return std::make_unique<FormulaImpl>(std::move(text.substr(1)));
-        }
-        catch (...) {
-            throw FormulaException("Error with formula"s);
-        }
-    } else {
-        return std::make_unique<TextImpl>(std::move(text));
-    }
 }

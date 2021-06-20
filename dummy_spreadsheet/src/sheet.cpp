@@ -26,6 +26,20 @@ void Sheet::PrintValues(std::ostream &output) const {}
 
 void Sheet::PrintTexts(std::ostream &output) const {}
 
+void Sheet::CheckPosition_(Position pos) const {
+    if (!pos.IsValid()) {
+        throw InvalidPositionException("Wrong pos"s);
+    }
+}
+
+void Sheet::AllocCell_(Position pos, std::string text) {
+
+    Cell *cell = new Cell(pos);
+    cell->Set(std::move(text));
+    cells_[pos].reset(cell);
+
+}
+
 std::unique_ptr<SheetInterface> CreateSheet() {
     return std::make_unique<Sheet>();
 }

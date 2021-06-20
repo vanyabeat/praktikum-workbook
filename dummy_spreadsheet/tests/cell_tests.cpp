@@ -10,7 +10,8 @@ inline std::ostream &operator<<(std::ostream &output, const CellInterface::Value
 }
 
 std::unique_ptr<CellInterface> CreateCell(const std::string &str) {
-    std::unique_ptr<CellInterface> cell = std::make_unique<Cell>();
+    auto pos = Position{0, 0};
+    std::unique_ptr<CellInterface> cell = std::make_unique<Cell>(pos);
     cell->Set(str);
     return cell;
 }

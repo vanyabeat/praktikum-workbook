@@ -7,6 +7,8 @@
 
 class Sheet : public SheetInterface {
 public:
+    using CellsMap = std::unordered_map<Position, std::unique_ptr<Cell>, CellHasher>;
+
     ~Sheet();
 
     void SetCell(Position pos, std::string text) override;
@@ -28,4 +30,10 @@ public:
 
 private:
     // Можете дополнить ваш класс нужными полями и методами
+    CellsMap cells_;
+    PositionsSet positions_;
+
+    void CheckPosition_(Position pos) const;
+
+    void AllocCell_(Position pos, std::string text);
 };

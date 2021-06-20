@@ -6,7 +6,7 @@
 
 class Cell : public CellInterface {
 public:
-    Cell();
+    Cell(Position pos);
 
     ~Cell();
 
@@ -66,4 +66,7 @@ private:
     };
 
     std::unique_ptr<Impl> impl_;
+    Position pos_;
+
+    Cell *AllocCell(Position pos) const;
 };

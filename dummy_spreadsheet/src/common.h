@@ -7,6 +7,7 @@
 #include <string_view>
 #include <variant>
 #include <vector>
+#include <unordered_set>
 
 // Позиция ячейки. Индексация с нуля.
 struct Position {
@@ -131,4 +132,16 @@ public:
 };
 
 // Создаёт готовую к работе пустую таблицу.
-std::unique_ptr<SheetInterface> CreateSheet(); 
+std::unique_ptr<SheetInterface> CreateSheet();
+
+class CellHasher {
+public:
+    size_t operator()(const Position &pos) const {
+        return i_hasher(pos.row) + 7 * i_hasher(pos.col);
+    }
+
+private:
+    std::hash<int> i_hasher;
+};
+
+using PositionsSet = std::unordered_set<Position, CellHasher>;

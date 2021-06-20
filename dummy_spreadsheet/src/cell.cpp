@@ -63,7 +63,7 @@ std::unique_ptr<Cell::Impl> Cell::MakeImpl_(std::string text) const {
 }
 
 // Реализуйте следующие методы
-Cell::Cell() : CellInterface(), impl_(std::make_unique<EmptyImpl>()) {}
+Cell::Cell(Position pos) : CellInterface(), impl_(std::make_unique<EmptyImpl>()), pos_(pos) {}
 
 Cell::~Cell() {}
 
@@ -83,4 +83,8 @@ Cell::Value Cell::GetValue() const {
 
 std::string Cell::GetText() const {
     return impl_->GetText();
+}
+
+Cell *Cell::AllocCell(Position pos) const {
+
 }

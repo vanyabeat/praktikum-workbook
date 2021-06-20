@@ -4,6 +4,9 @@
 #include "common.h"
 
 #include <functional>
+#include <unordered_map>
+
+class Cell;
 
 class Sheet : public SheetInterface {
 public:
@@ -36,4 +39,20 @@ private:
     void CheckPosition_(Position pos) const;
 
     void AllocCell_(Position pos, std::string text);
+
+    template<typename P>
+    void PrintSheet(std::ostream &output, P print) const {
+        Size scope = GetPrintableSize();
+        for (int i = 0; i < scope.rows; ++i) {
+            for (int j = 0; j < scope.cols - 1; ++j) {
+                Position pos{i, j};
+                print((cells_.count(pos) != 0) ? cells_.at(pos).get() : nullptr);
+                output << '\t';
+            }
+            Position pos{i, scope.cols - 1};
+            print((cells_.count(pos) != 0) ? cells_.at(pos).get() : nullptr);
+            output << '\n';
+        }
+    }
 };
+

@@ -36,6 +36,8 @@ struct Size {
     bool operator==(Size rhs) const;
 };
 
+
+
 // Описывает ошибки, которые могут возникнуть при вычислении формулы.
 class FormulaError : public std::runtime_error {
 public:

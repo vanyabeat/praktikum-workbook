@@ -63,7 +63,7 @@ std::unique_ptr<Cell::Impl> Cell::MakeImpl_(std::string text) const {
 }
 
 // Реализуйте следующие методы
-Cell::Cell(Position pos) : CellInterface(), impl_(std::make_unique<EmptyImpl>()), pos_(pos) {}
+
 
 Cell::~Cell() {}
 
@@ -86,5 +86,17 @@ std::string Cell::GetText() const {
 }
 
 Cell *Cell::AllocCell(Position pos) const {
+//    Cell *cell = dynamic_cast<Cell *>(sheet_.GetCell(pos));
+    Cell *cell = static_cast<Cell *>(sheet_.GetCell(pos));
+    if (!cell) {
+        sheet_.SetCell(pos, std::string());
+        cell = AllocCell(pos);
+    }
+    return cell;
+}
+
+Cell::Cell(Sheet &sheet, Position pos)
+        : CellInterface(), sheet_(sheet), pos_(pos), impl_(std::make_unique<EmptyImpl>()) {
+
 
 }

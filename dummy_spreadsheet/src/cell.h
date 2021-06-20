@@ -2,11 +2,15 @@
 
 #include "common.h"
 #include "formula.h"
+#include "sheet.h"
 #include <variant>
+
+// @Сергей хз сделал так через референсы
+class Sheet;
 
 class Cell : public CellInterface {
 public:
-    Cell(Position pos);
+    Cell(Sheet& sheet, Position pos);
 
     ~Cell();
 
@@ -65,8 +69,9 @@ private:
         std::unique_ptr<FormulaInterface> formula_;
     };
 
-    std::unique_ptr<Impl> impl_;
+    Sheet& sheet_;
     Position pos_;
+    std::unique_ptr<Impl> impl_;
 
     Cell *AllocCell(Position pos) const;
 };

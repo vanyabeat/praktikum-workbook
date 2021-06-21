@@ -34,7 +34,7 @@ CellInterface *Sheet::GetCell(Position pos) {
         return nullptr;
     }
     Cell *cell = cells_.at(pos).get();
-    if (!cell) {
+    if (!cell || cell->IsEmpty()) {
         return nullptr;
     }
     return cell;

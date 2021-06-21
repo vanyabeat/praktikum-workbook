@@ -100,3 +100,7 @@ Cell::Cell(Sheet &sheet, Position pos)
 
 
 }
+
+bool Cell::IsEmpty() const {
+    return impl_->GetText().empty();
+}

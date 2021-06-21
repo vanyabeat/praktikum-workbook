@@ -10,7 +10,7 @@ class Sheet;
 
 class Cell : public CellInterface {
 public:
-    Cell(Sheet& sheet, Position pos);
+    Cell(Sheet &sheet, Position pos);
 
     ~Cell();
 
@@ -21,6 +21,8 @@ public:
     Value GetValue() const override;
 
     std::string GetText() const override;
+
+    bool IsEmpty() const;
 
 private:
 
@@ -69,7 +71,7 @@ private:
         std::unique_ptr<FormulaInterface> formula_;
     };
 
-    Sheet& sheet_;
+    Sheet &sheet_;
     Position pos_;
     std::unique_ptr<Impl> impl_;
 

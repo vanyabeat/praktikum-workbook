@@ -12,8 +12,8 @@ inline std::ostream &operator<<(std::ostream &output, const CellInterface::Value
 
 std::unique_ptr<CellInterface> CreateCell(const std::string &str) {
     auto pos = Position{0, 0};
-    Sheet * sheet_p = nullptr;
-    std::unique_ptr<CellInterface> cell = std::make_unique<Cell>(*sheet_p, pos);
+
+    std::unique_ptr<CellInterface> cell = std::make_unique<Cell>(nullptr, pos);
     cell->Set(str);
     return cell;
 }

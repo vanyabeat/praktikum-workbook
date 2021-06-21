@@ -84,7 +84,7 @@ void Sheet::CheckPosition_(Position pos) const {
 
 void Sheet::AllocCell_(Position pos, std::string text) {
 
-    Cell *cell = new Cell(*this, pos);
+    Cell *cell = new Cell(this, pos);
     cell->Set(std::move(text));
     cells_[pos].reset(cell);
 

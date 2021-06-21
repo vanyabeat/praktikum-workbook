@@ -87,15 +87,15 @@ std::string Cell::GetText() const {
 
 Cell *Cell::AllocCell(Position pos) const {
 //    Cell *cell = dynamic_cast<Cell *>(sheet_.GetCell(pos));
-    Cell *cell = static_cast<Cell *>(sheet_.GetCell(pos));
+    Cell *cell = static_cast<Cell *>(sheet_->GetCell(pos));
     if (!cell) {
-        sheet_.SetCell(pos, std::string());
+        sheet_->SetCell(pos, std::string());
         cell = AllocCell(pos);
     }
     return cell;
 }
 
-Cell::Cell(Sheet &sheet, Position pos)
+Cell::Cell(Sheet *sheet, Position pos)
         : CellInterface(), sheet_(sheet), pos_(pos), impl_(std::make_unique<EmptyImpl>()) {
 
 
@@ -103,4 +103,8 @@ Cell::Cell(Sheet &sheet, Position pos)
 
 bool Cell::IsEmpty() const {
     return impl_->GetText().empty();
+}
+
+Cell::Cell() : CellInterface(), sheet_(nullptr), pos_(Position{}), impl_(std::make_unique<EmptyImpl>()) {
+
 }

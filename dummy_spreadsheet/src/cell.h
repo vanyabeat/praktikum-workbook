@@ -10,7 +10,8 @@ class Sheet;
 
 class Cell : public CellInterface {
 public:
-    Cell(Sheet &sheet, Position pos);
+    Cell();
+    Cell(Sheet *sheet, Position pos);
 
     ~Cell();
 
@@ -71,7 +72,7 @@ private:
         std::unique_ptr<FormulaInterface> formula_;
     };
 
-    Sheet &sheet_;
+    Sheet *sheet_;
     Position pos_;
     std::unique_ptr<Impl> impl_;
 

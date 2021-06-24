@@ -37,9 +37,31 @@ struct Size {
 };
 
 
-
 // Описывает ошибки, которые могут возникнуть при вычислении формулы.
-class FormulaError : public std::runtime_error {
+// Описывает ошибки, которые могут возникнуть при вычислении формулы.
+class FormulaError {
+public:
+    enum class Category {
+        Ref,    // ссылка на ячейку с некорректной позицией
+        Value,  // ячейка не может быть трактована как число
+        Div0,  // в результате вычисления возникло деление на ноль
+    };
+
+    FormulaError(Category category);
+
+    Category GetCategory() const;
+
+    bool operator==(FormulaError rhs) const;
+
+    std::string_view ToString() const;
+
+private:
+    Category category_;
+};
+
+// Исключение, выбрасываемое при попытке задать формулу, которая приводит к
+// циклической зависимости между ячейками
+class CircularDependencyException : public std::runtime_error {
 public:
     using std::runtime_error::runtime_error;
 };
@@ -95,6 +117,11 @@ public:
 // редактирование. В случае текстовой ячейки это её текст (возможно,
 // содержащий экранирующие символы). В случае формулы - её выражение.
     virtual std::string GetText() const = 0;
+
+    // Возвращает список ячеек, которые непосредственно задействованы в данной
+    // формуле. Список отсортирован по возрастанию и не содержит повторяющихся
+    // ячеек. В случае текстовой ячейки список пуст.
+    virtual std::vector<Position> GetReferencedCells() const = 0;
 };
 
 // Интерфейс таблицы

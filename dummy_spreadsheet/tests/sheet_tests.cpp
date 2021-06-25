@@ -99,3 +99,124 @@ TEST(Sheet, TestPrint) {
     sheet->ClearCell("B2"_pos);
     ASSERT_EQ(sheet->GetPrintableSize(), (Size{2, 1}));
 }
+
+TEST(Sheet, TestSetCell) {
+    auto sheet = CreateSheet();
+    sheet->SetCell("A1"_pos, "1");
+    sheet->SetCell("A2"_pos, "=A1+1");
+    sheet->SetCell("A3"_pos, "=A2+2");
+
+    ASSERT_EQ(sheet->GetPrintableSize(), (Size{3, 1}));
+
+    std::ostringstream texts;
+    sheet->PrintValues(texts);
+    ASSERT_EQ(texts.str(), "1\n2\n4\n");
+}
+
+TEST(Sheet, TestSetCell2) {
+    auto sheet = CreateSheet();
+    sheet->SetCell("A1"_pos, "2");
+    sheet->SetCell("A2"_pos, "=A1-1");
+    sheet->SetCell("A3"_pos, "=A2+A1");
+
+    ASSERT_EQ(sheet->GetPrintableSize(), (Size{3, 1}));
+
+    std::ostringstream texts;
+    sheet->PrintValues(texts);
+    ASSERT_EQ(texts.str(), "2\n1\n3\n");
+}
+
+TEST(Sheet, TestSetCell3) {
+    auto sheet = CreateSheet();
+    sheet->SetCell("A1"_pos, "2");
+    sheet->SetCell("A2"_pos, "=A1/0");
+    sheet->SetCell("A3"_pos, "=A2+A1");
+
+    ASSERT_EQ(sheet->GetPrintableSize(), (Size{3, 1}));
+
+    std::ostringstream texts;
+    sheet->PrintValues(texts);
+    ASSERT_EQ(texts.str(), "2\n#DIV/0!\n#DIV/0!\n");
+}
+
+TEST(Sheet, TestSetCell4) {
+    auto sheet = CreateSheet();
+    sheet->SetCell("A1"_pos, "1");
+    sheet->SetCell("A2"_pos, "=A1*-1");
+    sheet->SetCell("A3"_pos, "=A2");
+
+    ASSERT_EQ(sheet->GetPrintableSize(), (Size{3, 1}));
+
+    std::ostringstream texts;
+    sheet->PrintValues(texts);
+    ASSERT_EQ(texts.str(), "1\n-1\n-1\n");
+}
+
+TEST(Sheet, TestSetCell5) {
+    auto sheet = CreateSheet();
+    sheet->SetCell("A1"_pos, "1");
+    sheet->SetCell("B1"_pos, "100");
+    sheet->SetCell("A3"_pos, "=A1+B1");
+
+    ASSERT_EQ(sheet->GetPrintableSize(), (Size{3, 2}));
+
+    std::ostringstream texts;
+    sheet->PrintValues(texts);
+    ASSERT_EQ(texts.str(), "1\t100\n\t\n101\t\n");
+}
+
+TEST(Sheet, TestSetCell6) {
+    auto sheet = CreateSheet();
+    sheet->SetCell("A1"_pos, "1");
+    sheet->SetCell("B1"_pos, "100");
+    sheet->SetCell("A3"_pos, "=A1+B1");
+
+    ASSERT_EQ(sheet->GetPrintableSize(), (Size{3, 2}));
+
+    std::ostringstream texts;
+    sheet->PrintValues(texts);
+    ASSERT_EQ(texts.str(), "1\t100\n\t\n101\t\n");
+}
+
+TEST(Sheet, TestClearCell1) {
+    auto sheet = CreateSheet();
+    sheet->SetCell("A1"_pos, "1");
+    sheet->SetCell("B1"_pos, "2");
+    sheet->SetCell("A2"_pos, "3");
+    sheet->SetCell("B2"_pos, "4");
+
+    ASSERT_EQ(sheet->GetPrintableSize(), (Size{2, 2}));
+    sheet->ClearCell("A1"_pos);
+    sheet->ClearCell("B1"_pos);
+    sheet->ClearCell("A2"_pos);
+    sheet->ClearCell("B2"_pos);
+
+    ASSERT_EQ(sheet->GetPrintableSize(), (Size{0, 0}));
+}
+
+TEST(Sheet, TestSetCell8) {
+    auto sheet = CreateSheet();
+    sheet->SetCell("A1"_pos, "1");
+    sheet->SetCell("B1"_pos, "100");
+    sheet->SetCell("A3"_pos, "=A1+B1");
+
+    ASSERT_EQ(sheet->GetPrintableSize(), (Size{3, 2}));
+
+    std::ostringstream texts;
+    sheet->PrintValues(texts);
+    ASSERT_EQ(texts.str(), "1\t100\n\t\n101\t\n");
+}
+
+TEST(Sheet, Throws) {
+    auto sheet = CreateSheet();
+    ASSERT_THROW(sheet->SetCell("A1"_pos, "=A1"), CircularDependencyException);
+}
+
+TEST(Sheet, Throws2) {
+    auto sheet = CreateSheet();
+    auto value = sheet->GetCell("A1000"_pos)->GetValue();
+    auto expected = std::nullopt;
+    int a = 0;
+    (void) (&a);
+    (void) (&expected);
+}

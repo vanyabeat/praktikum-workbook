@@ -47,17 +47,37 @@ public:
         Div0,  // в результате вычисления возникло деление на ноль
     };
 
-    FormulaError(Category category);
+    FormulaError(Category category) : category_(category) {};
 
-    Category GetCategory() const;
+    Category GetCategory() const {
+        return category_;
+    }
 
-    bool operator==(FormulaError rhs) const;
+    bool operator==(FormulaError rhs) const {
 
-    std::string_view ToString() const;
+        return category_ == rhs.category_;
+
+    }
+
+    std::string_view ToString() const {
+        using namespace std::literals;
+        switch (category_) {
+            case Category::Ref:
+                return "#REF!"sv;
+            case Category::Value:
+                return "#VALUE!"sv;
+            default:
+                return "#DIV/0!"sv;
+        }
+    }
 
 private:
     Category category_;
 };
+
+
+
+
 
 // Исключение, выбрасываемое при попытке задать формулу, которая приводит к
 // циклической зависимости между ячейками

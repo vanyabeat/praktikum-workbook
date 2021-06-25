@@ -153,14 +153,11 @@ namespace ASTImpl {
             double Evaluate(CellFunctor args) const override {
                 if (type_ == Add) {
                     return lhs_->Evaluate(args) + rhs_->Evaluate(args);
-                }
-                else if (type_ == Subtract) {
+                } else if (type_ == Subtract) {
                     return lhs_->Evaluate(args) - rhs_->Evaluate(args);
-                }
-                else if (type_ == Multiply) {
+                } else if (type_ == Multiply) {
                     return lhs_->Evaluate(args) * rhs_->Evaluate(args);
-                }
-                else {
+                } else {
                     if (!std::isfinite(lhs_->Evaluate(args) / rhs_->Evaluate(args))) {
                         throw FormulaError(FormulaError::Category::Div0);
                     }
@@ -201,8 +198,12 @@ namespace ASTImpl {
                 return EP_UNARY;
             }
 
-            double Evaluate(/*добавьте нужные аргументы*/ args) const override {
-                // Скопируйте ваше решение из предыдущих уроков.
+            double Evaluate(CellFunctor args) const override {
+                if (type_ == UnaryMinus) {
+                    return -operand_->Evaluate(args);
+                } else {
+                    return operand_->Evaluate(args);
+                }
             }
 
         private:
@@ -232,8 +233,8 @@ namespace ASTImpl {
                 return EP_ATOM;
             }
 
-            double Evaluate(/*добавьте нужные аргументы*/ args) const override {
-                // реализуйте метод.
+            double Evaluate(CellFunctor args) const override {
+                return args(*cell_);
             }
 
         private:
@@ -258,7 +259,8 @@ namespace ASTImpl {
                 return EP_ATOM;
             }
 
-            double Evaluate(/*добавьте нужные аргументы*/ args) const override {
+            double Evaluate(CellFunctor args) const override {
+                (void) (&args);
                 return value_;
             }
 
@@ -413,7 +415,7 @@ void FormulaAST::PrintFormula(std::ostream &out) const {
 }
 
 double FormulaAST::Execute(CellFunctor args) const {
-    return root_expr_->Evaluate(/*добавьте нужные аргументы*/ args);
+    return root_expr_->Evaluate(args);
 }
 
 FormulaAST::FormulaAST(std::unique_ptr<ASTImpl::Expr> root_expr, std::forward_list<Position> cells)

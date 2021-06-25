@@ -17,6 +17,9 @@ std::string Cell::EmptyImpl::GetText() const {
     return std::string();
 }
 
+std::vector<Position> Cell::EmptyImpl::GetReferencedCells() const {
+    return {};
+}
 
 Cell::TextImpl::TextImpl(std::string str)
         : Impl(), str_(std::move(str)) {}
@@ -29,12 +32,17 @@ std::string Cell::TextImpl::GetText() const {
     return str_;
 }
 
+std::vector<Position> Cell::TextImpl::GetReferencedCells() const {
+    return std::vector<Position>();
+}
 
-Cell::FormulaImpl::FormulaImpl(std::string str)
-        : Impl(), formula_(ParseFormula(str)) {}
+
+Cell::FormulaImpl::FormulaImpl(std::string str,
+                               const SheetInterface &sheet)
+        : Impl(), sheet_(sheet), formula_(ParseFormula(str)) {}
 
 Cell::Value Cell::FormulaImpl::GetValue() const {
-    auto res = formula_->Evaluate();
+    auto res = formula_->Evaluate(sheet_);
     if (std::holds_alternative<double>(res)) {
         return std::get<double>(res);
     }
@@ -45,6 +53,10 @@ std::string Cell::FormulaImpl::GetText() const {
     return FORMULA_SIGN + formula_->GetExpression();
 }
 
+std::vector<Position> Cell::FormulaImpl::GetReferencedCells() const {
+    return formula_->GetReferencedCells();
+}
+
 std::unique_ptr<Cell::Impl> Cell::MakeImpl_(std::string text) const {
     using namespace std::literals;
     if (text.empty()) {
@@ -52,7 +64,7 @@ std::unique_ptr<Cell::Impl> Cell::MakeImpl_(std::string text) const {
     }
     if (text.front() == FORMULA_SIGN && text.size() > 1) {
         try {
-            return std::make_unique<FormulaImpl>(text.substr(1));
+            return std::make_unique<FormulaImpl>(text.substr(1), *sheet_);
         }
         catch (...) {
             throw FormulaException("Error with formula"s);
@@ -68,9 +80,14 @@ std::unique_ptr<Cell::Impl> Cell::MakeImpl_(std::string text) const {
 Cell::~Cell() {}
 
 void Cell::Set(std::string text) {
-    using namespace std::literals;
+    using namespace std;
+
     auto tmp = MakeImpl_(std::move(text));
+    if (IsCyclic(tmp.get())) {
+        throw CircularDependencyException("Error formula is сircular"s);
+    }
     impl_ = std::move(tmp);
+    InitializeCell();
 }
 
 void Cell::Clear() {
@@ -78,7 +95,8 @@ void Cell::Clear() {
 }
 
 Cell::Value Cell::GetValue() const {
-    return impl_->GetValue();
+    UpdateCache();
+    return cache_.value();
 }
 
 std::string Cell::GetText() const {
@@ -107,4 +125,12 @@ bool Cell::IsEmpty() const {
 
 Cell::Cell() : CellInterface(), sheet_(nullptr), pos_(Position{}), impl_(std::make_unique<EmptyImpl>()) {
 
+}
+
+std::vector<Position> Cell::GetReferencedCells() const {
+    return std::vector<Position>();
+}
+
+bool Cell::IsRef() const {
+    return !dependencies_o_.empty() || !dependencies_i_.empty();
 }

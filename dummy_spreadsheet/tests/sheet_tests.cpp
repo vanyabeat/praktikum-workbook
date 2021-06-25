@@ -165,6 +165,20 @@ TEST(Sheet, TestSetCell5) {
     ASSERT_EQ(texts.str(), "1\t100\n\t\n101\t\n");
 }
 
+TEST(Sheet, TestCache) {
+    auto sheet = CreateSheet();
+    sheet->SetCell("A1"_pos, "1");
+    sheet->SetCell("A2"_pos, "2");
+    sheet->SetCell("A3"_pos, "=A1+A2");
+
+    ASSERT_EQ(sheet->GetPrintableSize(), (Size{3, 1}));
+    auto value = sheet->GetCell("A3"_pos)->GetValue();
+    ASSERT_DOUBLE_EQ(std::get<double>(value), 3);
+    sheet->SetCell("A1"_pos, "100");
+    auto value_new = sheet->GetCell("A3"_pos)->GetValue();
+    ASSERT_DOUBLE_EQ(std::get<double>(value_new), 3);
+}
+
 TEST(Sheet, TestSetCell6) {
     auto sheet = CreateSheet();
     sheet->SetCell("A1"_pos, "1");
@@ -232,4 +246,32 @@ TEST(Sheet, GetCell2) {
     auto value = sheet->GetCell("A2"_pos)->GetValue();
     ASSERT_DOUBLE_EQ(std::get<double>(value), 3);
 
+}
+
+TEST(Sheet, CircularDependecies) {
+    using namespace std;
+    auto sheet = CreateSheet();
+
+    sheet->SetCell("A1"_pos, "=E5*5"s);
+    sheet->SetCell("B2"_pos, "=A1+1"s);
+    sheet->SetCell("C3"_pos, "=A1+B2"s);
+    sheet->SetCell("D4"_pos, "=C3+A1+B2"s);
+
+    ASSERT_THROW(sheet->SetCell("E5"_pos, "= B2/C3-D4+A1"s), CircularDependencyException);
+
+}
+
+TEST(Sheet, Deps){
+    using namespace std;
+    auto sheet = CreateSheet();
+
+    sheet->SetCell("A1"_pos, "3"s);
+    sheet->SetCell("A2"_pos, "=A1 + 2"s);
+    sheet->SetCell("A3"_pos, "=A2 + 3"s);
+    sheet->SetCell("A4"_pos, "=A2 + A1"s);
+
+    ASSERT_TRUE(sheet->GetCell("A1"_pos)->GetReferencedCells().empty());
+    ASSERT_EQ(sheet->GetCell("A2"_pos)->GetReferencedCells().size() , 1);
+    ASSERT_EQ(sheet->GetCell("A3"_pos)->GetReferencedCells().size() , 2);
+    ASSERT_EQ(sheet->GetCell("A4"_pos)->GetReferencedCells().size() , 2);
 }

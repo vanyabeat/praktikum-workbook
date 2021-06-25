@@ -2,7 +2,7 @@
 
 #include <cctype>
 #include <sstream>
-мп
+
 
 // че за эксель то такой ?! MAX_POS_LETTER_COUNT ? AAAA столбца быть не можнт ?
 const int LETTERS = 26;

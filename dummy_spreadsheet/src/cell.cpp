@@ -83,11 +83,11 @@ void Cell::Set(std::string text) {
     using namespace std;
 
     auto tmp = MakeImpl_(std::move(text));
-    if (IsCyclic(tmp.get())) {
+    if (IsCyclic_(tmp.get())) {
         throw CircularDependencyException("Error formula is сircular"s);
     }
     impl_ = std::move(tmp);
-    InitializeCell();
+    InitializeCell_();
 }
 
 void Cell::Clear() {
@@ -95,7 +95,7 @@ void Cell::Clear() {
 }
 
 Cell::Value Cell::GetValue() const {
-    UpdateCache();
+    UpdateCache_();
     return cache_.value();
 }
 
@@ -103,12 +103,12 @@ std::string Cell::GetText() const {
     return impl_->GetText();
 }
 
-Cell *Cell::AllocCell(Position pos) const {
+Cell *Cell::AllocCell_(Position pos) const {
 //    Cell *cell = dynamic_cast<Cell *>(sheet_.GetCell(pos));
     Cell *cell = static_cast<Cell *>(sheet_->GetCell(pos));
     if (!cell) {
         sheet_->SetCell(pos, std::string());
-        cell = AllocCell(pos);
+        cell = AllocCell_(pos);
     }
     return cell;
 }
@@ -128,9 +128,85 @@ Cell::Cell() : CellInterface(), sheet_(nullptr), pos_(Position{}), impl_(std::ma
 }
 
 std::vector<Position> Cell::GetReferencedCells() const {
-    return std::vector<Position>();
+    return impl_->GetReferencedCells();
 }
 
 bool Cell::IsRef() const {
     return !dependencies_o_.empty() || !dependencies_i_.empty();
+}
+
+bool Cell::IsCyclicFormula_(const PositionsSet &dependencies, PositionsSet &inspectors) const {
+    if (dependencies.count(pos_) != 0) {
+        return true;
+    }
+    for (auto pos : dependencies) {
+        if (!pos.IsValid() || inspectors.count(pos) != 0) {
+            continue;
+        }
+        inspectors.insert(pos);
+        Cell *cell = AllocCell_(pos);
+        if (IsCyclicFormula_(cell->dependencies_o_, inspectors)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void Cell::InitializeCell_() {
+    InvalidateCache_();
+    DeleteDependencies_();
+    CreateDependencies_();
+    PositionsSet invalids;
+    InvalidateAllDependentCaches_(dependencies_i_, invalids);
+}
+
+void Cell::InvalidateAllDependentCaches_(const PositionsSet &deps, PositionsSet &invalids) {
+    for (auto pos : deps) {
+        if (!pos.IsValid()) {
+            continue;
+        }
+        Cell *cell = AllocCell_(pos);
+        cell->InvalidateCache_();
+        invalids.insert(pos);
+        cell->InvalidateAllDependentCaches_(cell->dependencies_i_, invalids);
+    }
+}
+
+void Cell::CreateDependencies_() {
+    for (auto pos : GetReferencedCells()) {
+        if (!pos.IsValid()) {
+            continue;
+        }
+        dependencies_o_.insert(pos);
+        Cell *cell = AllocCell_(pos);
+        cell->dependencies_i_.insert(pos);
+    }
+}
+
+void Cell::DeleteDependencies_() {
+    for (auto pos : dependencies_o_) {
+        if (!pos.IsValid()) {
+            continue;
+        }
+        Cell *cell = AllocCell_(pos);
+        cell->dependencies_i_.erase(pos);
+    }
+    dependencies_o_.clear();
+}
+
+void Cell::InvalidateCache_() {
+    cache_ = std::nullopt;
+}
+
+void Cell::UpdateCache_() const {
+    if (!cache_.has_value()) {
+        cache_ = impl_->GetValue();
+    }
+}
+
+bool Cell::IsCyclic_(const Cell::Impl *impl) const {
+    auto positions = impl->GetReferencedCells();
+    PositionsSet dependencies(positions.begin(), positions.end());
+    PositionsSet inspectors;
+    return IsCyclicFormula_(dependencies, inspectors);
 }

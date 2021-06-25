@@ -212,11 +212,14 @@ TEST(Sheet, Throws) {
     ASSERT_THROW(sheet->SetCell("A1"_pos, "=A1"), CircularDependencyException);
 }
 
-TEST(Sheet, Throws2) {
+TEST(Sheet, Size) {
     auto sheet = CreateSheet();
-    auto value = sheet->GetCell("A1000"_pos)->GetValue();
-    auto expected = std::nullopt;
-    int a = 0;
-    (void) (&a);
-    (void) (&expected);
+    sheet->SetCell("ABC123"_pos, "1");
+    ASSERT_EQ(sheet->GetPrintableSize(), (Size{123, 731}));
+}
+
+TEST(Sheet, GetCell) {
+    auto sheet = CreateSheet();
+    sheet->SetCell("A1"_pos, "1");
+    ASSERT_EQ(sheet->GetCell("A2"_pos), nullptr);
 }

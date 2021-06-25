@@ -152,8 +152,8 @@ private:
         }
     }
 
-    void InvalidAllDependentCaches(const PositionsSet &effects,
-                                   PositionsSet &invalids) {
+    void InvalidateAllDependentCaches(const PositionsSet &effects,
+                                      PositionsSet &invalids) {
         for (auto pos : effects) {
             if (!pos.IsValid()) {
                 continue;
@@ -161,7 +161,7 @@ private:
             Cell *cell = AllocCell(pos);
             cell->InvalidateCache();
             invalids.insert(pos);
-            cell->InvalidAllDependentCaches(cell->dependencies_i_, invalids);
+            cell->InvalidateAllDependentCaches(cell->dependencies_i_, invalids);
         }
     }
 
@@ -170,6 +170,6 @@ private:
         DeleteDependencies();
         CreateDependencies();
         PositionsSet invalids;
-        InvalidAllDependentCaches(dependencies_i_, invalids);
+        InvalidateAllDependentCaches(dependencies_i_, invalids);
     }
 };

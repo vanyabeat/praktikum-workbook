@@ -223,3 +223,13 @@ TEST(Sheet, GetCell) {
     sheet->SetCell("A1"_pos, "1");
     ASSERT_EQ(sheet->GetCell("A2"_pos), nullptr);
 }
+
+TEST(Sheet, GetCell2) {
+    auto sheet = CreateSheet();
+    sheet->SetCell("A1"_pos, "1");
+    sheet->SetCell("AB2"_pos, "1");
+    sheet->SetCell("A2"_pos, "=AB2+1+A1");
+    auto value = sheet->GetCell("A2"_pos)->GetValue();
+    ASSERT_DOUBLE_EQ(std::get<double>(value), 3);
+
+}

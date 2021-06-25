@@ -75,7 +75,7 @@ private:
     Category category_;
 };
 
-
+std::ostream& operator<<(std::ostream& output, FormulaError fe);
 
 
 

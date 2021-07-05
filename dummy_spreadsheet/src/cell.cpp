@@ -104,6 +104,7 @@ std::string Cell::GetText() const {
 }
 
 Cell *Cell::AllocCell_(Position pos) const {
+/// не оставляйте закомментированный код в окончательном варианте
 //    Cell *cell = dynamic_cast<Cell *>(sheet_.GetCell(pos));
     Cell *cell = static_cast<Cell *>(sheet_->GetCell(pos));
     if (!cell) {
